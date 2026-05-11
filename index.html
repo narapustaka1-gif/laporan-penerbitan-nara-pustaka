@@ -6,6 +6,7 @@
   <title>Nara Pustaka System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: Inter, sans-serif;
@@ -106,9 +107,15 @@
     </div>
 
     <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
       <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded-xl">
         Export Excel
       </button>
+
+      <button onclick="exportPDF()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl">
+        Export PDF
+      </button>
+    </div>
 
       <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-xl">
         Logout
@@ -172,6 +179,30 @@
       <div class="bg-white rounded-3xl p-6 shadow mb-6">
         <h3 class="font-bold mb-4">Vendor Reminder</h3>
         <div id="vendorReminder"></div>
+
+        <div class="mt-6 border-t pt-6">
+          <h3 class="font-bold text-xl mb-4">Ubah Password Divisi</h3>
+
+          <div class="grid md:grid-cols-3 gap-4">
+            <select id="changeUser" class="border p-4 rounded-2xl">
+              <option value="vero">vero</option>
+              <option value="jeyraa">jeyraa</option>
+              <option value="thami">thami</option>
+              <option value="elyna">elyna</option>
+              <option value="nala">nala</option>
+              <option value="calista">calista</option>
+              <option value="zahra">zahra</option>
+            </select>
+
+            <input id="newPassword" type="text" placeholder="Password Baru"
+              class="border p-4 rounded-2xl" />
+
+            <button onclick="changePassword()"
+              class="bg-indigo-600 text-white rounded-2xl font-bold">
+              Simpan Password
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -195,6 +226,7 @@
           <input id="price" type="number" placeholder="Harga" class="border p-4 rounded-2xl" />
           <input id="writer" type="text" placeholder="Nama Penulis" class="border p-4 rounded-2xl" />
           <input id="vendor" type="text" placeholder="Vendor Percetakan" class="border p-4 rounded-2xl" />
+          <input id="proofFile" type="file" class="border p-4 rounded-2xl" />
         </div>
 
         <button onclick="saveSale()"
@@ -254,7 +286,10 @@ const users = {
   vero: { password: 'vero123', role: 'Manager' },
   jeyraa: { password: 'jey123', role: 'Leader' },
   thami: { password: 'thami123', role: 'Admin' },
-  elyna: { password: 'elyna123', role: 'Editor' }
+  elyna: { password: 'elyna123', role: 'Editor' },
+  nala: { password: 'nala123', role: 'Designer' },
+  calista: { password: 'calista123', role: 'Creative' },
+  zahra: { password: 'zahra123', role: 'Creative' }
 };
 
 let sales = JSON.parse(localStorage.getItem('sales')) || [];
@@ -312,7 +347,10 @@ function saveSale(){
   const qty = Number(document.getElementById('qty').value);
   const price = Number(document.getElementById('price').value);
 
+  const file = document.getElementById('proofFile').files[0];
+
   const data = {
+    proof:file ? file.name : '-',
     buyer: document.getElementById('buyer').value,
     book: document.getElementById('bookTitle').value,
     qty,
@@ -439,6 +477,23 @@ function deleteAuthor(index){
   renderAuthors();
 }
 
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(20);
+  doc.text('Laporan Nara Pustaka', 20, 20);
+
+  let y = 40;
+
+  sales.forEach((item,index)=>{
+    doc.text(`${index+1}. ${item.book} - ${item.buyer} - Rp${item.total.toLocaleString()}`,20,y);
+    y += 10;
+  });
+
+  doc.save('Laporan-Nara-Pustaka.pdf');
+}
+
 function exportExcel(){
   const workbook = XLSX.utils.book_new();
 
@@ -523,6 +578,27 @@ function saveEvaluation(user){
   localStorage.setItem('evaluations', JSON.stringify(evaluations));
 
   alert('Evaluasi berhasil disimpan');
+}
+
+function changePassword(){
+  const username = document.getElementById('changeUser').value;
+  const newPassword = document.getElementById('newPassword').value;
+
+  if(!newPassword){
+    alert('Isi password baru');
+    return;
+  }
+
+  users[username].password = newPassword;
+
+  localStorage.setItem('dynamicUsers', JSON.stringify(users));
+
+  alert('Password berhasil diubah');
+}
+
+const savedUsers = localStorage.getItem('dynamicUsers');
+if(savedUsers){
+  Object.assign(users, JSON.parse(savedUsers));
 }
 
 function togglePassword(){
