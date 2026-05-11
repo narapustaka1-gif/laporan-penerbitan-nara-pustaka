@@ -3,50 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nara Pustaka Management System</title>
-    <!-- Tailwind CSS untuk Styling -->
+    <title>Nara Pustaka Management System v2</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-[#FDFDFD]">
+<body class="bg-[#F8FAFC]">
     <div id="root"></div>
 
-    <!-- Firebase App & Firestore via ES Modules (Compatible with browser) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc, query, orderBy, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // Ambil konfigurasi dari environment global
+        // Fallback config untuk testing jika global config tidak ada
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'nara-pustaka-enterprise';
 
-        // Expose Firebase and configs to window so React (Babel) can access it
         window.FirebaseCore = { 
-            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
-            getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc, query, updateDoc,
-            firebaseConfig, initialToken, appId
+            initializeApp, getAuth, signInAnonymously, onAuthStateChanged, 
+            getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc, query, orderBy, updateDoc, serverTimestamp,
+            firebaseConfig, appId
         };
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
-
-        // Ambil instance dari window.FirebaseCore
-        const { 
-            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
-            getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc, query, updateDoc,
-            firebaseConfig, initialToken, appId
-        } = window.FirebaseCore;
-
-        // Inisialisasi Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        const { useState, useEffect } = React;
 
         const USERS = [
             { id: 'admin', name: 'Thami', role: 'Administrasi', password: 'admin123', color: 'bg-blue-600' },
@@ -59,59 +42,38 @@
         ];
 
         function App() {
-            const [user, setUser] = useState(null);
+            const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc, query, orderBy, updateDoc, serverTimestamp, firebaseConfig, appId } = window.FirebaseCore;
+            
+            const [userAuth, setUserAuth] = useState(null);
             const [currentUser, setCurrentUser] = useState(null);
             const [password, setPassword] = useState('');
             const [selectedUser, setSelectedUser] = useState(USERS[0]);
             const [isLoading, setIsLoading] = useState(true);
-
-            const [sales, setSales] = useState([]);
-            const [expenses, setExpenses] = useState([]);
-            const [authors, setAuthors] = useState([]);
             const [kpis, setKpis] = useState([]);
 
-            useEffect(() => {
-                const setup = async () => {
-                    try {
-                        // Prioritaskan Custom Token jika ada, fallback ke Anonymous
-                        if (initialToken) {
-                            await signInWithCustomToken(auth, initialToken);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
+            const db = getFirestore(initializeApp(firebaseConfig));
+            const auth = getAuth();
 
-                        const saved = localStorage.getItem('nara_pustaka_session');
-                        if (saved) {
-                            const found = USERS.find(u => u.id === saved);
-                            if (found) setCurrentUser(found);
-                        }
-                    } catch (e) {
-                        console.error("Firebase Authentication Error:", e);
-                    }
-                    setIsLoading(false);
-                };
-                setup();
-                return onAuthStateChanged(auth, (u) => {
-                    setUser(u);
-                });
+            useEffect(() => {
+                signInAnonymously(auth).catch(console.error);
+                const saved = localStorage.getItem('nara_pustaka_session');
+                if (saved) {
+                    const found = USERS.find(u => u.id === saved);
+                    if (found) setCurrentUser(found);
+                }
+                setIsLoading(false);
+                return onAuthStateChanged(auth, u => setUserAuth(u));
             }, []);
 
             useEffect(() => {
-                if (!user) return;
-                
-                // Firestore path: /artifacts/{appId}/public/data/{collectionName}
-                const salesRef = collection(db, 'artifacts', appId, 'public', 'data', 'sales');
-                const expRef = collection(db, 'artifacts', appId, 'public', 'data', 'expenses');
-                const authRef = collection(db, 'artifacts', appId, 'public', 'data', 'authors');
+                if (!userAuth) return;
                 const kpiRef = collection(db, 'artifacts', appId, 'public', 'data', 'kpis');
-
-                const unsubSales = onSnapshot(salesRef, s => setSales(s.docs.map(d => ({id: d.id, ...d.data()}))), e => console.error(e));
-                const unsubExp = onSnapshot(expRef, s => setExpenses(s.docs.map(d => ({id: d.id, ...d.data()}))), e => console.error(e));
-                const unsubAuth = onSnapshot(authRef, s => setAuthors(s.docs.map(d => ({id: d.id, ...d.data()}))), e => console.error(e));
-                const unsubKpi = onSnapshot(kpiRef, s => setKpis(s.docs.map(d => ({id: d.id, ...d.data()}))), e => console.error(e));
+                const q = query(kpiRef, orderBy('createdAt', 'desc'));
                 
-                return () => { unsubSales(); unsubExp(); unsubAuth(); unsubKpi(); };
-            }, [user]);
+                return onSnapshot(q, s => {
+                    setKpis(s.docs.map(d => ({id: d.id, ...d.data()})));
+                });
+            }, [userAuth]);
 
             const handleLogin = (e) => {
                 e.preventDefault();
@@ -128,168 +90,152 @@
                 localStorage.removeItem('nara_pustaka_session');
             };
 
-            const updateKpiProgress = async (id, val) => {
-                if (!user) return;
+            const updateKpiProgress = async (id, val, target) => {
+                if (val < 0 || val > target + 10) return; // Limitasi input liar
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'kpis', id), { current: val });
             };
 
-            const addKpi = async (kpiData) => {
-                if (!user) return;
+            const addKpi = async (uId, title, target) => {
+                if (!title || !target) return alert("Data tidak lengkap!");
+                const userObj = USERS.find(u => u.id === uId);
                 const id = Date.now().toString();
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'kpis', id), { ...kpiData, id, current: 0 });
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'kpis', id), {
+                    id, userId: uId, userName: userObj.name, title, 
+                    target: parseInt(target), current: 0, unit: 'Tugas Harian',
+                    createdAt: serverTimestamp()
+                });
             };
 
-            if (isLoading) return <div className="h-screen flex items-center justify-center font-bold text-slate-400 animate-pulse uppercase tracking-widest text-sm">Menghubungkan ke Server Nara...</div>;
+            const deleteKpi = async (id) => {
+                if (confirm("Hapus tugas KPI ini?")) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'kpis', id));
+                }
+            };
+
+            if (isLoading) return <div className="h-screen flex items-center justify-center font-black text-slate-300 animate-pulse">LOADING NARA SYSTEM...</div>;
 
             if (!currentUser) return (
-                <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-                    <div className="bg-white p-10 rounded-[3rem] shadow-xl w-full max-w-md border">
-                        <div className="text-center mb-8">
-                            <h1 className="text-3xl font-black italic tracking-tighter text-slate-900">NARA PUSTAKA</h1>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Management Cloud System</p>
+                <div className="min-h-screen flex items-center justify-center p-6 bg-slate-100">
+                    <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md">
+                        <div className="text-center mb-10">
+                            <h1 className="text-4xl font-black italic tracking-tighter text-slate-900">NARA</h1>
+                            <div className="h-1 w-12 bg-slate-900 mx-auto mt-1"></div>
                         </div>
-                        <form onSubmit={handleLogin} className="space-y-4">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">Pilih Identitas</label>
-                            <select className="w-full p-4 rounded-2xl bg-gray-50 border font-bold text-slate-700" value={selectedUser.id} onChange={e => setSelectedUser(USERS.find(u => u.id === e.target.value))}>
-                                {USERS.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
-                            </select>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">Kata Sandi</label>
-                            <input type="password" placeholder="••••••••" className="w-full p-4 rounded-2xl bg-gray-50 border text-center font-bold" value={password} onChange={e => setPassword(e.target.value)}/>
-                            <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black hover:bg-black transition-all shadow-lg mt-4">MASUK KE DASHBOARD</button>
+                        <form onSubmit={handleLogin} className="space-y-5">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Identitas</label>
+                                <select className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold" value={selectedUser.id} onChange={e => setSelectedUser(USERS.find(u => u.id === e.target.value))}>
+                                    {USERS.map(u => <option key={u.id} value={u.id}>{u.name} - {u.role}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Sandi</label>
+                                <input type="password" placeholder="••••" className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-center" value={password} onChange={e => setPassword(e.target.value)}/>
+                            </div>
+                            <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black hover:scale-[1.02] transition-all shadow-lg shadow-slate-200">MASUK DASHBOARD</button>
                         </form>
                     </div>
                 </div>
             );
 
             return (
-                <div className="max-w-6xl mx-auto p-4 md:p-8 pb-20">
-                    <div className="flex justify-between items-center bg-white p-5 rounded-3xl border shadow-sm mb-8">
+                <div className="max-w-6xl mx-auto p-4 md:p-10">
+                    {/* Header */}
+                    <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-10">
                         <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-2xl ${currentUser.color} flex items-center justify-center text-white font-black text-xl shadow-inner`}>{currentUser.name[0]}</div>
+                            <div className={`w-14 h-14 rounded-2xl ${currentUser.color} flex items-center justify-center text-white font-black text-2xl shadow-lg`}>{currentUser.name[0]}</div>
                             <div>
-                                <h2 className="font-black text-lg leading-none">{currentUser.name}</h2>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{currentUser.role}</p>
+                                <h2 className="font-black text-xl text-slate-900">{currentUser.name}</h2>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{currentUser.role}</p>
                             </div>
                         </div>
-                        <button onClick={handleLogout} className="text-red-500 font-bold px-4 py-2 hover:bg-red-50 rounded-xl transition-all text-sm uppercase tracking-wider">Logout</button>
+                        <button onClick={handleLogout} className="bg-red-50 text-red-500 font-black px-6 py-3 rounded-xl hover:bg-red-500 hover:text-white transition-all text-xs uppercase">Logout</button>
                     </div>
 
-                    <div className="space-y-10">
-                        {/* KPI Section for All Users */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="h-1 w-8 bg-slate-900 rounded-full"></div>
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Progres KPI Saya</h3>
-                            </div>
+                    <div className="grid grid-cols-1 gap-10">
+                        {/* KPI Display Section */}
+                        <section>
+                            <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                                <span className="w-2 h-2 bg-blue-500 rounded-full"></span> My Progress
+                            </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {kpis.filter(k => k.userId === currentUser.id).length === 0 ? (
-                                    <div className="col-span-full p-8 text-center bg-gray-50 rounded-3xl border border-dashed text-gray-400 text-sm italic">Belum ada KPI yang ditugaskan untuk Anda hari ini.</div>
-                                ) : (
-                                    kpis.filter(k => k.userId === currentUser.id).map(k => (
-                                        <div key={k.id} className="bg-white p-6 rounded-[2rem] border shadow-sm hover:shadow-md transition-all">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <p className="font-black text-slate-900 text-base">{k.title}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">{k.unit}</p>
-                                                </div>
-                                                <span className="text-xs bg-slate-100 text-slate-900 px-3 py-1 rounded-full font-black">{Math.min(100, Math.round((k.current/k.target)*100))}%</span>
+                                {kpis.filter(k => k.userId === currentUser.id).map(k => (
+                                    <div key={k.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative group">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <p className="font-black text-slate-900 text-lg">{k.title}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase">Target: {k.target}</p>
                                             </div>
-                                            <div className="w-full bg-gray-100 h-3 rounded-full mb-6 overflow-hidden">
-                                                <div className="bg-slate-900 h-full rounded-full transition-all duration-700" style={{width: `${Math.min(100, (k.current/k.target)*100)}%`}}></div>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-black text-lg text-slate-700">{k.current} <span className="text-xs text-slate-300">/ {k.target}</span></span>
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => updateKpiProgress(k.id, Math.max(0, k.current - 1))} className="bg-gray-100 text-slate-600 w-10 h-10 rounded-xl font-black hover:bg-gray-200">-</button>
-                                                    <button onClick={() => updateKpiProgress(k.id, k.current + 1)} className="bg-slate-900 text-white w-10 h-10 rounded-xl font-black hover:bg-black">+</button>
-                                                </div>
+                                            <span className="text-xs bg-slate-900 text-white px-3 py-1 rounded-lg font-black">{Math.round((k.current/k.target)*100)}%</span>
+                                        </div>
+                                        <div className="w-full bg-slate-100 h-4 rounded-full mb-6 overflow-hidden shadow-inner">
+                                            <div className="bg-slate-900 h-full rounded-full transition-all duration-1000" style={{width: `${Math.min(100, (k.current/k.target)*100)}%`}}></div>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-black text-2xl text-slate-800">{k.current}</span>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => updateKpiProgress(k.id, k.current - 1, k.target)} className="bg-slate-100 w-12 h-12 rounded-xl font-black hover:bg-slate-200">-</button>
+                                                <button onClick={() => updateKpiProgress(k.id, k.current + 1, k.target)} className="bg-slate-900 text-white w-12 h-12 rounded-xl font-black hover:shadow-lg">+</button>
                                             </div>
                                         </div>
-                                    ))
-                                )}
+                                    </div>
+                                ))}
                             </div>
-                        </div>
+                        </section>
 
-                        {/* Manager Section */}
+                        {/* Admin/Manager Panel */}
                         {currentUser.id === 'manager' && (
-                            <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm">
-                                <div className="flex items-center gap-3 mb-8">
-                                    <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                    </div>
-                                    <h2 className="text-2xl font-black text-slate-900">Control Panel: Assign KPI</h2>
-                                </div>
+                            <section className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-2xl">
+                                <h2 className="text-2xl font-black mb-8 italic">Assign Team KPI</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block ml-1">Pilih Anggota Tim</label>
-                                        <select id="kpi-user" className="w-full border-2 border-gray-100 p-4 rounded-2xl font-bold bg-gray-50 focus:border-slate-900 outline-none transition-all">
-                                            {USERS.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block ml-1">Nama Tugas KPI</label>
-                                        <input id="kpi-title" placeholder="Contoh: Balas Chat WA" className="w-full border-2 border-gray-100 p-4 rounded-2xl font-bold bg-gray-50 focus:border-slate-900 outline-none transition-all"/>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block ml-1">Target Angka</label>
-                                        <input id="kpi-target" type="number" placeholder="Target" className="w-full border-2 border-gray-100 p-4 rounded-2xl font-bold bg-gray-50 focus:border-slate-900 outline-none transition-all"/>
-                                    </div>
+                                    <select id="kpi-user" className="bg-slate-800 border-none p-4 rounded-2xl font-bold focus:ring-2 ring-blue-500 outline-none">
+                                        {USERS.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                    </select>
+                                    <input id="kpi-title" placeholder="Nama Tugas..." className="bg-slate-800 border-none p-4 rounded-2xl font-bold focus:ring-2 ring-blue-500 outline-none"/>
+                                    <input id="kpi-target" type="number" placeholder="Angka Target" className="bg-slate-800 border-none p-4 rounded-2xl font-bold focus:ring-2 ring-blue-500 outline-none"/>
                                 </div>
                                 <button onClick={() => {
                                     const uId = document.getElementById('kpi-user').value;
-                                    const uName = USERS.find(u => u.id === uId).name;
                                     const title = document.getElementById('kpi-title').value;
-                                    const target = parseInt(document.getElementById('kpi-target').value);
-                                    if(!title || !target) return alert("Isi semua data!");
-                                    addKpi({
-                                        userId: uId,
-                                        userName: uName,
-                                        title: title,
-                                        target: target,
-                                        unit: 'Progress Harian'
-                                    });
+                                    const target = document.getElementById('kpi-target').value;
+                                    addKpi(uId, title, target);
                                     document.getElementById('kpi-title').value = "";
                                     document.getElementById('kpi-target').value = "";
-                                }} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black shadow-lg hover:bg-black transition-all">PIRAMIDA TARGET: PUSH KE TIM</button>
-                            </div>
+                                }} className="w-full bg-blue-600 hover:bg-blue-500 p-5 rounded-2xl font-black transition-all">PUBLISH TARGET KE TIM</button>
+                            </section>
                         )}
 
-                        {/* Leader Section */}
-                        {currentUser.id === 'leader' && (
-                            <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm">
-                                <div className="flex items-center gap-3 mb-8">
-                                    <div className="p-3 bg-orange-100 text-orange-600 rounded-2xl">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-                                    </div>
-                                    <h2 className="text-2xl font-black text-slate-900 italic">Leader: Fleet Monitoring</h2>
-                                </div>
-                                <div className="space-y-4">
-                                    {kpis.length === 0 ? (
-                                        <p className="text-center py-10 text-gray-400 font-bold italic">Belum ada aktivitas KPI yang berjalan.</p>
-                                    ) : (
-                                        kpis.map(k => (
-                                            <div key={k.id} className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-slate-50 rounded-3xl gap-4 border border-slate-100">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-white border flex items-center justify-center font-black text-slate-400">{k.userName[0]}</div>
-                                                    <div>
-                                                        <p className="font-black text-slate-900">{k.userName}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">{k.title}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-6">
-                                                    <div className="text-right">
-                                                        <p className="font-black text-slate-900">{Math.round((k.current/k.target)*100)}%</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{k.current} / {k.target}</p>
-                                                    </div>
-                                                    <div className="w-32 h-2 bg-white rounded-full overflow-hidden border">
-                                                        <div className="bg-orange-500 h-full" style={{width: `${Math.min(100, (k.current/k.target)*100)}%`}}></div>
-                                                    </div>
+                        {/* Leader Monitoring */}
+                        {(currentUser.id === 'leader' || currentUser.id === 'manager') && (
+                            <section className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                                <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span> Team Fleet Monitor
+                                </h2>
+                                <div className="space-y-3">
+                                    {kpis.map(k => (
+                                        <div key={k.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 group">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center font-black text-slate-400 border text-xs">{k.userName[0]}</div>
+                                                <div>
+                                                    <p className="font-black text-slate-900 text-sm">{k.userName}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase">{k.title}</p>
                                                 </div>
                                             </div>
-                                        ))
-                                    )}
+                                            <div className="flex items-center gap-6">
+                                                <div className="text-right hidden md:block">
+                                                    <p className="font-black text-slate-900">{Math.round((k.current/k.target)*100)}%</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase">{k.current} / {k.target}</p>
+                                                </div>
+                                                {currentUser.id === 'manager' && (
+                                                    <button onClick={() => deleteKpi(k.id)} className="text-slate-300 hover:text-red-500 p-2 transition-all">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
+                            </section>
                         )}
                     </div>
                 </div>
