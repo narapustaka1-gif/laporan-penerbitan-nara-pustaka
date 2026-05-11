@@ -1,197 +1,1008 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nara Pustaka OS | Enterprise v2.1</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nara Pustaka</title>
 
-    <style>
-        :root {
-            --primary: #6366f1; --bg: #f8fafc; --dark: #0f172a;
-            --glass: rgba(255, 255, 255, 0.9); --border: rgba(226, 232, 240, 0.8);
-            --success: #22c55e; --danger: #ef4444;
-        }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); color: var(--dark); overflow-x: hidden; }
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-        .hidden { display: none !important; }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+<style>
 
-        /* --- AUTH SCREEN --- */
-        .auth-screen { height: 100vh; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at 0% 0%, #e0e7ff 0%, #f8fafc 100%); }
-        .login-box { padding: 40px; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; background: white; box-shadow: 0 20px 40px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-        .brand { font-size: 28px; font-weight: 800; margin-bottom: 25px; letter-spacing: -1px; }
-        .brand span { color: var(--primary); }
+:root{
+  --bg:#081120;
+  --card:rgba(255,255,255,.08);
+  --border:rgba(255,255,255,.08);
+  --text:#ffffff;
+  --muted:#94a3b8;
+  --primary:#6366f1;
+  --secondary:#8b5cf6;
+  --success:#10b981;
+  --danger:#ef4444;
+}
 
-        .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #64748b; }
-        .input-group input, .input-group select { width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid #e2e8f0; outline: none; }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Inter',sans-serif;
+}
 
-        #btn-login { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--dark); color: white; font-weight: 700; cursor: pointer; margin-top: 10px; }
+html{
+  scroll-behavior:smooth;
+}
 
-        /* --- LAYOUT --- */
-        .sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; padding: 30px; background: white; border-right: 1px solid #e2e8f0; z-index: 100; }
-        .main-content { margin-left: 260px; padding: 40px; min-height: 100vh; }
-        
-        .nav-item { padding: 12px 15px; border-radius: 12px; margin-bottom: 5px; cursor: pointer; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
-        .nav-item.active { background: var(--primary); color: white; }
+body{
+  background:
+  radial-gradient(circle at top left,#1e1b4b 0%,transparent 30%),
+  radial-gradient(circle at bottom right,#0f766e 0%,transparent 30%),
+  var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .card-stat { padding: 20px; border-radius: 20px; background: white; border: 1px solid #e2e8f0; }
+body.dark{
+  background:#020617;
+}
 
-        /* MOBILE */
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main-content { margin-left: 0; padding: 20px 20px 100px 20px; }
-            .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #e2e8f0; z-index: 1000; }
-        }
-    </style>
+::-webkit-scrollbar{
+  width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+  background:#374151;
+  border-radius:10px;
+}
+
+.login-screen{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
+
+.glass{
+  background:var(--card);
+  border:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  border-radius:28px;
+  box-shadow:0 10px 40px rgba(0,0,0,.25);
+}
+
+.login-card{
+  width:100%;
+  max-width:430px;
+  padding:40px;
+  animation:fade .5s ease;
+}
+
+@keyframes fade{
+  from{
+    opacity:0;
+    transform:translateY(20px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.logo{
+  font-size:36px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.subtitle{
+  color:var(--muted);
+  margin-bottom:30px;
+}
+
+.input{
+  width:100%;
+  padding:15px;
+  border:none;
+  outline:none;
+  border-radius:16px;
+  margin-top:12px;
+  background:rgba(255,255,255,.08);
+  color:white;
+}
+
+.btn{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:16px;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:white;
+  font-weight:700;
+  margin-top:15px;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+}
+
+.demo{
+  margin-top:25px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.8;
+}
+
+.app{
+  display:none;
+}
+
+.sidebar{
+  width:270px;
+  position:fixed;
+  top:0;
+  left:0;
+  bottom:0;
+  padding:25px;
+  background:rgba(255,255,255,.05);
+  border-right:1px solid rgba(255,255,255,.08);
+  overflow-y:auto;
+}
+
+.sidebar h2{
+  font-size:28px;
+  margin-bottom:30px;
+}
+
+.nav-btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:16px;
+  margin-bottom:10px;
+  background:rgba(255,255,255,.05);
+  color:white;
+  text-align:left;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.nav-btn:hover{
+  background:rgba(255,255,255,.1);
+}
+
+.main{
+  margin-left:270px;
+  padding:25px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px;
+  margin-bottom:20px;
+}
+
+.top-actions{
+  display:flex;
+  gap:10px;
+}
+
+.small-btn{
+  padding:12px 18px;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+  color:white;
+  background:rgba(255,255,255,.08);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+}
+
+.card{
+  padding:25px;
+}
+
+.card-title{
+  color:var(--muted);
+  margin-bottom:10px;
+}
+
+.card-value{
+  font-size:34px;
+  font-weight:800;
+}
+
+.chart-box{
+  margin-top:20px;
+  padding:20px;
+}
+
+.section{
+  display:none;
+}
+
+.active{
+  display:block;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
+}
+
+.table-wrap{
+  overflow:auto;
+  margin-top:20px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:15px;
+  text-align:left;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+th{
+  color:#cbd5e1;
+}
+
+.progress{
+  width:100%;
+  height:12px;
+  border-radius:20px;
+  background:rgba(255,255,255,.08);
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.progress div{
+  height:100%;
+  background:linear-gradient(135deg,#10b981,#14b8a6);
+}
+
+.fab{
+  width:65px;
+  height:65px;
+  border-radius:50%;
+  position:fixed;
+  right:25px;
+  bottom:25px;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:30px;
+  cursor:pointer;
+  box-shadow:0 10px 30px rgba(99,102,241,.4);
+}
+
+.badge{
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:12px;
+  display:inline-block;
+}
+
+.success{
+  background:rgba(16,185,129,.2);
+  color:#6ee7b7;
+}
+
+.warning{
+  background:rgba(245,158,11,.2);
+  color:#fbbf24;
+}
+
+.danger{
+  background:rgba(239,68,68,.2);
+  color:#fca5a5;
+}
+
+.mobile-top{
+  display:none;
+}
+
+@media(max-width:900px){
+
+  .sidebar{
+    left:-100%;
+    transition:.4s;
+    z-index:999;
+  }
+
+  .sidebar.show{
+    left:0;
+  }
+
+  .main{
+    margin-left:0;
+    padding:15px;
+  }
+
+  .mobile-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+  }
+
+}
+
+</style>
 </head>
 <body>
 
-    <!-- LOADING OVERLAY -->
-    <div id="loader" style="position:fixed; inset:0; background:white; z-index:9999; display:flex; justify-content:center; align-items:center;">
-        <div class="brand">NARA<span>PUSTAKA</span></div>
+<div id="loginPage" class="login-screen">
+
+  <div class="glass login-card">
+
+    <div class="logo">Nara Pustaka</div>
+    <div class="subtitle">
+      Professional Publishing Startup Dashboard
     </div>
 
-    <!-- LOGIN PAGE -->
-    <section id="page-login" class="auth-screen hidden">
-        <div class="login-box fade-in">
-            <div class="brand">NARA<span>PUSTAKA</span></div>
-            <div class="input-group">
-                <label>User Role</label>
-                <select id="role-in">
-                    <option value="Manager">Manager</option>
-                    <option value="Editor">Editor (Elyna)</option>
-                    <option value="Admin">Admin (Thami)</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>Passcode</label>
-                <input type="password" id="pass-in" value="admin123">
-            </div>
-            <button id="btn-login" onclick="login()">Buka Sistem</button>
+    <input id="username" class="input" placeholder="Username">
+    <input id="password" type="password" class="input" placeholder="Password">
+
+    <button class="btn" onclick="login()">
+      Masuk Dashboard
+    </button>
+
+    <div class="demo">
+      manager / 12345 <br>
+      admin / 12345 <br>
+      leader / 12345
+    </div>
+
+  </div>
+
+</div>
+
+<div id="app" class="app">
+
+  <aside id="sidebar" class="sidebar">
+
+    <h2>Nara Pustaka</h2>
+
+    <button class="nav-btn" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('sales')">Penjualan</button>
+    <button class="nav-btn" onclick="showPage('manuscripts')">Naskah</button>
+    <button class="nav-btn" onclick="showPage('expenses')">Pengeluaran</button>
+    <button class="nav-btn" onclick="showPage('kpi')">KPI Team</button>
+    <button class="nav-btn" onclick="showPage('design')">Desain</button>
+    <button class="nav-btn" onclick="showPage('team')">Team</button>
+    <button class="nav-btn" onclick="exportPDF()">Export PDF</button>
+    <button class="nav-btn" onclick="logout()">Logout</button>
+
+  </aside>
+
+  <main class="main">
+
+    <div class="mobile-top">
+      <button class="small-btn" onclick="toggleSidebar()">☰</button>
+      <button class="small-btn" onclick="toggleDark()">Dark</button>
+    </div>
+
+    <div class="glass topbar">
+
+      <div>
+        <h1 id="welcome"></h1>
+        <div style="color:var(--muted)">
+          Startup Publishing System
         </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="small-btn" onclick="toggleDark()">
+          Dark Mode
+        </button>
+      </div>
+
+    </div>
+
+    <!-- DASHBOARD -->
+
+    <section id="dashboard" class="section active">
+
+      <div class="grid">
+
+        <div class="glass card">
+          <div class="card-title">Total Penjualan</div>
+          <div id="totalSales" class="card-value">Rp0</div>
+        </div>
+
+        <div class="glass card">
+          <div class="card-title">Total Pengeluaran</div>
+          <div id="totalExpenses" class="card-value">Rp0</div>
+        </div>
+
+        <div class="glass card">
+          <div class="card-title">Jumlah Naskah</div>
+          <div id="totalManuscript" class="card-value">0</div>
+        </div>
+
+        <div class="glass card">
+          <div class="card-title">KPI Team</div>
+          <div id="kpiValue" class="card-value">92%</div>
+        </div>
+
+      </div>
+
+      <div class="glass chart-box">
+        <canvas id="chart"></canvas>
+      </div>
+
     </section>
 
-    <!-- DASHBOARD PAGE -->
-    <section id="page-app" class="hidden">
-        <aside class="sidebar">
-            <div class="brand" style="font-size: 20px;">NARA<span>PUSTAKA</span></div>
-            <div class="nav-item active" onclick="switchTab('dash')" id="nav-dash"><i class="fa-solid fa-house"></i> Dashboard</div>
-            <div class="nav-item" onclick="switchTab('books')" id="nav-books"><i class="fa-solid fa-book"></i> Naskah</div>
-            <div class="nav-item" onclick="switchTab('finance')" id="nav-finance"><i class="fa-solid fa-wallet"></i> Keuangan</div>
-            <div class="nav-item" onclick="logout()" style="color: var(--danger); margin-top: 20px;"><i class="fa-solid fa-power-off"></i> Logout</div>
-        </aside>
+    <!-- SALES -->
 
-        <main class="main-content">
-            <header class="header">
-                <div>
-                    <h1 id="title-text">Dashboard</h1>
-                    <p id="user-tag" style="color: #64748b; font-size: 14px;"></p>
-                </div>
-            </header>
+    <section id="sales" class="section">
 
-            <div id="content-dash" class="tab-content fade-in">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                    <div class="card-stat">
-                        <small>Total Omzet</small>
-                        <h2 id="val-rev">Rp 0</h2>
-                    </div>
-                    <div class="card-stat">
-                        <small>Buku Terbit</small>
-                        <h2 id="val-books">0</h2>
-                    </div>
-                </div>
-                <div style="margin-top: 30px; background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0;">
-                    <h3>Aktivitas Terbaru</h3>
-                    <p style="color: #94a3b8; margin-top: 10px;">Menunggu data dari Spreadsheet...</p>
-                </div>
-            </div>
+      <div class="glass card">
 
-            <div id="content-books" class="tab-content hidden fade-in">
-                <h2>Manajemen Naskah</h2>
-                <p>Daftar naskah yang sedang diproses.</p>
-            </div>
+        <h2>Tambah Penjualan</h2>
 
-            <div id="content-finance" class="tab-content hidden fade-in">
-                <h2>Laporan Keuangan</h2>
-                <p>Data kas masuk dan keluar.</p>
-            </div>
-        </main>
+        <div class="form-grid">
 
-        <nav class="bottom-nav">
-            <div onclick="switchTab('dash')"><i class="fa-solid fa-house"></i></div>
-            <div onclick="switchTab('books')"><i class="fa-solid fa-book"></i></div>
-            <div onclick="switchTab('finance')"><i class="fa-solid fa-wallet"></i></div>
-        </nav>
+          <input id="saleBook" class="input" placeholder="Judul Buku">
+          <input id="saleQty" class="input" type="number" placeholder="Qty">
+          <input id="saleTotal" class="input" type="number" placeholder="Total">
+
+        </div>
+
+        <button class="btn" onclick="addSale()">
+          Simpan Penjualan
+        </button>
+
+      </div>
+
+      <div class="glass card table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Judul</th>
+              <th>Qty</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+
+          <tbody id="salesTable"></tbody>
+
+        </table>
+
+      </div>
+
     </section>
 
-    <script>
-        // --- LOGIC UTAMA ---
-        const ui = {
-            loader: document.getElementById('loader'),
-            loginPage: document.getElementById('page-login'),
-            appPage: document.getElementById('page-app')
-        };
+    <!-- MANUSCRIPT -->
 
-        window.onload = () => {
-            checkSession();
-            setTimeout(() => { ui.loader.classList.add('hidden'); }, 1000);
-        };
+    <section id="manuscripts" class="section">
 
-        function login() {
-            const role = document.getElementById('role-in').value;
-            // Simpan ke memori browser
-            localStorage.setItem('nara_session', 'active');
-            localStorage.setItem('nara_role', role);
-            localStorage.setItem('nara_tab', 'dash');
-            
-            location.reload(); // Refresh untuk menerapkan status
-        }
+      <div class="glass card">
 
-        function checkSession() {
-            const session = localStorage.getItem('nara_session');
-            const savedTab = localStorage.getItem('nara_tab') || 'dash';
-            const role = localStorage.getItem('nara_role');
+        <h2>Tambah Naskah</h2>
 
-            if (session === 'active') {
-                ui.loginPage.classList.add('hidden');
-                ui.appPage.classList.remove('hidden');
-                document.getElementById('user-tag').innerText = "Logged in as: " + role;
-                switchTab(savedTab); // Kembali ke tab terakhir sebelum refresh
-            } else {
-                ui.loginPage.classList.remove('hidden');
-                ui.appPage.classList.add('hidden');
-            }
-        }
+        <div class="form-grid">
 
-        function switchTab(tabId) {
-            // Sembunyikan semua konten
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+          <input id="bookTitle" class="input" placeholder="Judul Buku">
+          <input id="authorName" class="input" placeholder="Penulis">
 
-            // Tampilkan yang dipilih
-            document.getElementById('content-' + tabId).classList.remove('hidden');
-            document.getElementById('nav-' + tabId).classList.add('active');
-            
-            // Update Judul
-            const titles = { 'dash': 'Dashboard', 'books': 'Naskah', 'finance': 'Keuangan' };
-            document.getElementById('title-text').innerText = titles[tabId];
+          <select id="bookStatus" class="input">
+            <option>Masuk</option>
+            <option>Editing</option>
+            <option>Desain</option>
+            <option>Cetak</option>
+            <option>Selesai</option>
+          </select>
 
-            // Simpan tab ke memori agar kalau di-refresh tidak balik ke awal
-            localStorage.setItem('nara_tab', tabId);
-        }
+        </div>
 
-        function logout() {
-            localStorage.clear();
-            location.reload();
-        }
-    </script>
+        <button class="btn" onclick="addBook()">
+          Simpan Naskah
+        </button>
+
+      </div>
+
+      <div class="glass card table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Judul</th>
+              <th>Penulis</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="bookTable"></tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+    <!-- EXPENSE -->
+
+    <section id="expenses" class="section">
+
+      <div class="glass card">
+
+        <h2>Tambah Pengeluaran</h2>
+
+        <div class="form-grid">
+
+          <select id="expenseType" class="input">
+            <option>Percetakan</option>
+            <option>Iklan</option>
+            <option>Operasional</option>
+            <option>Tak Terduga</option>
+          </select>
+
+          <input id="expenseAmount" class="input" type="number" placeholder="Nominal">
+
+        </div>
+
+        <button class="btn" onclick="addExpense()">
+          Simpan Pengeluaran
+        </button>
+
+      </div>
+
+      <div class="glass card table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Kategori</th>
+              <th>Nominal</th>
+            </tr>
+          </thead>
+
+          <tbody id="expenseTable"></tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+    <!-- KPI -->
+
+    <section id="kpi" class="section">
+
+      <div class="grid">
+
+        <div class="glass card">
+
+          <h2>Elyna</h2>
+
+          <div class="progress">
+            <div style="width:92%"></div>
+          </div>
+
+          <div style="margin-top:10px">92%</div>
+
+        </div>
+
+        <div class="glass card">
+
+          <h2>Thami</h2>
+
+          <div class="progress">
+            <div style="width:88%"></div>
+          </div>
+
+          <div style="margin-top:10px">88%</div>
+
+        </div>
+
+        <div class="glass card">
+
+          <h2>Jeyraa</h2>
+
+          <div class="progress">
+            <div style="width:95%"></div>
+          </div>
+
+          <div style="margin-top:10px">95%</div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- DESIGN -->
+
+    <section id="design" class="section">
+
+      <div class="glass card">
+
+        <h2>Divisi Kreatif</h2>
+
+        <p style="margin-top:15px;color:var(--muted)">
+          Cover Buku : Rp50.000 / naskah
+        </p>
+
+        <p style="margin-top:10px;color:var(--muted)">
+          Feed Sosmed : Rp2.000
+        </p>
+
+        <p style="margin-top:10px;color:var(--muted)">
+          Desain PO : Rp25.000
+        </p>
+
+      </div>
+
+    </section>
+
+    <!-- TEAM -->
+
+    <section id="team" class="section">
+
+      <div class="grid">
+
+        <div class="glass card">
+          <h2>Manager</h2>
+          <span class="badge success">Aktif</span>
+        </div>
+
+        <div class="glass card">
+          <h2>Editor</h2>
+          <span class="badge warning">Progress</span>
+        </div>
+
+        <div class="glass card">
+          <h2>Admin</h2>
+          <span class="badge success">Aktif</span>
+        </div>
+
+        <div class="glass card">
+          <h2>Desainer</h2>
+          <span class="badge danger">Deadline</span>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+<div class="fab">
+  +
+</div>
+
+<script>
+
+const users = [
+  {
+    username:'manager',
+    password:'12345',
+    role:'Manager'
+  },
+  {
+    username:'admin',
+    password:'12345',
+    role:'Admin'
+  },
+  {
+    username:'leader',
+    password:'12345',
+    role:'Leader'
+  }
+];
+
+if(!localStorage.getItem('sales')){
+  localStorage.setItem('sales',JSON.stringify([]));
+}
+
+if(!localStorage.getItem('books')){
+  localStorage.setItem('books',JSON.stringify([]));
+}
+
+if(!localStorage.getItem('expenses')){
+  localStorage.setItem('expenses',JSON.stringify([]));
+}
+
+function login(){
+
+  const username=document.getElementById('username').value;
+  const password=document.getElementById('password').value;
+
+  const user=users.find(u=>
+    u.username===username &&
+    u.password===password
+  );
+
+  if(user){
+
+    localStorage.setItem('session',JSON.stringify(user));
+
+    startApp();
+
+  }else{
+    alert('Login gagal');
+  }
+
+}
+
+function startApp(){
+
+  const session=JSON.parse(localStorage.getItem('session'));
+
+  if(!session)return;
+
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('app').style.display='block';
+
+  document.getElementById('welcome').innerText=
+  `Welcome, ${session.role}`;
+
+  renderSales();
+  renderBooks();
+  renderExpenses();
+  calculate();
+
+}
+
+function logout(){
+
+  localStorage.removeItem('session');
+  location.reload();
+
+}
+
+function showPage(id){
+
+  document.querySelectorAll('.section')
+  .forEach(section=>{
+    section.classList.remove('active');
+  });
+
+  document.getElementById(id)
+  .classList.add('active');
+
+}
+
+function addSale(){
+
+  const title=document.getElementById('saleBook').value;
+  const qty=document.getElementById('saleQty').value;
+  const total=document.getElementById('saleTotal').value;
+
+  const sales=JSON.parse(localStorage.getItem('sales'));
+
+  sales.push({
+    title,
+    qty,
+    total
+  });
+
+  localStorage.setItem('sales',JSON.stringify(sales));
+
+  renderSales();
+  calculate();
+
+}
+
+function renderSales(){
+
+  const table=document.getElementById('salesTable');
+
+  table.innerHTML='';
+
+  const sales=JSON.parse(localStorage.getItem('sales'));
+
+  sales.forEach(item=>{
+
+    table.innerHTML+=`
+      <tr>
+        <td>${item.title}</td>
+        <td>${item.qty}</td>
+        <td>Rp${Number(item.total).toLocaleString()}</td>
+      </tr>
+    `;
+
+  });
+
+}
+
+function addBook(){
+
+  const title=document.getElementById('bookTitle').value;
+  const author=document.getElementById('authorName').value;
+  const status=document.getElementById('bookStatus').value;
+
+  const books=JSON.parse(localStorage.getItem('books'));
+
+  books.push({
+    title,
+    author,
+    status
+  });
+
+  localStorage.setItem('books',JSON.stringify(books));
+
+  renderBooks();
+  calculate();
+
+}
+
+function renderBooks(){
+
+  const table=document.getElementById('bookTable');
+
+  table.innerHTML='';
+
+  const books=JSON.parse(localStorage.getItem('books'));
+
+  books.forEach(item=>{
+
+    table.innerHTML+=`
+      <tr>
+        <td>${item.title}</td>
+        <td>${item.author}</td>
+        <td>${item.status}</td>
+      </tr>
+    `;
+
+  });
+
+}
+
+function addExpense(){
+
+  const type=document.getElementById('expenseType').value;
+  const amount=document.getElementById('expenseAmount').value;
+
+  const expenses=JSON.parse(localStorage.getItem('expenses'));
+
+  expenses.push({
+    type,
+    amount
+  });
+
+  localStorage.setItem('expenses',JSON.stringify(expenses));
+
+  renderExpenses();
+  calculate();
+
+}
+
+function renderExpenses(){
+
+  const table=document.getElementById('expenseTable');
+
+  table.innerHTML='';
+
+  const expenses=JSON.parse(localStorage.getItem('expenses'));
+
+  expenses.forEach(item=>{
+
+    table.innerHTML+=`
+      <tr>
+        <td>${item.type}</td>
+        <td>Rp${Number(item.amount).toLocaleString()}</td>
+      </tr>
+    `;
+
+  });
+
+}
+
+function calculate(){
+
+  const sales=JSON.parse(localStorage.getItem('sales'));
+  const books=JSON.parse(localStorage.getItem('books'));
+  const expenses=JSON.parse(localStorage.getItem('expenses'));
+
+  let totalSales=0;
+  let totalExpenses=0;
+
+  sales.forEach(item=>{
+    totalSales+=Number(item.total);
+  });
+
+  expenses.forEach(item=>{
+    totalExpenses+=Number(item.amount);
+  });
+
+  document.getElementById('totalSales').innerText=
+  `Rp${totalSales.toLocaleString()}`;
+
+  document.getElementById('totalExpenses').innerText=
+  `Rp${totalExpenses.toLocaleString()}`;
+
+  document.getElementById('totalManuscript').innerText=
+  books.length;
+
+}
+
+function toggleDark(){
+  document.body.classList.toggle('dark');
+}
+
+function exportPDF(){
+
+  const { jsPDF } = window.jspdf;
+
+  const doc=new jsPDF();
+
+  doc.setFontSize(24);
+  doc.text('Nara Pustaka Report',20,20);
+
+  doc.setFontSize(12);
+
+  const sales=JSON.parse(localStorage.getItem('sales'));
+
+  let y=40;
+
+  sales.forEach(item=>{
+
+    doc.text(
+      `${item.title} | Qty ${item.qty} | Rp${item.total}`,
+      20,
+      y
+    );
+
+    y+=10;
+
+  });
+
+  doc.save('nara-pustaka-report.pdf');
+
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar')
+  .classList.toggle('show');
+}
+
+const session=localStorage.getItem('session');
+
+if(session){
+  startApp();
+}
+
+const ctx=document.getElementById('chart');
+
+new Chart(ctx,{
+  type:'line',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May'],
+    datasets:[{
+      label:'Penjualan',
+      data:[120,300,250,600,800],
+      tension:.4
+    }]
+  }
+});
+
+</script>
+
 </body>
 </html>
