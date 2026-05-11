@@ -1,1008 +1,303 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Nara Pustaka</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<style>
-
-:root{
-  --bg:#081120;
-  --card:rgba(255,255,255,.08);
-  --border:rgba(255,255,255,.08);
-  --text:#ffffff;
-  --muted:#94a3b8;
-  --primary:#6366f1;
-  --secondary:#8b5cf6;
-  --success:#10b981;
-  --danger:#ef4444;
-}
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Inter',sans-serif;
-}
-
-html{
-  scroll-behavior:smooth;
-}
-
-body{
-  background:
-  radial-gradient(circle at top left,#1e1b4b 0%,transparent 30%),
-  radial-gradient(circle at bottom right,#0f766e 0%,transparent 30%),
-  var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  overflow-x:hidden;
-}
-
-body.dark{
-  background:#020617;
-}
-
-::-webkit-scrollbar{
-  width:8px;
-}
-
-::-webkit-scrollbar-thumb{
-  background:#374151;
-  border-radius:10px;
-}
-
-.login-screen{
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:20px;
-}
-
-.glass{
-  background:var(--card);
-  border:1px solid var(--border);
-  backdrop-filter:blur(20px);
-  border-radius:28px;
-  box-shadow:0 10px 40px rgba(0,0,0,.25);
-}
-
-.login-card{
-  width:100%;
-  max-width:430px;
-  padding:40px;
-  animation:fade .5s ease;
-}
-
-@keyframes fade{
-  from{
-    opacity:0;
-    transform:translateY(20px);
-  }
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
-}
-
-.logo{
-  font-size:36px;
-  font-weight:800;
-  margin-bottom:8px;
-}
-
-.subtitle{
-  color:var(--muted);
-  margin-bottom:30px;
-}
-
-.input{
-  width:100%;
-  padding:15px;
-  border:none;
-  outline:none;
-  border-radius:16px;
-  margin-top:12px;
-  background:rgba(255,255,255,.08);
-  color:white;
-}
-
-.btn{
-  width:100%;
-  padding:15px;
-  border:none;
-  border-radius:16px;
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:white;
-  font-weight:700;
-  margin-top:15px;
-  cursor:pointer;
-  transition:.3s;
-}
-
-.btn:hover{
-  transform:translateY(-2px);
-}
-
-.demo{
-  margin-top:25px;
-  color:var(--muted);
-  font-size:14px;
-  line-height:1.8;
-}
-
-.app{
-  display:none;
-}
-
-.sidebar{
-  width:270px;
-  position:fixed;
-  top:0;
-  left:0;
-  bottom:0;
-  padding:25px;
-  background:rgba(255,255,255,.05);
-  border-right:1px solid rgba(255,255,255,.08);
-  overflow-y:auto;
-}
-
-.sidebar h2{
-  font-size:28px;
-  margin-bottom:30px;
-}
-
-.nav-btn{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:16px;
-  margin-bottom:10px;
-  background:rgba(255,255,255,.05);
-  color:white;
-  text-align:left;
-  cursor:pointer;
-  transition:.3s;
-}
-
-.nav-btn:hover{
-  background:rgba(255,255,255,.1);
-}
-
-.main{
-  margin-left:270px;
-  padding:25px;
-}
-
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:20px;
-  margin-bottom:20px;
-}
-
-.top-actions{
-  display:flex;
-  gap:10px;
-}
-
-.small-btn{
-  padding:12px 18px;
-  border:none;
-  border-radius:14px;
-  cursor:pointer;
-  color:white;
-  background:rgba(255,255,255,.08);
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
-}
-
-.card{
-  padding:25px;
-}
-
-.card-title{
-  color:var(--muted);
-  margin-bottom:10px;
-}
-
-.card-value{
-  font-size:34px;
-  font-weight:800;
-}
-
-.chart-box{
-  margin-top:20px;
-  padding:20px;
-}
-
-.section{
-  display:none;
-}
-
-.active{
-  display:block;
-}
-
-.form-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:15px;
-}
-
-.table-wrap{
-  overflow:auto;
-  margin-top:20px;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th,td{
-  padding:15px;
-  text-align:left;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-th{
-  color:#cbd5e1;
-}
-
-.progress{
-  width:100%;
-  height:12px;
-  border-radius:20px;
-  background:rgba(255,255,255,.08);
-  overflow:hidden;
-  margin-top:10px;
-}
-
-.progress div{
-  height:100%;
-  background:linear-gradient(135deg,#10b981,#14b8a6);
-}
-
-.fab{
-  width:65px;
-  height:65px;
-  border-radius:50%;
-  position:fixed;
-  right:25px;
-  bottom:25px;
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:30px;
-  cursor:pointer;
-  box-shadow:0 10px 30px rgba(99,102,241,.4);
-}
-
-.badge{
-  padding:8px 14px;
-  border-radius:999px;
-  font-size:12px;
-  display:inline-block;
-}
-
-.success{
-  background:rgba(16,185,129,.2);
-  color:#6ee7b7;
-}
-
-.warning{
-  background:rgba(245,158,11,.2);
-  color:#fbbf24;
-}
-
-.danger{
-  background:rgba(239,68,68,.2);
-  color:#fca5a5;
-}
-
-.mobile-top{
-  display:none;
-}
-
-@media(max-width:900px){
-
-  .sidebar{
-    left:-100%;
-    transition:.4s;
-    z-index:999;
-  }
-
-  .sidebar.show{
-    left:0;
-  }
-
-  .main{
-    margin-left:0;
-    padding:15px;
-  }
-
-  .mobile-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:15px;
-  }
-
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nara Pustaka Management System</title>
+    <!-- Tailwind CSS untuk Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body>
-
-<div id="loginPage" class="login-screen">
-
-  <div class="glass login-card">
-
-    <div class="logo">Nara Pustaka</div>
-    <div class="subtitle">
-      Professional Publishing Startup Dashboard
-    </div>
-
-    <input id="username" class="input" placeholder="Username">
-    <input id="password" type="password" class="input" placeholder="Password">
-
-    <button class="btn" onclick="login()">
-      Masuk Dashboard
-    </button>
-
-    <div class="demo">
-      manager / 12345 <br>
-      admin / 12345 <br>
-      leader / 12345
-    </div>
-
-  </div>
-
-</div>
-
-<div id="app" class="app">
-
-  <aside id="sidebar" class="sidebar">
-
-    <h2>Nara Pustaka</h2>
-
-    <button class="nav-btn" onclick="showPage('dashboard')">Dashboard</button>
-    <button class="nav-btn" onclick="showPage('sales')">Penjualan</button>
-    <button class="nav-btn" onclick="showPage('manuscripts')">Naskah</button>
-    <button class="nav-btn" onclick="showPage('expenses')">Pengeluaran</button>
-    <button class="nav-btn" onclick="showPage('kpi')">KPI Team</button>
-    <button class="nav-btn" onclick="showPage('design')">Desain</button>
-    <button class="nav-btn" onclick="showPage('team')">Team</button>
-    <button class="nav-btn" onclick="exportPDF()">Export PDF</button>
-    <button class="nav-btn" onclick="logout()">Logout</button>
-
-  </aside>
-
-  <main class="main">
-
-    <div class="mobile-top">
-      <button class="small-btn" onclick="toggleSidebar()">☰</button>
-      <button class="small-btn" onclick="toggleDark()">Dark</button>
-    </div>
-
-    <div class="glass topbar">
-
-      <div>
-        <h1 id="welcome"></h1>
-        <div style="color:var(--muted)">
-          Startup Publishing System
-        </div>
-      </div>
-
-      <div class="top-actions">
-        <button class="small-btn" onclick="toggleDark()">
-          Dark Mode
-        </button>
-      </div>
-
-    </div>
-
-    <!-- DASHBOARD -->
-
-    <section id="dashboard" class="section active">
-
-      <div class="grid">
-
-        <div class="glass card">
-          <div class="card-title">Total Penjualan</div>
-          <div id="totalSales" class="card-value">Rp0</div>
-        </div>
-
-        <div class="glass card">
-          <div class="card-title">Total Pengeluaran</div>
-          <div id="totalExpenses" class="card-value">Rp0</div>
-        </div>
-
-        <div class="glass card">
-          <div class="card-title">Jumlah Naskah</div>
-          <div id="totalManuscript" class="card-value">0</div>
-        </div>
-
-        <div class="glass card">
-          <div class="card-title">KPI Team</div>
-          <div id="kpiValue" class="card-value">92%</div>
-        </div>
-
-      </div>
-
-      <div class="glass chart-box">
-        <canvas id="chart"></canvas>
-      </div>
-
-    </section>
-
-    <!-- SALES -->
-
-    <section id="sales" class="section">
-
-      <div class="glass card">
-
-        <h2>Tambah Penjualan</h2>
-
-        <div class="form-grid">
-
-          <input id="saleBook" class="input" placeholder="Judul Buku">
-          <input id="saleQty" class="input" type="number" placeholder="Qty">
-          <input id="saleTotal" class="input" type="number" placeholder="Total">
-
-        </div>
-
-        <button class="btn" onclick="addSale()">
-          Simpan Penjualan
-        </button>
-
-      </div>
-
-      <div class="glass card table-wrap">
-
-        <table>
-
-          <thead>
-            <tr>
-              <th>Judul</th>
-              <th>Qty</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-
-          <tbody id="salesTable"></tbody>
-
-        </table>
-
-      </div>
-
-    </section>
-
-    <!-- MANUSCRIPT -->
-
-    <section id="manuscripts" class="section">
-
-      <div class="glass card">
-
-        <h2>Tambah Naskah</h2>
-
-        <div class="form-grid">
-
-          <input id="bookTitle" class="input" placeholder="Judul Buku">
-          <input id="authorName" class="input" placeholder="Penulis">
-
-          <select id="bookStatus" class="input">
-            <option>Masuk</option>
-            <option>Editing</option>
-            <option>Desain</option>
-            <option>Cetak</option>
-            <option>Selesai</option>
-          </select>
-
-        </div>
-
-        <button class="btn" onclick="addBook()">
-          Simpan Naskah
-        </button>
-
-      </div>
-
-      <div class="glass card table-wrap">
-
-        <table>
-
-          <thead>
-            <tr>
-              <th>Judul</th>
-              <th>Penulis</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-
-          <tbody id="bookTable"></tbody>
-
-        </table>
-
-      </div>
-
-    </section>
-
-    <!-- EXPENSE -->
-
-    <section id="expenses" class="section">
-
-      <div class="glass card">
-
-        <h2>Tambah Pengeluaran</h2>
-
-        <div class="form-grid">
-
-          <select id="expenseType" class="input">
-            <option>Percetakan</option>
-            <option>Iklan</option>
-            <option>Operasional</option>
-            <option>Tak Terduga</option>
-          </select>
-
-          <input id="expenseAmount" class="input" type="number" placeholder="Nominal">
-
-        </div>
-
-        <button class="btn" onclick="addExpense()">
-          Simpan Pengeluaran
-        </button>
-
-      </div>
-
-      <div class="glass card table-wrap">
-
-        <table>
-
-          <thead>
-            <tr>
-              <th>Kategori</th>
-              <th>Nominal</th>
-            </tr>
-          </thead>
-
-          <tbody id="expenseTable"></tbody>
-
-        </table>
-
-      </div>
-
-    </section>
-
-    <!-- KPI -->
-
-    <section id="kpi" class="section">
-
-      <div class="grid">
-
-        <div class="glass card">
-
-          <h2>Elyna</h2>
-
-          <div class="progress">
-            <div style="width:92%"></div>
-          </div>
-
-          <div style="margin-top:10px">92%</div>
-
-        </div>
-
-        <div class="glass card">
-
-          <h2>Thami</h2>
-
-          <div class="progress">
-            <div style="width:88%"></div>
-          </div>
-
-          <div style="margin-top:10px">88%</div>
-
-        </div>
-
-        <div class="glass card">
-
-          <h2>Jeyraa</h2>
-
-          <div class="progress">
-            <div style="width:95%"></div>
-          </div>
-
-          <div style="margin-top:10px">95%</div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- DESIGN -->
-
-    <section id="design" class="section">
-
-      <div class="glass card">
-
-        <h2>Divisi Kreatif</h2>
-
-        <p style="margin-top:15px;color:var(--muted)">
-          Cover Buku : Rp50.000 / naskah
-        </p>
-
-        <p style="margin-top:10px;color:var(--muted)">
-          Feed Sosmed : Rp2.000
-        </p>
-
-        <p style="margin-top:10px;color:var(--muted)">
-          Desain PO : Rp25.000
-        </p>
-
-      </div>
-
-    </section>
-
-    <!-- TEAM -->
-
-    <section id="team" class="section">
-
-      <div class="grid">
-
-        <div class="glass card">
-          <h2>Manager</h2>
-          <span class="badge success">Aktif</span>
-        </div>
-
-        <div class="glass card">
-          <h2>Editor</h2>
-          <span class="badge warning">Progress</span>
-        </div>
-
-        <div class="glass card">
-          <h2>Admin</h2>
-          <span class="badge success">Aktif</span>
-        </div>
-
-        <div class="glass card">
-          <h2>Desainer</h2>
-          <span class="badge danger">Deadline</span>
-        </div>
-
-      </div>
-
-    </section>
-
-  </main>
-
-</div>
-
-<div class="fab">
-  +
-</div>
-
-<script>
-
-const users = [
-  {
-    username:'manager',
-    password:'12345',
-    role:'Manager'
-  },
-  {
-    username:'admin',
-    password:'12345',
-    role:'Admin'
-  },
-  {
-    username:'leader',
-    password:'12345',
-    role:'Leader'
-  }
-];
-
-if(!localStorage.getItem('sales')){
-  localStorage.setItem('sales',JSON.stringify([]));
-}
-
-if(!localStorage.getItem('books')){
-  localStorage.setItem('books',JSON.stringify([]));
-}
-
-if(!localStorage.getItem('expenses')){
-  localStorage.setItem('expenses',JSON.stringify([]));
-}
-
-function login(){
-
-  const username=document.getElementById('username').value;
-  const password=document.getElementById('password').value;
-
-  const user=users.find(u=>
-    u.username===username &&
-    u.password===password
-  );
-
-  if(user){
-
-    localStorage.setItem('session',JSON.stringify(user));
-
-    startApp();
-
-  }else{
-    alert('Login gagal');
-  }
-
-}
-
-function startApp(){
-
-  const session=JSON.parse(localStorage.getItem('session'));
-
-  if(!session)return;
-
-  document.getElementById('loginPage').style.display='none';
-  document.getElementById('app').style.display='block';
-
-  document.getElementById('welcome').innerText=
-  `Welcome, ${session.role}`;
-
-  renderSales();
-  renderBooks();
-  renderExpenses();
-  calculate();
-
-}
-
-function logout(){
-
-  localStorage.removeItem('session');
-  location.reload();
-
-}
-
-function showPage(id){
-
-  document.querySelectorAll('.section')
-  .forEach(section=>{
-    section.classList.remove('active');
-  });
-
-  document.getElementById(id)
-  .classList.add('active');
-
-}
-
-function addSale(){
-
-  const title=document.getElementById('saleBook').value;
-  const qty=document.getElementById('saleQty').value;
-  const total=document.getElementById('saleTotal').value;
-
-  const sales=JSON.parse(localStorage.getItem('sales'));
-
-  sales.push({
-    title,
-    qty,
-    total
-  });
-
-  localStorage.setItem('sales',JSON.stringify(sales));
-
-  renderSales();
-  calculate();
-
-}
-
-function renderSales(){
-
-  const table=document.getElementById('salesTable');
-
-  table.innerHTML='';
-
-  const sales=JSON.parse(localStorage.getItem('sales'));
-
-  sales.forEach(item=>{
-
-    table.innerHTML+=`
-      <tr>
-        <td>${item.title}</td>
-        <td>${item.qty}</td>
-        <td>Rp${Number(item.total).toLocaleString()}</td>
-      </tr>
-    `;
-
-  });
-
-}
-
-function addBook(){
-
-  const title=document.getElementById('bookTitle').value;
-  const author=document.getElementById('authorName').value;
-  const status=document.getElementById('bookStatus').value;
-
-  const books=JSON.parse(localStorage.getItem('books'));
-
-  books.push({
-    title,
-    author,
-    status
-  });
-
-  localStorage.setItem('books',JSON.stringify(books));
-
-  renderBooks();
-  calculate();
-
-}
-
-function renderBooks(){
-
-  const table=document.getElementById('bookTable');
-
-  table.innerHTML='';
-
-  const books=JSON.parse(localStorage.getItem('books'));
-
-  books.forEach(item=>{
-
-    table.innerHTML+=`
-      <tr>
-        <td>${item.title}</td>
-        <td>${item.author}</td>
-        <td>${item.status}</td>
-      </tr>
-    `;
-
-  });
-
-}
-
-function addExpense(){
-
-  const type=document.getElementById('expenseType').value;
-  const amount=document.getElementById('expenseAmount').value;
-
-  const expenses=JSON.parse(localStorage.getItem('expenses'));
-
-  expenses.push({
-    type,
-    amount
-  });
-
-  localStorage.setItem('expenses',JSON.stringify(expenses));
-
-  renderExpenses();
-  calculate();
-
-}
-
-function renderExpenses(){
-
-  const table=document.getElementById('expenseTable');
-
-  table.innerHTML='';
-
-  const expenses=JSON.parse(localStorage.getItem('expenses'));
-
-  expenses.forEach(item=>{
-
-    table.innerHTML+=`
-      <tr>
-        <td>${item.type}</td>
-        <td>Rp${Number(item.amount).toLocaleString()}</td>
-      </tr>
-    `;
-
-  });
-
-}
-
-function calculate(){
-
-  const sales=JSON.parse(localStorage.getItem('sales'));
-  const books=JSON.parse(localStorage.getItem('books'));
-  const expenses=JSON.parse(localStorage.getItem('expenses'));
-
-  let totalSales=0;
-  let totalExpenses=0;
-
-  sales.forEach(item=>{
-    totalSales+=Number(item.total);
-  });
-
-  expenses.forEach(item=>{
-    totalExpenses+=Number(item.amount);
-  });
-
-  document.getElementById('totalSales').innerText=
-  `Rp${totalSales.toLocaleString()}`;
-
-  document.getElementById('totalExpenses').innerText=
-  `Rp${totalExpenses.toLocaleString()}`;
-
-  document.getElementById('totalManuscript').innerText=
-  books.length;
-
-}
-
-function toggleDark(){
-  document.body.classList.toggle('dark');
-}
-
-function exportPDF(){
-
-  const { jsPDF } = window.jspdf;
-
-  const doc=new jsPDF();
-
-  doc.setFontSize(24);
-  doc.text('Nara Pustaka Report',20,20);
-
-  doc.setFontSize(12);
-
-  const sales=JSON.parse(localStorage.getItem('sales'));
-
-  let y=40;
-
-  sales.forEach(item=>{
-
-    doc.text(
-      `${item.title} | Qty ${item.qty} | Rp${item.total}`,
-      20,
-      y
-    );
-
-    y+=10;
-
-  });
-
-  doc.save('nara-pustaka-report.pdf');
-
-}
-
-function toggleSidebar(){
-  document.getElementById('sidebar')
-  .classList.toggle('show');
-}
-
-const session=localStorage.getItem('session');
-
-if(session){
-  startApp();
-}
-
-const ctx=document.getElementById('chart');
-
-new Chart(ctx,{
-  type:'line',
-  data:{
-    labels:['Jan','Feb','Mar','Apr','May'],
-    datasets:[{
-      label:'Penjualan',
-      data:[120,300,250,600,800],
-      tension:.4
-    }]
-  }
-});
-
-</script>
-
+<body class="bg-[#FDFDFD]">
+    <div id="root"></div>
+
+    <!-- Firebase App & Firestore via ES Modules (Compatible with browser) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        // Ambil konfigurasi dari environment global
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'nara-pustaka-enterprise';
+
+        // Expose Firebase and configs to window so React (Babel) can access it
+        window.FirebaseCore = { 
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
+            getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc, query, updateDoc,
+            firebaseConfig, initialToken, appId
+        };
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // Ambil instance dari window.FirebaseCore
+        const { 
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
+            getFirestore, doc, setDoc, collection, onSnapshot, deleteDoc, query, updateDoc,
+            firebaseConfig, initialToken, appId
+        } = window.FirebaseCore;
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const USERS = [
+            { id: 'admin', name: 'Thami', role: 'Administrasi', password: 'admin123', color: 'bg-blue-600' },
+            { id: 'editor', name: 'Elyna', role: 'Redaksi', password: 'editor123', color: 'bg-green-600' },
+            { id: 'kreatif_calista', name: 'Calista', role: 'Kreatif (Ilustrator)', password: 'kreatif123', color: 'bg-purple-600' },
+            { id: 'kreatif_zahra', name: 'Zahra', role: 'Kreatif (Ilustrator)', password: 'zahra123', color: 'bg-pink-600' },
+            { id: 'sosmed_nala', name: 'Nala', role: 'Desain Grafis Sosmed', password: 'nala123', color: 'bg-indigo-600' },
+            { id: 'leader', name: 'Jeyraa', role: 'Team Leader', password: 'leader123', color: 'bg-orange-600' },
+            { id: 'manager', name: 'Vero', role: 'Manager/Keuangan', password: 'vero123', color: 'bg-red-600' }
+        ];
+
+        function App() {
+            const [user, setUser] = useState(null);
+            const [currentUser, setCurrentUser] = useState(null);
+            const [password, setPassword] = useState('');
+            const [selectedUser, setSelectedUser] = useState(USERS[0]);
+            const [isLoading, setIsLoading] = useState(true);
+
+            const [sales, setSales] = useState([]);
+            const [expenses, setExpenses] = useState([]);
+            const [authors, setAuthors] = useState([]);
+            const [kpis, setKpis] = useState([]);
+
+            useEffect(() => {
+                const setup = async () => {
+                    try {
+                        // Prioritaskan Custom Token jika ada, fallback ke Anonymous
+                        if (initialToken) {
+                            await signInWithCustomToken(auth, initialToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+
+                        const saved = localStorage.getItem('nara_pustaka_session');
+                        if (saved) {
+                            const found = USERS.find(u => u.id === saved);
+                            if (found) setCurrentUser(found);
+                        }
+                    } catch (e) {
+                        console.error("Firebase Authentication Error:", e);
+                    }
+                    setIsLoading(false);
+                };
+                setup();
+                return onAuthStateChanged(auth, (u) => {
+                    setUser(u);
+                });
+            }, []);
+
+            useEffect(() => {
+                if (!user) return;
+                
+                // Firestore path: /artifacts/{appId}/public/data/{collectionName}
+                const salesRef = collection(db, 'artifacts', appId, 'public', 'data', 'sales');
+                const expRef = collection(db, 'artifacts', appId, 'public', 'data', 'expenses');
+                const authRef = collection(db, 'artifacts', appId, 'public', 'data', 'authors');
+                const kpiRef = collection(db, 'artifacts', appId, 'public', 'data', 'kpis');
+
+                const unsubSales = onSnapshot(salesRef, s => setSales(s.docs.map(d => ({id: d.id, ...d.data()}))), e => console.error(e));
+                const unsubExp = onSnapshot(expRef, s => setExpenses(s.docs.map(d => ({id: d.id, ...d.data()}))), e => console.error(e));
+                const unsubAuth = onSnapshot(authRef, s => setAuthors(s.docs.map(d => ({id: d.id, ...d.data()}))), e => console.error(e));
+                const unsubKpi = onSnapshot(kpiRef, s => setKpis(s.docs.map(d => ({id: d.id, ...d.data()}))), e => console.error(e));
+                
+                return () => { unsubSales(); unsubExp(); unsubAuth(); unsubKpi(); };
+            }, [user]);
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (password === selectedUser.password) {
+                    setCurrentUser(selectedUser);
+                    localStorage.setItem('nara_pustaka_session', selectedUser.id);
+                } else {
+                    alert("Password Salah!");
+                }
+            };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                localStorage.removeItem('nara_pustaka_session');
+            };
+
+            const updateKpiProgress = async (id, val) => {
+                if (!user) return;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'kpis', id), { current: val });
+            };
+
+            const addKpi = async (kpiData) => {
+                if (!user) return;
+                const id = Date.now().toString();
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'kpis', id), { ...kpiData, id, current: 0 });
+            };
+
+            if (isLoading) return <div className="h-screen flex items-center justify-center font-bold text-slate-400 animate-pulse uppercase tracking-widest text-sm">Menghubungkan ke Server Nara...</div>;
+
+            if (!currentUser) return (
+                <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+                    <div className="bg-white p-10 rounded-[3rem] shadow-xl w-full max-w-md border">
+                        <div className="text-center mb-8">
+                            <h1 className="text-3xl font-black italic tracking-tighter text-slate-900">NARA PUSTAKA</h1>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Management Cloud System</p>
+                        </div>
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">Pilih Identitas</label>
+                            <select className="w-full p-4 rounded-2xl bg-gray-50 border font-bold text-slate-700" value={selectedUser.id} onChange={e => setSelectedUser(USERS.find(u => u.id === e.target.value))}>
+                                {USERS.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+                            </select>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">Kata Sandi</label>
+                            <input type="password" placeholder="••••••••" className="w-full p-4 rounded-2xl bg-gray-50 border text-center font-bold" value={password} onChange={e => setPassword(e.target.value)}/>
+                            <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black hover:bg-black transition-all shadow-lg mt-4">MASUK KE DASHBOARD</button>
+                        </form>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="max-w-6xl mx-auto p-4 md:p-8 pb-20">
+                    <div className="flex justify-between items-center bg-white p-5 rounded-3xl border shadow-sm mb-8">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-2xl ${currentUser.color} flex items-center justify-center text-white font-black text-xl shadow-inner`}>{currentUser.name[0]}</div>
+                            <div>
+                                <h2 className="font-black text-lg leading-none">{currentUser.name}</h2>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{currentUser.role}</p>
+                            </div>
+                        </div>
+                        <button onClick={handleLogout} className="text-red-500 font-bold px-4 py-2 hover:bg-red-50 rounded-xl transition-all text-sm uppercase tracking-wider">Logout</button>
+                    </div>
+
+                    <div className="space-y-10">
+                        {/* KPI Section for All Users */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="h-1 w-8 bg-slate-900 rounded-full"></div>
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Progres KPI Saya</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {kpis.filter(k => k.userId === currentUser.id).length === 0 ? (
+                                    <div className="col-span-full p-8 text-center bg-gray-50 rounded-3xl border border-dashed text-gray-400 text-sm italic">Belum ada KPI yang ditugaskan untuk Anda hari ini.</div>
+                                ) : (
+                                    kpis.filter(k => k.userId === currentUser.id).map(k => (
+                                        <div key={k.id} className="bg-white p-6 rounded-[2rem] border shadow-sm hover:shadow-md transition-all">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <p className="font-black text-slate-900 text-base">{k.title}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">{k.unit}</p>
+                                                </div>
+                                                <span className="text-xs bg-slate-100 text-slate-900 px-3 py-1 rounded-full font-black">{Math.min(100, Math.round((k.current/k.target)*100))}%</span>
+                                            </div>
+                                            <div className="w-full bg-gray-100 h-3 rounded-full mb-6 overflow-hidden">
+                                                <div className="bg-slate-900 h-full rounded-full transition-all duration-700" style={{width: `${Math.min(100, (k.current/k.target)*100)}%`}}></div>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-black text-lg text-slate-700">{k.current} <span className="text-xs text-slate-300">/ {k.target}</span></span>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => updateKpiProgress(k.id, Math.max(0, k.current - 1))} className="bg-gray-100 text-slate-600 w-10 h-10 rounded-xl font-black hover:bg-gray-200">-</button>
+                                                    <button onClick={() => updateKpiProgress(k.id, k.current + 1)} className="bg-slate-900 text-white w-10 h-10 rounded-xl font-black hover:bg-black">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Manager Section */}
+                        {currentUser.id === 'manager' && (
+                            <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm">
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    </div>
+                                    <h2 className="text-2xl font-black text-slate-900">Control Panel: Assign KPI</h2>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block ml-1">Pilih Anggota Tim</label>
+                                        <select id="kpi-user" className="w-full border-2 border-gray-100 p-4 rounded-2xl font-bold bg-gray-50 focus:border-slate-900 outline-none transition-all">
+                                            {USERS.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block ml-1">Nama Tugas KPI</label>
+                                        <input id="kpi-title" placeholder="Contoh: Balas Chat WA" className="w-full border-2 border-gray-100 p-4 rounded-2xl font-bold bg-gray-50 focus:border-slate-900 outline-none transition-all"/>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block ml-1">Target Angka</label>
+                                        <input id="kpi-target" type="number" placeholder="Target" className="w-full border-2 border-gray-100 p-4 rounded-2xl font-bold bg-gray-50 focus:border-slate-900 outline-none transition-all"/>
+                                    </div>
+                                </div>
+                                <button onClick={() => {
+                                    const uId = document.getElementById('kpi-user').value;
+                                    const uName = USERS.find(u => u.id === uId).name;
+                                    const title = document.getElementById('kpi-title').value;
+                                    const target = parseInt(document.getElementById('kpi-target').value);
+                                    if(!title || !target) return alert("Isi semua data!");
+                                    addKpi({
+                                        userId: uId,
+                                        userName: uName,
+                                        title: title,
+                                        target: target,
+                                        unit: 'Progress Harian'
+                                    });
+                                    document.getElementById('kpi-title').value = "";
+                                    document.getElementById('kpi-target').value = "";
+                                }} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black shadow-lg hover:bg-black transition-all">PIRAMIDA TARGET: PUSH KE TIM</button>
+                            </div>
+                        )}
+
+                        {/* Leader Section */}
+                        {currentUser.id === 'leader' && (
+                            <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm">
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="p-3 bg-orange-100 text-orange-600 rounded-2xl">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                                    </div>
+                                    <h2 className="text-2xl font-black text-slate-900 italic">Leader: Fleet Monitoring</h2>
+                                </div>
+                                <div className="space-y-4">
+                                    {kpis.length === 0 ? (
+                                        <p className="text-center py-10 text-gray-400 font-bold italic">Belum ada aktivitas KPI yang berjalan.</p>
+                                    ) : (
+                                        kpis.map(k => (
+                                            <div key={k.id} className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-slate-50 rounded-3xl gap-4 border border-slate-100">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-white border flex items-center justify-center font-black text-slate-400">{k.userName[0]}</div>
+                                                    <div>
+                                                        <p className="font-black text-slate-900">{k.userName}</p>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">{k.title}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-6">
+                                                    <div className="text-right">
+                                                        <p className="font-black text-slate-900">{Math.round((k.current/k.target)*100)}%</p>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{k.current} / {k.target}</p>
+                                                    </div>
+                                                    <div className="w-32 h-2 bg-white rounded-full overflow-hidden border">
+                                                        <div className="bg-orange-500 h-full" style={{width: `${Math.min(100, (k.current/k.target)*100)}%`}}></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
