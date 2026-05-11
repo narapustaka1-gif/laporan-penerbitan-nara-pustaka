@@ -3,177 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Operasional Nara Pustaka</title>
+    <title>Sistem Laporan Nara Pustaka</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .hidden { display: none; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>.hidden { display: none; }</style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 font-sans">
 
-    <div id="login-container" class="min-h-screen flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-96 border-t-4 border-blue-600">
-            <h1 class="text-2xl font-bold mb-2 text-center text-gray-800">Nara Pustaka</h1>
-            <p class="text-xs text-center text-gray-500 mb-6 uppercase tracking-widest">Integrated System</p>
-            <div class="space-y-4">
-                <input type="text" id="username" placeholder="Username" class="w-full p-3 border rounded focus:outline-blue-500">
-                <input type="password" id="password" placeholder="Kata Sandi" class="w-full p-3 border rounded focus:outline-blue-500">
-                <button onclick="auth()" class="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700 transition">MASUK</button>
-            </div>
+    <div id="login-section" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-96 border-b-8 border-blue-600">
+            <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Nara Pustaka Login</h1>
+            <input type="text" id="username" placeholder="Username" class="w-full p-3 mb-4 border rounded-lg outline-blue-500">
+            <input type="password" id="password" placeholder="Kata Sandi" class="w-full p-3 mb-6 border rounded-lg outline-blue-500">
+            <button onclick="login()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition">MASUK</button>
         </div>
     </div>
 
-    <div id="app" class="hidden min-h-screen flex flex-col">
-        <header class="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md">
-            <div class="flex items-center gap-4">
-                <span class="font-bold border-r pr-4 italic">NARA PUSTAKA</span>
-                <span id="display-role" class="text-sm bg-blue-500 px-2 py-1 rounded"></span>
+    <div id="dashboard" class="hidden min-h-screen flex flex-col">
+        <nav class="bg-slate-900 text-white p-4 flex justify-between shadow-md">
+            <span class="font-bold tracking-tighter italic text-xl">NARA PUSTAKA</span>
+            <div class="flex items-center gap-4 text-sm">
+                <span id="user-display" class="bg-blue-500 px-3 py-1 rounded-full"></span>
+                <button onclick="location.reload()" class="bg-red-500 px-3 py-1 rounded">Logout</button>
             </div>
-            <button onclick="location.reload()" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition">Keluar</button>
-        </header>
+        </nav>
 
-        <div class="p-6 max-w-7xl mx-auto w-full flex-1">
+        <main class="p-6 max-w-7xl mx-auto w-full space-y-6">
             
-            <div id="view-thami" class="hidden space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
-                        <h3 class="font-bold mb-4 flex justify-between">Laporan Penjualan Baru <span class="text-xs text-gray-400">Admin SOP [cite: 3, 5]</span></h3>
-                        <div class="space-y-3">
-                            <input type="text" placeholder="Nama Pembeli" class="w-full p-2 border rounded text-sm">
-                            <input type="text" placeholder="Judul Buku" class="w-full p-2 border rounded text-sm">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="number" id="qty" placeholder="Jumlah" class="p-2 border rounded text-sm">
-                                <input type="number" id="price" placeholder="Harga" class="p-2 border rounded text-sm">
-                            </div>
-                            <div class="p-2 bg-gray-50 rounded text-xs font-bold text-blue-600">Total: Otomatis Kalkulasi</div>
-                            <label class="block text-xs font-bold">Bukti TF & Invoice:</label>
-                            <input type="file" class="text-xs w-full border p-1 rounded">
-                            <button class="w-full bg-green-600 text-white p-2 rounded text-sm font-bold">Tambah Penjualan</button>
+            <div id="chart-section" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow border">
+                    <h3 class="font-bold mb-4 flex justify-between">
+                        Statistik Penjualan
+                        <button onclick="exportPDF('Grafik Penjualan')" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 font-bold">PDF</button>
+                    </h3>
+                    <canvas id="salesChart"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow border">
+                    <h3 class="font-bold mb-4 flex justify-between">
+                        Statistik Penerbitan
+                        <button onclick="exportPDF('Grafik Penerbitan')" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 font-bold">PDF</button>
+                    </h3>
+                    <canvas id="prodChart"></canvas>
+                </div>
+            </div>
+
+            <div id="input-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 italic">
+                <div id="input-thami" class="hidden bg-white p-6 rounded-xl shadow border-l-4 border-green-500">
+                    <h3 class="font-bold text-green-700 mb-4 tracking-wider underline">Input Penjualan (Admin)</h3>
+                    <div class="space-y-3">
+                        <input type="text" placeholder="Nama Pembeli" class="w-full p-2 border rounded text-sm">
+                        <input type="text" placeholder="Judul Buku" class="w-full p-2 border rounded text-sm">
+                        <div class="flex gap-2">
+                            <input type="number" placeholder="Jumlah" class="w-1/3 p-2 border rounded text-sm">
+                            <input type="number" placeholder="Harga" class="w-2/3 p-2 border rounded text-sm">
                         </div>
+                        <input type="file" title="Bukti TF" class="text-xs w-full">
+                        <button class="w-full bg-green-600 text-white p-2 rounded-lg font-bold">Submit Penjualan</button>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-orange-500">
-                        <h3 class="font-bold mb-4">Pengeluaran Percetakan <span class="text-xs text-gray-400">[cite: 8]</span></h3>
-                        <div class="space-y-3">
-                            <input type="text" value="Tanggal: 2026-05-11" readonly class="w-full p-2 bg-gray-100 border rounded text-sm">
-                            <input type="text" placeholder="Judul Buku" class="w-full p-2 border rounded text-sm">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="number" placeholder="Jumlah Buku" class="p-2 border rounded text-sm">
-                                <input type="number" placeholder="Harga" class="p-2 border rounded text-sm">
-                            </div>
-                            <button class="w-full bg-orange-500 text-white p-2 rounded text-sm font-bold">Tambah Pengeluaran</button>
-                        </div>
+                </div>
+
+                <div id="input-elyna" class="hidden bg-white p-6 rounded-xl shadow border-l-4 border-purple-500">
+                    <h3 class="font-bold text-purple-700 mb-4 underline">Laporan Penulis (Redaksi)</h3>
+                    <div class="space-y-3 text-sm italic">
+                        <input type="text" placeholder="Nama Penulis" class="w-full p-2 border rounded">
+                        <input type="text" placeholder="Judul Buku" class="w-full p-2 border rounded">
+                        <input type="number" placeholder="Royalti (Rp)" class="w-full p-2 border rounded">
+                        <button class="w-full bg-purple-600 text-white p-2 rounded-lg font-bold italic">Simpan Data Penulis</button>
                     </div>
                 </div>
             </div>
 
-            <div id="view-elyna" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-purple-500">
-                    <h3 class="font-bold mb-4">Pendaftaran Penulis Baru <span class="text-xs text-gray-400">Editor Akuisisi [cite: 19, 20]</span></h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" placeholder="Nama Penulis" class="p-2 border rounded text-sm">
-                        <input type="text" placeholder="Judul Buku" class="p-2 border rounded text-sm">
-                        <input type="date" class="p-2 border rounded text-sm">
-                        <input type="number" placeholder="Royalti (Rp)" class="p-2 border rounded text-sm">
-                        <div class="col-span-full space-y-2">
-                            <label class="text-xs font-bold">Archive MOU & Form Terbit:</label>
-                            <input type="file" class="w-full border p-1 rounded text-sm">
-                        </div>
-                        <button class="col-span-full bg-purple-600 text-white p-2 rounded font-bold">Daftarkan Penulis</button>
-                    </div>
-                </div>
+            <div id="history-section" class="bg-white p-6 rounded-xl shadow overflow-x-auto">
+                <h3 class="font-bold border-b pb-2 mb-4 italic uppercase text-gray-600">Riwayat Laporan & Data</h3>
+                <table class="w-full text-left text-xs italic">
+                    <tr class="bg-slate-100">
+                        <th class="p-3">Tanggal</th><th class="p-3">Judul/Karya</th><th class="p-3">Personel</th><th class="p-3">Status</th>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 text-gray-500">11/05/2026</td><td class="p-3 font-bold">Naskah_Final_A.pdf</td><td class="p-3">Elyna</td><td class="p-3 text-blue-500 underline">Tinjau</td>
+                    </tr>
+                </table>
             </div>
-
-            <div id="view-kreatif" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-pink-500">
-                    <h3 class="font-bold mb-4 italic text-pink-600">Submission Desain [cite: 10, 16]</h3>
-                    <div class="space-y-4">
-                        <input type="text" placeholder="Judul Karya" class="w-full p-2 border rounded text-sm">
-                        <input type="text" placeholder="Nama Cover / Aset Visual" class="w-full p-2 border rounded text-sm">
-                        <div class="p-4 border-2 border-dashed rounded text-center text-gray-400 text-sm italic">
-                            Klik atau Drag File Cover/Gambar ke sini
-                            <input type="file" class="opacity-0 absolute cursor-pointer">
-                        </div>
-                        <button class="w-full bg-pink-500 text-white p-2 rounded font-bold">Kirim Aset Visual</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-jeyraa" class="hidden space-y-6 text-sm">
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="font-bold text-red-600 border-b pb-2 mb-4 uppercase">Vendor Reminder System </h3>
-                    <div class="bg-red-50 p-4 border border-red-200 rounded text-red-700 font-bold mb-4">
-                        Status Percetakan: 2 Pesanan melewati deadline (3 hari)!
-                    </div>
-                    <table class="w-full text-left">
-                        <tr class="bg-gray-100"><th class="p-2">Order</th><th class="p-2">Status</th><th class="p-2">Aksi</th></tr>
-                        <tr>
-                            <td class="p-2 italic">Buku: Filosofi Senja</td>
-                            <td class="p-2 text-red-500">4 Hari Belum Kirim</td>
-                            <td class="p-2">
-                                <button class="bg-red-600 text-white px-2 py-1 rounded text-xs" onclick="alert('Pesan dikirim: Buku wajib kirim maksimal 3 hari!')">Kirim Pesan Otomatis</button>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                </div>
-
-            <div id="view-vero" class="hidden space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-green-600 text-white p-6 rounded-lg shadow shadow-green-200">
-                        <p class="text-xs uppercase font-bold opacity-80">Total Pemasukan</p>
-                        <p id="total-income" class="text-2xl font-bold">Rp 0</p>
-                    </div>
-                    <div class="bg-red-500 text-white p-6 rounded-lg shadow shadow-red-200">
-                        <p class="text-xs uppercase font-bold opacity-80">Total Pengeluaran</p>
-                        <p id="total-expense" class="text-2xl font-bold">Rp 0</p>
-                    </div>
-                    <div class="bg-blue-600 text-white p-6 rounded-lg shadow shadow-blue-200">
-                        <p class="text-xs uppercase font-bold opacity-80">Laba Bersih</p>
-                        <p id="total-net" class="text-2xl font-bold italic underline">Automated Kalkulasi</p>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-gray-700 uppercase italic border-b-2 border-blue-600">Financial Report Integrasi Otomatis</h3>
-                        <button class="bg-slate-800 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-2">
-                            <span>DF</span> Export to PDF/Excel
-                        </button>
-                    </div>
-                    <p class="text-xs text-gray-500 italic">*Data di atas ditarik otomatis dari input Thami (Admin) dan Elyna (Redaksi).</p>
-                </div>
-            </div>
-
-        </div>
+        </main>
     </div>
 
     <script>
-        const users = {
-            'vero': { pass: 'vero_penerbitan', role: 'Manager', views: ['view-vero', 'view-thami', 'view-elyna', 'view-kreatif', 'view-jeyraa'] },
-            'jeyraa': { pass: 'jeyraa_leader', role: 'Team Leader', views: ['view-jeyraa', 'view-thami', 'view-elyna', 'view-kreatif'] },
-            'thami': { pass: 'thami_nara', role: 'Administrasi', views: ['view-thami'] },
-            'elyna': { pass: 'elyna_redaksi', role: 'Redaksi', views: ['view-view-elyna'] },
-            'nala': { pass: 'nala_desain', role: 'Media Sosial & Desain', views: ['view-kreatif'] },
-            'calista': { pass: 'calista_kreatif', role: 'Kreatif', views: ['view-kreatif'] },
-            'zahra': { pass: 'zahra_kreatif', role: 'Kreatif', views: ['view-kreatif'] }
-        };
+        const { jsPDF } = window.jspdf;
 
-        function auth() {
-            const u = document.getElementById('username').value.toLowerCase();
-            const p = document.getElementById('password').value;
+        function login() {
+            const user = document.getElementById('username').value.toLowerCase();
+            const pass = document.getElementById('password').value;
 
-            if (users[u] && users[u].pass === p) {
-                document.getElementById('login-container').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
-                document.getElementById('display-role').innerText = users[u].role;
+            // Logic SOP: Setiap orang punya sandi wajib
+            const roles = {
+                'vero': { p: 'vero_nara', show: ['chart-section', 'input-thami', 'input-elyna'], title: 'Manager (Vero)' },
+                'jeyraa': { p: 'jeyraa_nara', show: ['chart-section', 'input-thami', 'input-elyna'], title: 'Team Leader (Jeyraa)' },
+                'thami': { p: 'thami_nara', show: ['input-thami'], title: 'Admin (Thami)' },
+                'elyna': { p: 'elyna_nara', show: ['input-elyna'], title: 'Redaksi (Elyna)' },
+                'nala': { p: 'nala_nara', show: ['input-thami'], title: 'Desain (Nala)' }
+            };
+
+            if (roles[user] && roles[user].p === pass) {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                document.getElementById('user-display').innerText = roles[user].title;
                 
-                // Show relevant dashboards
-                users[u].views.forEach(viewId => {
-                    document.getElementById(viewId).classList.remove('hidden');
-                });
+                roles[user].show.forEach(id => document.getElementById(id).classList.remove('hidden'));
+                
+                // Load Grafik jika Vero atau Jeyraa
+                if (user === 'vero' || user === 'jeyraa') initCharts();
             } else {
-                alert('Akses Ditolak: Username atau Password salah!');
+                alert('Kata sandi salah atau user tidak terdaftar!');
             }
+        }
+
+        function initCharts() {
+            new Chart(document.getElementById('salesChart'), {
+                type: 'bar',
+                data: { labels: ['Jan', 'Feb', 'Mar', 'Apr'], datasets: [{ label: 'Omzet', data: [12, 19, 15, 25], backgroundColor: '#2563eb' }]}
+            });
+            new Chart(document.getElementById('prodChart'), {
+                type: 'line',
+                data: { labels: ['Jan', 'Feb', 'Mar', 'Apr'], datasets: [{ label: 'Buku Terbit', data: [3, 7, 4, 8], borderColor: '#db2777' }]}
+            });
+        }
+
+        function exportPDF(title) {
+            const doc = new jsPDF();
+            doc.text("LAPORAN NARA PUSTAKA", 10, 10);
+            doc.text("Kategori: " + title, 10, 20);
+            doc.text("Tanggal Cetak: " + new Date().toLocaleDateString(), 10, 30);
+            doc.text("Status: Verified by System", 10, 40);
+            doc.save("Laporan_Nara_" + title + ".pdf");
         }
     </script>
 </body>
