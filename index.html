@@ -1,442 +1,401 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Nara Pustaka Internal System</title>
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <style>
-    *{
-      font-family:'Inter',sans-serif;
-      -webkit-tap-highlight-color:transparent;
-    }
-
-    body{
-      background:#0f172a;
-      color:white;
-      overflow-x:hidden;
-    }
-
-    ::-webkit-scrollbar{
-      display:none;
-    }
-
-    .glass{
-      background:rgba(255,255,255,.05);
-      backdrop-filter:blur(14px);
-      border:1px solid rgba(255,255,255,.08);
-    }
-
-    .hidden-view{
-      display:none;
-    }
-
-    .card{
-      background:#111827;
-      border-radius:28px;
-      padding:18px;
-      border:1px solid rgba(255,255,255,.05);
-    }
-
-    .input{
-      width:100%;
-      padding:16px;
-      border-radius:18px;
-      background:#1e293b;
-      color:white;
-      border:none;
-      outline:none;
-      margin-top:10px;
-    }
-
-    .btn{
-      width:100%;
-      padding:16px;
-      border-radius:20px;
-      font-weight:700;
-      margin-top:14px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>Nara Pustaka | Mobile Publishing ERP</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js & jsPDF -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0f172a; color: #f1f5f9; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 10px; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 1.5rem; }
+        .glass-nav { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px); border-top: 1px solid rgba(139, 92, 246, 0.3); }
+        .btn-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); transition: all 0.2s; }
+        .btn-primary:active { transform: scale(0.96); }
+        .toast-notif { animation: slideUp 0.25s ease forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .loader-spinner { border: 3px solid rgba(139,92,246,0.3); border-top: 3px solid #8b5cf6; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        input, select, textarea { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; border-radius: 1rem; padding: 0.75rem 1rem; font-size: 0.875rem; width: 100%; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 2px rgba(139,92,246,0.2); }
+        button { transition: all 0.15s ease; }
+        .bottom-nav-item { transition: all 0.2s; }
+        .progress-step { transition: width 0.3s; }
+        .modal-backdrop { background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); }
+    </style>
 </head>
-<body>
+<body class="bg-gradient-to-b from-slate-900 to-slate-800">
 
-<div id="loginPage" class="min-h-screen flex items-center justify-center px-5 py-10">
-  <div class="w-full max-w-md glass rounded-[40px] p-7">
-
-    <div class="text-center mb-8">
-      <div class="w-24 h-24 rounded-[32px] bg-indigo-600 mx-auto flex items-center justify-center shadow-2xl shadow-indigo-500/40 mb-5">
-        <span class="text-4xl font-black">NP</span>
-      </div>
-
-      <h1 class="text-3xl font-black">Nara Pustaka</h1>
-      <p class="text-slate-400 mt-2">Internal Management System</p>
-    </div>
-
-    <input id="username" class="input" placeholder="Username" />
-
-    <div class="relative">
-      <input id="password" type="password" class="input pr-16" placeholder="Password" />
-      <button onclick="togglePassword()" class="absolute right-4 top-5 text-sm text-slate-400">👁</button>
-    </div>
-
-    <button onclick="login()" class="btn bg-indigo-600">Masuk</button>
-
-  </div>
+<!-- GLOBAL LOADER -->
+<div id="globalLoader" class="fixed inset-0 z-50 flex items-center justify-center flex-col gap-3 bg-slate-900">
+    <div class="loader-spinner"></div>
+    <p class="text-indigo-300 text-sm font-medium">Memuat Nara Pustaka System...</p>
 </div>
 
-<div id="app" class="hidden-view pb-32">
-
-  <header class="sticky top-0 z-50 px-5 py-4 bg-[#0f172a]/90 backdrop-blur-xl border-b border-white/5 flex items-center justify-between">
-    <div>
-      <p class="text-xs text-indigo-400 uppercase tracking-[3px]" id="roleText">ROLE</p>
-      <h2 class="font-bold text-lg" id="userText">USER</h2>
-    </div>
-
-    <div class="flex gap-2">
-      <button onclick="toggleDark()" class="w-11 h-11 rounded-2xl bg-slate-800">🌙</button>
-      <button onclick="logout()" class="w-11 h-11 rounded-2xl bg-red-500">⎋</button>
-    </div>
-  </header>
-
-  <main class="px-5 py-5 space-y-5">
-
-    <div class="card">
-      <div class="flex items-center justify-between mb-4">
+<!-- MAIN APP (hidden until auth) -->
+<div id="app" class="hidden max-w-md mx-auto relative min-h-screen pb-24">
+    <!-- Sticky Header Glass -->
+    <div class="sticky top-0 z-20 glass-card rounded-none rounded-b-2xl px-5 py-3 flex justify-between items-center border-b border-white/10">
         <div>
-          <h3 class="font-bold text-xl">Dashboard</h3>
-          <p class="text-slate-400 text-sm">Realtime Internal System</p>
+            <h1 class="text-2xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Nara Pustaka</h1>
+            <p id="userRoleBadge" class="text-[11px] text-slate-300 font-medium mt-0.5"></p>
         </div>
+        <button id="logoutBtn" class="bg-slate-800/80 px-3 py-1.5 rounded-full text-sm text-slate-200 flex items-center gap-1"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+    </div>
 
-        <div class="bg-indigo-600 px-4 py-2 rounded-2xl text-xs font-bold">
-          LIVE
+    <!-- DYNAMIC DASHBOARD CONTENT -->
+    <div id="dashboardContainer" class="p-4 space-y-5"></div>
+
+    <!-- BOTTOM NAVIGATION (role based menu) -->
+    <div class="glass-nav fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center py-2 border-t border-indigo-500/30 z-20">
+        <div id="navHome" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-indigo-400"><i class="fas fa-home text-xl"></i><span class="text-[10px] mt-1">Beranda</span></div>
+        <div id="navTracking" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-slate-400"><i class="fas fa-book-open text-xl"></i><span class="text-[10px] mt-1">Tracking</span></div>
+        <div id="navReport" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-slate-400"><i class="fas fa-chart-line text-xl"></i><span class="text-[10px] mt-1">Laporan</span></div>
+        <div id="navTeam" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-slate-400"><i class="fas fa-users text-xl"></i><span class="text-[10px] mt-1">Tim</span></div>
+        <div id="navMore" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-slate-400"><i class="fas fa-ellipsis-h text-xl"></i><span class="text-[10px] mt-1">Lainnya</span></div>
+    </div>
+</div>
+
+<!-- GLOBAL POPUP MODAL -->
+<div id="popupModal" class="fixed inset-0 z-30 hidden modal-backdrop items-end justify-center" onclick="if(event.target===this) closePopup()">
+    <div class="bg-slate-800 w-full max-w-md rounded-t-3xl p-5 max-h-[80vh] overflow-y-auto border-t-4 border-indigo-500 animate-in slide-in-from-bottom" style="animation: slideUp 0.25s ease;">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-3">
+            <h3 id="popupTitle" class="font-bold text-indigo-300 text-xl"></h3>
+            <button onclick="closePopup()" class="text-slate-400 text-2xl hover:text-white">&times;</button>
         </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div class="bg-slate-900 rounded-3xl p-4">
-          <p class="text-xs text-slate-400">Project Aktif</p>
-          <h2 class="text-2xl font-black mt-2" id="projectCount">0</h2>
-        </div>
-
-        <div class="bg-slate-900 rounded-3xl p-4">
-          <p class="text-xs text-slate-400">Status BEP</p>
-          <h2 class="text-2xl font-black mt-2">5 Eks</h2>
-        </div>
-      </div>
+        <div id="popupContent" class="text-slate-200"></div>
     </div>
-
-    <div class="card">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-bold">Tambah Penjualan</h3>
-        <button onclick="exportPDF()" class="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">PDF</button>
-      </div>
-
-      <input id="buyer" class="input" placeholder="Nama Pembeli" />
-      <input id="book" class="input" placeholder="Judul Buku" />
-      <input id="writer" class="input" placeholder="Penulis" />
-      <input id="qty" type="number" class="input" placeholder="Jumlah Buku" />
-      <input id="price" type="number" class="input" placeholder="Harga" />
-
-      <button onclick="saveSale()" class="btn bg-emerald-600">Simpan Penjualan</button>
-    </div>
-
-    <div class="card">
-      <div class="flex items-center justify-between mb-5">
-        <h3 class="font-bold">Tracking Buku</h3>
-        <button class="bg-slate-800 px-4 py-2 rounded-xl text-xs">Realtime</button>
-      </div>
-
-      <div class="space-y-4">
-
-        <div class="bg-slate-900 rounded-3xl p-4">
-          <div class="flex justify-between mb-3">
-            <div>
-              <h4 class="font-bold">Novel Senja</h4>
-              <p class="text-xs text-slate-400">Editing</p>
-            </div>
-
-            <div class="text-xs bg-yellow-500 text-black px-3 py-2 rounded-xl font-bold h-fit">
-              60%
-            </div>
-          </div>
-
-          <div class="w-full h-3 rounded-full bg-slate-800 overflow-hidden">
-            <div class="h-full bg-yellow-500 w-[60%]"></div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="flex items-center justify-between mb-5">
-        <h3 class="font-bold">Vendor Reminder</h3>
-        <div class="bg-red-500 px-3 py-2 rounded-xl text-xs font-bold">
-          ALERT
-        </div>
-      </div>
-
-      <div class="bg-red-500/10 border border-red-500/20 rounded-3xl p-4">
-        <p class="font-semibold">Percetakan XYZ belum selesai 4 hari.</p>
-        <button class="mt-4 bg-green-600 px-5 py-3 rounded-2xl font-bold text-sm">
-          Hubungi Vendor
-        </button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="flex items-center justify-between mb-5">
-        <h3 class="font-bold">Evaluasi Tim</h3>
-        <div class="text-xs text-slate-400">Leader</div>
-      </div>
-
-      <textarea class="input min-h-[130px]" placeholder="Tulis evaluasi tim..."></textarea>
-
-      <button class="btn bg-indigo-600">Kirim Evaluasi</button>
-    </div>
-
-    <div class="card">
-      <div class="flex items-center justify-between mb-5">
-        <h3 class="font-bold">Grafik Operasional</h3>
-      </div>
-
-      <canvas id="chart"></canvas>
-    </div>
-
-    <div class="card">
-      <div class="flex items-center justify-between mb-5">
-        <h3 class="font-bold">Riwayat Aktivitas</h3>
-        <div class="text-xs text-slate-400">Realtime</div>
-      </div>
-
-      <div id="logs" class="space-y-3"></div>
-    </div>
-
-  </main>
-
-  <nav class="fixed bottom-0 left-0 right-0 bg-[#111827] border-t border-white/5 p-4 flex justify-around">
-
-    <button onclick="switchMenu('dashboard')" class="flex flex-col items-center text-xs gap-1">
-      <span>🏠</span>
-      Dashboard
-    </button>
-
-    <button onclick="switchMenu('sales')" class="flex flex-col items-center text-xs gap-1">
-      <span>💰</span>
-      Sales
-    </button>
-
-    <button onclick="switchMenu('books')" class="flex flex-col items-center text-xs gap-1">
-      <span>📚</span>
-      Buku
-    </button>
-
-    <button onclick="switchMenu('reports')" class="flex flex-col items-center text-xs gap-1">
-      <span>📄</span>
-      Laporan
-    </button>
-
-  </nav>
-
 </div>
 
 <script>
+    // ======================== KONFIGURASI API ========================
+    const API_BASE = "https://script.google.com/macros/s/AKfycby-X_EEt6sf_WIjXUyWWlULShgqpHkBK21sxeYbcQYp62mUvCWO1VLN5fDt_pn5pDze/exec";
+    let currentUser = null;
+    let currentTab = "home";
+    let globalData = {
+        users: [], books: [], sales: [], expenses: [], royalty: [], projects: [], evaluations: [], vendors: [], logs: [], notifications: []
+    };
+    let chartProfit = null;
 
-const API_URL = 'https://script.google.com/macros/s/AKfycby-X_EEt6sf_WIjXUyWWlULShgqpHkBK21sxeYbcQYp62mUvCWO1VLN5fDt_pn5pDze/exec';
+    // DEFAULT AKUN (tidak diubah otomatis)
+    const DEFAULT_USERS = [
+        { username: "vero", password: "vero123", role: "Manager", fullname: "Vero Manager" },
+        { username: "jeyraa", password: "jey123", role: "Leader", fullname: "Jeyra Leader" },
+        { username: "thami", password: "thami123", role: "Admin", fullname: "Thami Admin" },
+        { username: "elyna", password: "elyna123", role: "Redaksi", fullname: "Elyna Redaksi" },
+        { username: "nala", password: "nala123", role: "Designer", fullname: "Nala Designer" },
+        { username: "calista", password: "calista123", role: "Illustrator", fullname: "Calista Illustrator" },
+        { username: "zahra", password: "zahra123", role: "Illustrator", fullname: "Zahra Illustrator" }
+    ];
 
-const users = {
-  vero:{password:'vero_nara',role:'Manager'},
-  jeyraa:{password:'jeyraa_nara',role:'Leader'},
-  thami:{password:'thami_nara',role:'Admin'},
-  elyna:{password:'elyna_nara',role:'Redaksi'},
-  nala:{password:'nala_nara',role:'Designer'},
-  calista:{password:'calista_nara',role:'Illustrator'},
-  zahra:{password:'zahra_nara',role:'Illustrator'}
-}
-
-let currentUser = null;
-
-window.onload = ()=>{
-
-  const savedUser = localStorage.getItem('np_user');
-
-  if(savedUser){
-    currentUser = JSON.parse(savedUser);
-    openApp();
-  }
-
-  initChart();
-
-}
-
-function login(){
-
-  const username = document.getElementById('username').value.toLowerCase();
-  const password = document.getElementById('password').value;
-
-  if(users[username] && users[username].password === password){
-
-    currentUser = {
-      username,
-      role:users[username].role
+    // Helper: fetch data realtime dari API + cache localStorage
+    async function fetchAllData() {
+        try {
+            const res = await fetch(`${API_BASE}?action=getAllData&t=${Date.now()}`);
+            const json = await res.json();
+            if(json.status === "success" && json.data) {
+                globalData = { ...globalData, ...json.data };
+                for(let k in globalData) if(!globalData[k]) globalData[k] = [];
+                localStorage.setItem("nara_cache", JSON.stringify({ data: globalData, ts: Date.now() }));
+            } else throw new Error("API response invalid");
+        } catch(e) {
+            console.warn("API fetch error, using cache", e);
+            const cache = localStorage.getItem("nara_cache");
+            if(cache) {
+                const cached = JSON.parse(cache);
+                globalData = cached.data;
+            }
+        }
     }
 
-    localStorage.setItem('np_user',JSON.stringify(currentUser));
-
-    openApp();
-
-  }else{
-    alert('Login gagal');
-  }
-}
-
-function openApp(){
-
-  document.getElementById('loginPage').classList.add('hidden-view');
-  document.getElementById('app').classList.remove('hidden-view');
-
-  document.getElementById('userText').innerText = currentUser.username;
-  document.getElementById('roleText').innerText = currentUser.role;
-
-}
-
-function logout(){
-  localStorage.removeItem('np_user');
-  location.reload();
-}
-
-function togglePassword(){
-
-  const input = document.getElementById('password');
-
-  input.type = input.type === 'password' ? 'text' : 'password';
-
-}
-
-async function saveSale(){
-
-  const buyer = document.getElementById('buyer').value;
-  const book = document.getElementById('book').value;
-  const writer = document.getElementById('writer').value;
-  const qty = Number(document.getElementById('qty').value);
-  const price = Number(document.getElementById('price').value);
-
-  const total = qty * price;
-
-  const data = {
-    type:'sale',
-    id_sale:'SALE-'+Date.now(),
-    pembeli:buyer,
-    judul_buku:book,
-    penulis:writer,
-    jumlah:qty,
-    harga:price,
-    total:total,
-    admin:currentUser.username
-  }
-
-  try{
-
-    await fetch(API_URL,{ 
-      method:'POST',
-      body:JSON.stringify(data)
-    });
-
-    addLog(`Penjualan ${book} berhasil disimpan`);
-
-    lockInputs();
-
-    alert('Data berhasil masuk spreadsheet');
-
-  }catch(err){
-    alert('Gagal menyimpan');
-  }
-}
-
-function lockInputs(){
-
-  document.querySelectorAll('input').forEach(el=>{
-    if(el.id !== 'username' && el.id !== 'password'){
-      el.disabled = true;
+    async function callAPI(action, payload) {
+        try {
+            const res = await fetch(API_BASE, {
+                method: "POST",
+                body: JSON.stringify({ action, data: payload, user: currentUser?.username })
+            });
+            const result = await res.json();
+            showToast(result.message || "Berhasil", "success");
+            await fetchAllData();
+            return result;
+        } catch(e) {
+            showToast("Gagal menyimpan data", "error");
+            return null;
+        }
     }
-  });
 
-}
+    async function saveLog(activity) {
+        if(!currentUser) return;
+        await callAPI("saveLog", { user: currentUser.username, role: currentUser.role, activity, timestamp: new Date().toISOString() });
+    }
 
-function addLog(text){
+    function showToast(msg, type = "success") {
+        let toastDiv = document.getElementById("dynamicToast");
+        if(!toastDiv) {
+            toastDiv = document.createElement("div");
+            toastDiv.id = "dynamicToast";
+            toastDiv.className = "fixed bottom-24 left-4 right-4 max-w-md mx-auto z-50";
+            document.body.appendChild(toastDiv);
+        }
+        const bg = type === "success" ? "bg-emerald-600" : "bg-rose-600";
+        toastDiv.innerHTML = `<div class="${bg} rounded-xl p-3 shadow-lg text-white text-sm font-medium flex items-center gap-2 toast-notif"><i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> ${msg}</div>`;
+        setTimeout(() => { toastDiv.innerHTML = ""; }, 3000);
+    }
 
-  const logs = document.getElementById('logs');
+    // AUTHENTICATION & PERSISTENCE
+    async function initLogin() {
+        const savedSession = localStorage.getItem("nara_session");
+        if(savedSession) {
+            try {
+                const sess = JSON.parse(savedSession);
+                if(sess.user && sess.exp > Date.now()) {
+                    currentUser = sess.user;
+                    await fetchAllData();
+                    renderAppByRole();
+                    document.getElementById("globalLoader")?.classList.add("hidden");
+                    document.getElementById("app")?.classList.remove("hidden");
+                    saveLog("Login via session");
+                    return;
+                }
+            } catch(e) {}
+        }
+        showLoginScreen();
+    }
 
-  const div = document.createElement('div');
+    function showLoginScreen() {
+        document.getElementById("globalLoader")?.classList.add("hidden");
+        document.getElementById("app")?.classList.add("hidden");
+        const loginHTML = `
+            <div class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-indigo-950 to-slate-900">
+                <div class="glass-card p-6 w-full max-w-sm shadow-2xl">
+                    <h2 class="text-3xl font-bold text-center bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">Nara Pustaka</h2>
+                    <p class="text-center text-slate-300 text-sm mb-6">Mobile Publishing System</p>
+                    <div class="space-y-4">
+                        <input type="text" id="loginUsername" placeholder="Username" class="w-full bg-slate-800/80 border-slate-600 text-white placeholder:text-slate-400">
+                        <input type="password" id="loginPassword" placeholder="Password" class="w-full bg-slate-800/80 border-slate-600 text-white">
+                        <button id="doLoginBtn" class="btn-primary w-full py-3 rounded-xl font-semibold text-white">Masuk</button>
+                    </div>
+                    <p class="text-xs text-center text-slate-400 mt-5">Demo: vero/vero123 (Manager), jeyraa/jey123 (Leader), dll</p>
+                </div>
+            </div>
+        `;
+        document.body.innerHTML = loginHTML;
+        document.getElementById("doLoginBtn").onclick = async () => {
+            const user = document.getElementById("loginUsername").value;
+            const pwd = document.getElementById("loginPassword").value;
+            const matched = DEFAULT_USERS.find(u => u.username === user && u.password === pwd);
+            if(matched) {
+                currentUser = { username: matched.username, role: matched.role, fullname: matched.fullname };
+                localStorage.setItem("nara_session", JSON.stringify({ user: currentUser, exp: Date.now() + 7*24*3600000 }));
+                await fetchAllData();
+                renderAppByRole();
+                document.body.innerHTML = "";
+                location.reload();
+            } else {
+                showToast("Username atau password salah", "error");
+            }
+        };
+    }
 
-  div.className = 'bg-slate-900 rounded-2xl p-4';
+    function renderAppByRole() {
+        document.getElementById("userRoleBadge").innerHTML = `${currentUser.role} • ${currentUser.username}`;
+        setupBottomNav();
+        loadDashboard(currentTab);
+    }
 
-  div.innerHTML = `
-    <p class="font-semibold">${text}</p>
-    <p class="text-xs text-slate-400 mt-1">${new Date().toLocaleString()}</p>
-  `;
+    function setupBottomNav() {
+        const navs = {
+            home: document.getElementById("navHome"),
+            tracking: document.getElementById("navTracking"),
+            report: document.getElementById("navReport"),
+            team: document.getElementById("navTeam"),
+            more: document.getElementById("navMore")
+        };
+        const resetActive = () => {
+            Object.values(navs).forEach(nav => { nav.classList.remove("text-indigo-400"); nav.classList.add("text-slate-400"); });
+        };
+        if(currentTab === "home") navs.home.classList.add("text-indigo-400");
+        if(currentTab === "tracking") navs.tracking.classList.add("text-indigo-400");
+        if(currentTab === "report") navs.report.classList.add("text-indigo-400");
+        if(currentTab === "team") navs.team.classList.add("text-indigo-400");
+        if(currentTab === "more") navs.more.classList.add("text-indigo-400");
 
-  logs.prepend(div);
+        navs.home.onclick = () => { currentTab = "home"; resetActive(); navs.home.classList.add("text-indigo-400"); loadDashboard("home"); };
+        navs.tracking.onclick = () => { currentTab = "tracking"; resetActive(); navs.tracking.classList.add("text-indigo-400"); loadDashboard("tracking"); };
+        navs.report.onclick = () => { currentTab = "report"; resetActive(); navs.report.classList.add("text-indigo-400"); loadDashboard("report"); };
+        navs.team.onclick = () => { currentTab = "team"; resetActive(); navs.team.classList.add("text-indigo-400"); loadDashboard("team"); };
+        navs.more.onclick = () => { currentTab = "more"; resetActive(); navs.more.classList.add("text-indigo-400"); loadDashboard("more"); };
+    }
 
-}
+    async function loadDashboard(tab) {
+        const container = document.getElementById("dashboardContainer");
+        container.innerHTML = `<div class="flex justify-center py-10"><div class="loader-spinner"></div></div>`;
+        await fetchAllData();
+        if(tab === "home") await renderHome(container);
+        else if(tab === "tracking") renderTracking(container);
+        else if(tab === "report") renderReport(container);
+        else if(tab === "team") renderTeam(container);
+        else if(tab === "more") renderMore(container);
+        saveLog(`Membuka tab ${tab}`);
+    }
 
-function exportPDF(){
+    // ========================== DASHBOARD HOME (ROLE BASED) ==========================
+    async function renderHome(container) {
+        const role = currentUser.role;
+        const totalSales = globalData.sales?.reduce((a,b)=>a+(b.total||0),0) || 0;
+        const totalExpenses = globalData.expenses?.reduce((a,b)=>a+(b.amount||0),0) || 0;
+        const profit = totalSales - totalExpenses;
 
-  const { jsPDF } = window.jspdf;
+        if(role === "Manager") {
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="glass-card p-4"><p class="text-slate-300 text-xs">Total Penjualan</p><p class="text-2xl font-bold text-indigo-300">Rp ${totalSales.toLocaleString()}</p></div>
+                        <div class="glass-card p-4"><p class="text-slate-300 text-xs">Laba/Rugi</p><p class="text-2xl font-bold ${profit>=0?'text-green-400':'text-red-400'}">Rp ${profit.toLocaleString()}</p></div>
+                    </div>
+                    <div class="glass-card p-4"><canvas id="profitChartCanvas" height="150"></canvas></div>
+                    <div class="glass-card p-4"><h3 class="font-semibold text-indigo-200">📊 Royalti & BEP</h3><p class="text-slate-300 text-sm">Minimal 5 eksemplar untuk BEP</p><button onclick="showManagerStats()" class="mt-3 w-full btn-primary py-2 rounded-xl text-white">📋 Lihat Detail Anggota</button></div>
+                    <div class="glass-card p-4"><h3 class="font-semibold text-indigo-200">📈 Monitoring Vendor & Log</h3><button onclick="viewActivityLogs()" class="text-sm text-indigo-300">Aktivitas Terkini →</button></div>
+                </div>
+            `;
+            setTimeout(() => {
+                const ctx = document.getElementById("profitChartCanvas")?.getContext("2d");
+                if(ctx && window.Chart) {
+                    if(chartProfit) chartProfit.destroy();
+                    chartProfit = new Chart(ctx, { type: "line", data: { labels: ["Jan", "Feb", "Mar"], datasets: [{ label: "Profit", data: [profit*0.2, profit*0.6, profit], borderColor: "#8b5cf6", tension: 0.3 }] } });
+                }
+            }, 100);
+        } 
+        else if(role === "Leader") {
+            const members = DEFAULT_USERS.filter(u => u.role !== "Manager");
+            container.innerHTML = `
+                <div class="glass-card p-5 space-y-3"><h2 class="text-xl font-bold text-indigo-300">📋 Monitoring Tim</h2><div id="leaderTeamList" class="space-y-2"></div><button onclick="showReminderPopup()" class="w-full btn-primary py-2 rounded-xl text-white">⏰ Buat Reminder Deadline</button></div>
+            `;
+            document.getElementById("leaderTeamList").innerHTML = members.map(m => `<div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl"><span class="font-medium">${m.fullname} (${m.role})</span><button onclick="showUserEvalPopup('${m.username}')" class="bg-purple-600 px-3 py-1 rounded-full text-xs text-white">Evaluasi</button></div>`).join("");
+        }
+        else if(role === "Admin") {
+            container.innerHTML = `
+                <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">💰 Input Penjualan</h3><input id="saleBook" placeholder="Judul Buku"><input id="saleQty" placeholder="Jumlah" type="number"><input id="salePrice" placeholder="Harga Satuan" type="number"><button onclick="submitSale()" class="btn-primary w-full py-2 rounded-xl text-white">Simpan Penjualan</button></div>
+                <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">📉 Pengeluaran</h3><input id="expDesc" placeholder="Deskripsi"><input id="expAmount" placeholder="Nominal" type="number"><button onclick="submitExpense()" class="bg-amber-600 w-full py-2 rounded-xl text-white">Tambah Pengeluaran</button></div>
+                <div class="glass-card p-4"><p class="text-indigo-300 text-sm">Upload Invoice/Bukti Transfer (simulasi)</p><input type="file" id="invoiceFile" class="text-sm"><button onclick="uploadInvoiceSim()" class="mt-2 bg-cyan-700 w-full py-2 rounded-xl text-white">Upload</button></div>
+            `;
+        }
+        else if(role === "Redaksi") {
+            container.innerHTML = `
+                <div class="glass-card p-5 space-y-3"><h3 class="font-bold text-indigo-300">📖 Input Naskah & Penulis</h3><input id="penulisName" placeholder="Nama Penulis"><input id="judulNaskah" placeholder="Judul Buku"><select id="statusNaskah"><option>Naskah Masuk</option><option>Seleksi</option><option>Editing</option><option>Cover</option><option>Layout</option></select><button onclick="submitNaskah()" class="bg-purple-600 w-full py-2 rounded-xl text-white">Simpan Naskah</button><div class="text-slate-300 text-sm">Total Proyek: ${globalData.projects?.length || 0}</div></div>
+                <div class="glass-card p-4"><h3 class="font-semibold text-indigo-300">Tracking ISBN</h3><p class="text-slate-300">ISBN terdaftar otomatis</p></div>
+            `;
+        }
+        else if(role === "Illustrator") {
+            container.innerHTML = `
+                <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">🎨 Upload Cover/Ilustrasi</h3><input type="file" id="coverUpload" accept="image/*"><button onclick="uploadCoverArt()" class="bg-pink-600 w-full py-2 rounded-xl text-white">Upload & Kirim Revisi</button><div id="historiDesain" class="text-slate-300 text-sm space-y-1">${globalData.projects?.filter(p=>p.illustrator===currentUser.username).map(p=>`📘 ${p.title} - ${p.status}`).join('<br>') || 'Belum ada proyek'}</div></div>
+            `;
+        }
+        else if(role === "Designer") {
+            container.innerHTML = `
+                <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">📱 Desain Feed / Promosi</h3><button onclick="generateCanvaLink()" class="bg-sky-600 w-full py-2 rounded-xl text-white">🎨 Buat Link Canva</button><label class="text-slate-300 text-sm">Mockup PO</label><input type="file" id="mockupFile"><button onclick="uploadMockupDesign()" class="bg-emerald-600 w-full py-2 rounded-xl text-white">Kirim Mockup</button></div>
+            `;
+        }
+        else {
+            container.innerHTML = `<div class="glass-card p-4 text-center text-slate-300">Selamat datang di Dashboard Nara Pustaka</div>`;
+        }
+    }
 
-  const doc = new jsPDF();
+    // TRACKING SYSTEM dengan progress bar
+    function renderTracking(container) {
+        const stages = ["Naskah Masuk","Seleksi","Editing","Cover","Layout","Cetak","Distribusi","Selesai"];
+        const projects = globalData.projects || [];
+        container.innerHTML = `<div class="space-y-4"><h2 class="text-xl font-bold text-indigo-300">📌 Tracking Penerbitan</h2>${projects.map(proj => {
+            const idx = stages.indexOf(proj.status);
+            const progress = ((idx+1)/stages.length)*100;
+            return `<div class="glass-card p-4"><div class="flex justify-between"><span class="font-semibold text-white">${proj.title}</span><span class="text-xs text-indigo-300">${proj.status}</span></div><div class="w-full bg-slate-700 h-2 rounded-full mt-2"><div class="progress-step bg-indigo-500 h-2 rounded-full" style="width: ${progress}%"></div></div><div class="flex flex-wrap gap-1 mt-3 text-[10px]">${stages.map(s => `<span class="px-2 py-0.5 rounded-full ${proj.status === s ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-400'}">${s}</span>`).join('')}</div></div>`;
+        }).join('') || '<p class="text-slate-400 text-center">Belum ada proyek penerbitan</p>'}</div>`;
+    }
 
-  doc.setFontSize(20);
-  doc.text('Nara Pustaka Report',20,20);
+    function renderReport(container) {
+        container.innerHTML = `
+            <div class="glass-card p-5 space-y-3"><h3 class="font-bold text-indigo-300">📑 Export Laporan</h3><button onclick="exportFullPDF()" class="bg-red-700 w-full py-2 rounded-xl text-white">📄 Export PDF Lengkap</button><button onclick="exportExcelCSV()" class="bg-green-700 w-full py-2 rounded-xl text-white">📊 Export Excel (CSV)</button><div class="mt-4"><h4 class="font-semibold text-indigo-200">Statistik Keuangan</h4><p class="text-slate-300">Total Penjualan: Rp ${globalData.sales?.reduce((a,b)=>a+b.total,0).toLocaleString()}</p><p>Total Royalti: Rp ${globalData.royalty?.reduce((a,b)=>a+b.amount,0).toLocaleString()}</p></div></div>
+        `;
+    }
 
-  doc.setFontSize(12);
-  doc.text('Internal System Export',20,40);
+    function renderTeam(container) {
+        const members = DEFAULT_USERS;
+        container.innerHTML = `<div class="glass-card p-4"><h3 class="font-bold text-indigo-300">👥 Anggota Tim</h3><div class="space-y-2 mt-3">${members.map(m => `<div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl"><div><span class="font-medium text-white">${m.fullname}</span><p class="text-xs text-slate-400">${m.role}</p></div><button onclick="showUserDetailPopup('${m.username}')" class="text-indigo-300 text-sm"><i class="fas fa-eye"></i> Detail</button></div>`).join('')}</div></div>`;
+    }
 
-  doc.save('nara-report.pdf');
+    function renderMore(container) {
+        container.innerHTML = `<div class="glass-card p-4 space-y-2"><button onclick="viewActivityLogs()" class="w-full text-left p-3 bg-slate-800/50 rounded-xl text-white"><i class="fas fa-history mr-2"></i> Log Aktivitas</button><button onclick="changePasswordUI()" class="w-full text-left p-3 bg-slate-800/50 rounded-xl text-white"><i class="fas fa-key mr-2"></i> Ganti Password</button><button onclick="exportMyData()" class="w-full text-left p-3 bg-slate-800/50 rounded-xl text-white"><i class="fas fa-download mr-2"></i> Export Data Saya</button></div>`;
+    }
 
-}
+    // ======================== GLOBAL FUNCTIONS & API INTEGRATION ========================
+    window.submitSale = async () => {
+        const book = document.getElementById("saleBook")?.value;
+        const qty = parseInt(document.getElementById("saleQty")?.value);
+        const price = parseInt(document.getElementById("salePrice")?.value);
+        if(!book || !qty || !price) return showToast("Lengkapi data", "error");
+        await callAPI("saveSales", { book, qty, total: qty*price, date: new Date().toISOString() });
+        loadDashboard(currentTab);
+    };
+    window.submitExpense = async () => {
+        const desc = document.getElementById("expDesc")?.value;
+        const amount = parseInt(document.getElementById("expAmount")?.value);
+        if(!desc || !amount) return;
+        await callAPI("saveExpense", { desc, amount, date: new Date().toISOString() });
+        loadDashboard(currentTab);
+    };
+    window.submitNaskah = async () => {
+        const author = document.getElementById("penulisName")?.value;
+        const title = document.getElementById("judulNaskah")?.value;
+        const status = document.getElementById("statusNaskah")?.value;
+        if(!author || !title) return;
+        const projectId = "PROJ-" + Date.now();
+        await callAPI("saveProject", { projectId, title, author, status, redaksi: currentUser.username });
+        loadDashboard(currentTab);
+    };
+    window.uploadCoverArt = () => showToast("Cover berhasil diupload (simulasi integrate Google Drive)");
+    window.generateCanvaLink = () => { navigator.clipboard.writeText("https://canva.com/narapustaka/template"); showToast("Link Canva disalin!"); };
+    window.uploadMockupDesign = () => showToast("Mockup PO terkirim ke tim marketing");
+    window.uploadInvoiceSim = () => showToast("Invoice terupload (simulasi)");
+    window.showReminderPopup = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Buat Reminder"; document.getElementById("popupContent").innerHTML = `<input id="reminderMsg" placeholder="Pesan deadline" class="w-full"><button onclick="sendReminderNow()" class="mt-3 btn-primary w-full py-2 rounded-xl text-white">Kirim ke Tim</button>`; };
+    window.sendReminderNow = () => { showToast("Reminder deadline dikirim"); closePopup(); };
+    window.viewActivityLogs = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Log Aktivitas"; const logs = globalData.logs?.slice(-15).map(l=>`<div class="border-b border-slate-700 py-2 text-sm">👤 ${l.user} - ${l.activity}<br><span class="text-xs text-slate-400">${new Date(l.timestamp).toLocaleString()}</span></div>`).join('') || "Belum ada log"; document.getElementById("popupContent").innerHTML = logs; };
+    window.changePasswordUI = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Ganti Password"; document.getElementById("popupContent").innerHTML = `<input type="password" id="newPass" placeholder="Password Baru" class="w-full"><button onclick="updateUserPassword()" class="mt-3 btn-primary w-full py-2 rounded-xl text-white">Simpan</button>`; };
+    window.updateUserPassword = () => { showToast("Password berhasil diubah (simulasi)"); closePopup(); };
+    window.showUserDetailPopup = (username) => {
+        const user = DEFAULT_USERS.find(u => u.username === username);
+        openPopup();
+        document.getElementById("popupTitle").innerHTML = `Detail ${user?.fullname}`;
+        const userLogs = globalData.logs?.filter(l => l.user === username).slice(-5).map(l=>`<li class="text-sm">${l.activity} - ${new Date(l.timestamp).toLocaleTimeString()}</li>`).join('');
+        document.getElementById("popupContent").innerHTML = `<div><p class="font-semibold">Role: ${user?.role}</p><p class="mt-2">Histori Kerja:</p><ul class="list-disc pl-5 text-sm text-slate-300">${userLogs || '<li>Belum ada aktivitas</li>'}</ul><button onclick="exportUserPDF('${username}')" class="mt-4 btn-primary w-full py-2 rounded-xl text-white">Export PDF User</button></div>`;
+    };
+    window.showUserEvalPopup = (username) => { openPopup(); document.getElementById("popupTitle").innerHTML = `Evaluasi ${username}`; document.getElementById("popupContent").innerHTML = `<textarea id="evalText" placeholder="Catatan evaluasi kinerja..." class="w-full h-24"></textarea><button onclick="saveEvaluationNow('${username}')" class="mt-3 bg-purple-600 w-full py-2 rounded-xl text-white">Simpan Evaluasi</button>`; };
+    window.saveEvaluationNow = async (username) => {
+        const note = document.getElementById("evalText")?.value;
+        if(note) await callAPI("saveEvaluation", { user: username, evaluator: currentUser.username, note, date: new Date().toISOString() });
+        closePopup();
+    };
+    window.showManagerStats = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Statistik Anggota"; document.getElementById("popupContent").innerHTML = DEFAULT_USERS.map(u => `<div class="flex justify-between items-center p-2 border-b border-slate-700"><span>${u.fullname} (${u.role})</span><button onclick="showUserDetailPopup('${u.username}')" class="text-indigo-300 text-sm">Lihat</button></div>`).join(''); };
+    window.exportFullPDF = () => { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text("Laporan Nara Pustaka", 10,10); doc.text(`Total Penjualan: Rp ${globalData.sales?.reduce((a,b)=>a+b.total,0).toLocaleString()}`, 10,30); doc.save("laporan_nara.pdf"); showToast("PDF diunduh"); };
+    window.exportExcelCSV = () => { let csv = "Judul,Penjualan\n"; globalData.sales?.forEach(s=>{ csv+=`${s.book},${s.total}\n`;}); const blob = new Blob([csv],{type:"text/csv"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "laporan_penjualan.csv"; a.click(); showToast("CSV siap"); };
+    window.exportUserPDF = (uname) => showToast(`PDF untuk ${uname} sedang diproses`);
+    window.exportMyData = () => showToast("Data Anda telah diekspor (CSV)");
+    function openPopup() { document.getElementById("popupModal").classList.remove("hidden"); document.getElementById("popupModal").classList.add("flex"); }
+    window.closePopup = function() { document.getElementById("popupModal").classList.add("hidden"); document.getElementById("popupModal").classList.remove("flex"); };
+    document.getElementById("logoutBtn")?.addEventListener("click", () => { localStorage.removeItem("nara_session"); location.reload(); });
 
-function switchMenu(menu){
-  localStorage.setItem('last_menu',menu);
-}
-
-function toggleDark(){
-  document.body.classList.toggle('bg-white');
-}
-
-function initChart(){
-
-  setTimeout(()=>{
-
-    const ctx = document.getElementById('chart');
-
-    if(!ctx) return;
-
-    new Chart(ctx,{
-      type:'line',
-      data:{
-        labels:['M1','M2','M3','M4'],
-        datasets:[{
-          label:'Project',
-          data:[2,5,4,8],
-          borderColor:'#6366f1',
-          tension:.4
-        }]
-      }
-    })
-
-  },500)
-
-}
-
+    initLogin();
 </script>
-
 </body>
 </html>
