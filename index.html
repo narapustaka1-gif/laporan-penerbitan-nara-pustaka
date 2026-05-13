@@ -1,846 +1,1086 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nara Pustaka Operasional</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<title>Nara Pustaka Mobile</title>
 
-  <style>
-    *{scroll-behavior:smooth}
-    body{
-      font-family:Inter,sans-serif;
-      background:linear-gradient(135deg,#dbeafe,#fce7f3,#dcfce7,#fef3c7);
-      min-height:100vh;
-      overflow-x:hidden;
-      color:#1e293b;
-    }
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    .glass{
-      background:rgba(255,255,255,.55);
-      backdrop-filter:blur(14px);
-      border:1px solid rgba(255,255,255,.4);
-      box-shadow:0 8px 32px rgba(0,0,0,.3);
-    }
+<style>
 
-    .fade-in{
-      animation:fade .5s ease;
-    }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
 
-    @keyframes fade{
-      from{opacity:0;transform:translateY(10px)}
-      to{opacity:1;transform:translateY(0)}
-    }
+body{
+background:linear-gradient(135deg,#dbeafe,#fce7f3,#dcfce7,#fef3c7);
+min-height:100vh;
+overflow-x:hidden;
+color:#1e293b;
+}
 
-    .bottom-nav{
-      position:fixed;
-      bottom:0;
-      left:0;
-      right:0;
-      z-index:999;
-    }
+.glass{
+background:rgba(255,255,255,.55);
+backdrop-filter:blur(14px);
+border:1px solid rgba(255,255,255,.5);
+box-shadow:0 8px 32px rgba(0,0,0,.08);
+}
 
-    .loader{
-      position:fixed;
-      inset:0;
-      background:linear-gradient(135deg,#bfdbfe,#fbcfe8,#bbf7d0);
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      z-index:99999;
-    }
+.loader{
+position:fixed;
+inset:0;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#bfdbfe,#fbcfe8,#bbf7d0);
+z-index:99999;
+}
 
-    .spin{
-      width:70px;
-      height:70px;
-      border:6px solid rgba(255,255,255,.1);
-      border-top:6px solid #38bdf8;
-      border-radius:50%;
-      animation:spin 1s linear infinite;
-    }
+.spin{
+width:70px;
+height:70px;
+border:6px solid rgba(255,255,255,.3);
+border-top:6px solid #0ea5e9;
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
 
-    @keyframes spin{
-      to{transform:rotate(360deg)}
-    }
+@keyframes spin{
+to{
+transform:rotate(360deg);
+}
+}
 
-    .hidden-scroll::-webkit-scrollbar{
-      display:none;
-    }
-  </style>
+.bottom-nav{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+z-index:999;
+}
+
+.fade{
+animation:fade .4s ease;
+}
+
+@keyframes fade{
+from{
+opacity:0;
+transform:translateY(10px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+input,
+textarea,
+select{
+outline:none;
+}
+
+</style>
 </head>
+
 <body>
 
 <div id="loader" class="loader">
-  <div class="text-center">
-    <div class="spin mx-auto"></div>
-    <p class="mt-4 text-sky-300 text-xl font-bold">Nara Pustaka</p>
-  </div>
+<div class="text-center">
+<div class="spin mx-auto"></div>
+
+<h1 class="text-3xl font-black text-sky-500 mt-5">
+Nara Pustaka
+</h1>
+
+</div>
 </div>
 
-<div id="toast" class="fixed top-5 right-5 hidden z-[9999] px-5 py-3 rounded-2xl glass text-white"></div>
+<div id="toast"
+class="fixed top-5 right-5 hidden z-[9999] px-5 py-3 rounded-2xl glass">
+</div>
 
 <div id="app"></div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzU6OXHUHXHUPeSD9560gUy5F-XAdegvadeQOhq3e0I2Z5rZmny9ww_JY5qGtLiz2Y/exec";
+
+const API_URL = "https://script.google.com/macros/s/AKfycbznZWEypHjDOe3GoyVCIHFl6fjKL4KJ6MepgAGfFEjXI-bKRGu8AIyuaSBSQzGd9WbqWw/exec";
 
 const USERS = [
-  {username:'vero',password:'vero123',role:'Manager',fullname:'Vero'},
-  {username:'jeyraa',password:'jey123',role:'Team Leader',fullname:'Jeyraa'},
-  {username:'thami',password:'thami123',role:'Administrasi',fullname:'Thami'},
-  {username:'elyna',password:'ely123',role:'Redaksi',fullname:'Elyna'},
-  {username:'nala',password:'nala123',role:'Desain',fullname:'Nala'},
-  {username:'calista',password:'calista123',role:'Kreatif',fullname:'Calista'},
-  {username:'zahra',password:'zahra123',role:'Kreatif',fullname:'Zahra'}
+{
+username:'vero',
+password:'vero123',
+role:'Manager',
+fullname:'Vero'
+},
+{
+username:'jeyraa',
+password:'jey123',
+role:'Team Leader',
+fullname:'Jeyraa'
+},
+{
+username:'thami',
+password:'thami123',
+role:'Administrasi',
+fullname:'Thami'
+},
+{
+username:'elyna',
+password:'ely123',
+role:'Redaksi',
+fullname:'Elyna'
+},
+{
+username:'nala',
+password:'nala123',
+role:'Desain',
+fullname:'Nala'
+},
+{
+username:'calista',
+password:'calista123',
+role:'Kreatif',
+fullname:'Calista'
+},
+{
+username:'zahra',
+password:'zahra123',
+role:'Kreatif',
+fullname:'Zahra'
+}
 ];
 
-let salesData = JSON.parse(localStorage.getItem('salesData')) || [];
-let projectsData = JSON.parse(localStorage.getItem('projectsData')) || [];
+let books = [];
+let sales = [];
+let projects = [];
+let expenses = [];
+let royalty = [];
 
 setTimeout(()=>{
-  document.getElementById('loader').style.display='none';
-  checkSession();
+document.getElementById('loader').style.display='none';
+checkSession();
 },1200);
 
-function saveData(){
-  localStorage.setItem('salesData',JSON.stringify(salesData));
-  localStorage.setItem('projectsData',JSON.stringify(projectsData));
-}
-
 function toast(msg){
-  const t=document.getElementById('toast');
-  t.innerHTML=msg;
-  t.classList.remove('hidden');
 
-  setTimeout(()=>{
-    t.classList.add('hidden');
-  },2500);
+const t = document.getElementById('toast');
+
+t.innerHTML = msg;
+
+t.classList.remove('hidden');
+
+setTimeout(()=>{
+t.classList.add('hidden');
+},2500);
+
 }
 
 function checkSession(){
-  const user = JSON.parse(localStorage.getItem('naraUser'));
 
-  if(user){
-    renderDashboard(user);
-  }else{
-    renderLogin();
-  }
+const user = JSON.parse(localStorage.getItem('naraUser'));
+
+if(user){
+loadAllData(user);
+}else{
+renderLogin();
+}
+
 }
 
 function renderLogin(){
-  document.getElementById('app').innerHTML=`
 
-  <div class="min-h-screen flex items-center justify-center p-5 fade-in">
+document.getElementById('app').innerHTML = `
 
-    <div class="glass w-full max-w-md p-6 rounded-3xl">
+<div class="min-h-screen flex items-center justify-center p-5 fade">
 
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-black text-sky-300">Nara Pustaka</h1>
-        <p class="text-slate-300 mt-2">Sistem Operasional Penerbit</p>
-      </div>
+<div class="glass rounded-3xl p-6 w-full max-w-md">
 
-      <div class="space-y-4">
-        <input id="username" type="text" placeholder="Username"
-        class="w-full p-4 rounded-2xl bg-white/10 border border-white/10 outline-none">
+<div class="text-center mb-8">
 
-        <input id="password" type="password" placeholder="Password"
-        class="w-full p-4 rounded-2xl bg-white/10 border border-white/10 outline-none">
+<h1 class="text-4xl font-black text-sky-500">
+Nara Pustaka
+</h1>
 
-        <button onclick="login()"
-        class="w-full bg-sky-500 hover:bg-sky-600 transition p-4 rounded-2xl font-bold">
-          Login
-        </button>
-      </div>
+<p class="text-slate-600 mt-2">
+Sistem Operasional Mobile
+</p>
 
-    </div>
-  </div>
-  `;
+</div>
+
+<div class="space-y-4">
+
+<input
+id="username"
+placeholder="Username"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
+
+<input
+id="password"
+type="password"
+placeholder="Password"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
+
+<button
+onclick="login()"
+class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">
+
+Login
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
 }
 
 function login(){
-  const u=document.getElementById('username').value;
-  const p=document.getElementById('password').value;
 
-  const found=USERS.find(x=>x.username===u && x.password===p);
+const u = document.getElementById('username').value;
+const p = document.getElementById('password').value;
 
-  if(found){
-    localStorage.setItem('naraUser',JSON.stringify(found));
-    toast('Login berhasil');
-    renderDashboard(found);
-  }else{
-    toast('Username/password salah');
-  }
+const found = USERS.find(x=>x.username===u && x.password===p);
+
+if(found){
+
+localStorage.setItem('naraUser',JSON.stringify(found));
+
+toast('Login berhasil');
+
+loadAllData(found);
+
+}else{
+
+toast('Username/password salah');
+
+}
+
 }
 
 function logout(){
-  localStorage.removeItem('naraUser');
-  renderLogin();
+
+localStorage.removeItem('naraUser');
+
+renderLogin();
+
+}
+
+async function loadAllData(user){
+
+try{
+
+const [
+booksRes,
+salesRes,
+projectsRes,
+expensesRes,
+royaltyRes
+] = await Promise.all([
+
+fetch(API_URL + '?action=getBooks'),
+fetch(API_URL + '?action=getSales'),
+fetch(API_URL + '?action=getProjects'),
+fetch(API_URL + '?action=getExpenses'),
+fetch(API_URL + '?action=getRoyalty')
+
+]);
+
+books = await booksRes.json();
+sales = await salesRes.json();
+projects = await projectsRes.json();
+expenses = await expensesRes.json();
+royalty = await royaltyRes.json();
+
+renderDashboard(user);
+
+}catch(err){
+
+console.log(err);
+
+toast('Gagal memuat data');
+
+}
+
 }
 
 function renderDashboard(user){
 
-  let content='';
+if(user.role==='Manager'){
+managerDashboard(user);
+return;
+}
 
-  if(user.role==='Manager') content=managerDashboard(user);
-  else if(user.role==='Administrasi') content=adminDashboard(user);
-  else if(user.role==='Redaksi') content=redaksiDashboard(user);
-  else content=staffDashboard(user);
+if(user.role==='Administrasi'){
+adminDashboard(user);
+return;
+}
 
-  document.getElementById('app').innerHTML=content;
+if(user.role==='Redaksi'){
+redaksiDashboard(user);
+return;
+}
 
-  if(user.role==='Manager') initCharts();
+if(user.role==='Desain'){
+designDashboard(user);
+return;
+}
+
+creativeDashboard(user);
+
 }
 
 function totalIncome(){
-  return salesData.reduce((a,b)=>a+Number(b.total||0),0);
+return sales.reduce((a,b)=>a+Number(b.total||0),0);
+}
+
+function totalExpense(){
+return expenses.reduce((a,b)=>a+Number(b.amount||0),0);
 }
 
 function totalRoyalty(){
-  return salesData.reduce((a,b)=>a+Number(b.royalty||0),0);
+return royalty.reduce((a,b)=>a+Number(b.amount||0),0);
 }
 
 function managerDashboard(user){
 
-  const income=totalIncome();
-  const royalty=totalRoyalty();
-  const expense=500000;
-  const gross=income-expense;
-  const net=gross-royalty;
+const income = totalIncome();
+const expense = totalExpense();
+const royal = totalRoyalty();
 
-  return `
+const labaKotor = income - expense;
+const labaBersih = labaKotor - royal;
 
-  <div class="pb-28 p-4 fade-in">
+document.getElementById('app').innerHTML = `
 
-    <div class="flex justify-between items-center mb-5">
-      <div>
-        <h1 class="text-3xl font-black text-sky-300">Manager</h1>
-        <p class="text-slate-300">Halo ${user.fullname}</p>
-      </div>
+<div class="p-4 pb-28 fade">
 
-      <button onclick="logout()"
-      class="bg-red-500 px-4 py-2 rounded-xl">
-        Logout
-      </button>
-    </div>
+<div class="flex justify-between items-center mb-5">
 
-    <div class="grid grid-cols-2 gap-4">
+<div>
 
-      ${card('Total Pemasukan','Rp '+income.toLocaleString(),'fa-wallet')}
-      ${card('Pengeluaran','Rp '+expense.toLocaleString(),'fa-money-bill')}
-      ${card('Laba Kotor','Rp '+gross.toLocaleString(),'fa-chart-line')}
-      ${card('Laba Bersih','Rp '+net.toLocaleString(),'fa-coins')}
-      ${card('Royalti','Rp '+royalty.toLocaleString(),'fa-crown')}
-      ${card('Penjualan',salesData.length,'fa-cart-shopping')}
+<h1 class="text-3xl font-black text-sky-500">
+Manager
+</h1>
 
-    </div>
+<p class="text-slate-600">
+Halo ${user.fullname}
+</p>
 
-    <div class="glass rounded-3xl p-5 mt-5">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="font-bold text-xl">Grafik Penjualan</h2>
-      </div>
-      <canvas id="salesChart"></canvas>
-    </div>
+</div>
 
-    <div class="glass rounded-3xl p-5 mt-5">
-      <h2 class="font-bold text-xl mb-4">Grafik Laba</h2>
-      <canvas id="profitChart"></canvas>
-    </div>
+<button
+onclick="logout()"
+class="bg-red-500 text-white px-4 py-2 rounded-xl">
 
-    <div class="glass rounded-3xl p-5 mt-5 overflow-auto hidden-scroll">
+Logout
 
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="font-bold text-xl">Laporan</h2>
-      </div>
+</button>
 
-      <div class="space-y-3">
+</div>
 
-        <button onclick="exportManagerPDF()"
-        class="w-full bg-sky-500 p-4 rounded-2xl font-bold">
-        Export PDF Manager
-        </button>
+<div class="grid grid-cols-2 gap-4">
 
-        <button onclick="exportTaxPDF()"
-        class="w-full bg-emerald-500 p-4 rounded-2xl font-bold">
-        Export PDF Pajak
-        </button>
+${card('Pemasukan','Rp '+income.toLocaleString(),'fa-wallet')}
+${card('Pengeluaran','Rp '+expense.toLocaleString(),'fa-money-bill')}
+${card('Laba Kotor','Rp '+labaKotor.toLocaleString(),'fa-chart-line')}
+${card('Laba Bersih','Rp '+labaBersih.toLocaleString(),'fa-coins')}
+${card('Royalti','Rp '+royal.toLocaleString(),'fa-crown')}
+${card('Penjualan',sales.length,'fa-cart-shopping')}
 
-        <button onclick="exportRoyaltyPDF()"
-        class="w-full bg-purple-500 p-4 rounded-2xl font-bold">
-        Export Royalti
-        </button>
+</div>
 
-      </div>
+<div class="glass rounded-3xl p-5 mt-5">
 
-    </div>
+<h2 class="font-bold text-xl mb-4">
+Grafik Penjualan
+</h2>
 
-    ${bottomNav()}
+<canvas id="salesChart"></canvas>
 
-  </div>
-  `;
+</div>
+
+<div class="glass rounded-3xl p-5 mt-5">
+
+<button
+onclick="exportManagerPDF()"
+class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">
+
+Export PDF Manager
+
+</button>
+
+</div>
+
+${bottomNav()}
+
+</div>
+
+`;
+
+setTimeout(initChart,100);
+
 }
 
 function adminDashboard(user){
 
-  return `
+document.getElementById('app').innerHTML = `
 
-  <div class="p-4 pb-28 fade-in">
+<div class="p-4 pb-28 fade">
 
-    <div class="flex justify-between items-center mb-5">
-      <div>
-        <h1 class="text-3xl font-black text-sky-300">Administrasi</h1>
-        <p class="text-slate-300">Input Penjualan</p>
-      </div>
+<div class="flex justify-between items-center mb-5">
 
-      <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-xl">Logout</button>
-    </div>
+<div>
 
-    <div class="glass rounded-3xl p-5 space-y-4 shadow-xl">
+<h1 class="text-3xl font-black text-sky-500">
+Administrasi
+</h1>
 
-      <input id="book" placeholder="Pilih Buku"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+<p class="text-slate-600">
+Input Penjualan & Pengeluaran
+</p>
 
-      <input id="buyer" placeholder="Nama Pembeli"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+</div>
 
-      <input id="qty" type="number" placeholder="Jumlah"
-      oninput="calculateTotal()"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+<button
+onclick="logout()"
+class="bg-red-500 text-white px-4 py-2 rounded-xl">
 
-      <input id="marketplace" placeholder="Marketplace"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+Logout
 
-      <input id="total" readonly placeholder="Total Otomatis"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+</button>
 
-      <input id="royalty" readonly placeholder="Royalti Otomatis"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+</div>
 
-      <input type="file"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+<div class="glass rounded-3xl p-5 space-y-4">
 
-      <input type="file"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+<h2 class="text-xl font-bold text-sky-600">
+Input Penjualan
+</h2>
 
-      <div class="grid grid-cols-2 gap-3">
+<select
+id="book"
+onchange="calculateTotal()"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
 
-        <button onclick="saveSale('${user.fullname}')"
-        class="bg-sky-500 p-4 rounded-2xl font-bold">
-          Simpan
-        </button>
+<option value="">
+Pilih Buku
+</option>
 
-        <button onclick="clearSales()"
-        class="bg-red-500 p-4 rounded-2xl font-bold">
-          Hapus
-        </button>
+${books.map(b=>`
+<option value="${b.title}">
+${b.title}
+</option>
+`).join('')}
 
-      </div>
+</select>
 
-    </div>
+<input
+id="buyer"
+placeholder="Nama Pembeli"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-    <div class="mt-5 space-y-3">
+<input
+id="qty"
+type="number"
+placeholder="Jumlah"
+oninput="calculateTotal()"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-      <div class="glass rounded-3xl p-5 mb-5 shadow-xl">
-        <h2 class="text-xl font-bold mb-4 text-emerald-600">Input Pengeluaran Cetak</h2>
+<input
+id="marketplace"
+placeholder="Marketplace"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-        <div class="space-y-4">
-          <input id="expenseName" placeholder="Nama Pengeluaran"
-          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+<input
+id="total"
+readonly
+placeholder="Total"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-          <input id="vendor" placeholder="Vendor Percetakan"
-          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+<input
+id="royaltyAmount"
+readonly
+placeholder="Royalti"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-          <input id="expenseAmount" type="number" placeholder="Jumlah Biaya"
-          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+<button
+onclick="saveSale('${user.fullname}')"
+class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">
 
-          <input type="file"
-          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+Simpan Penjualan
 
-          <button onclick="toast('Pengeluaran berhasil disimpan')"
-          class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold">
-            Simpan Pengeluaran
-          </button>
-        </div>
-      </div>
+</button>
 
-      ${salesData.map((s,i)=>`
-      <div class="glass p-4 rounded-2xl">
-        <div class="flex justify-between">
-          <div>
-            <h3 class="font-bold">${s.book}</h3>
-            <p class="text-sm text-slate-300">${s.buyer}</p>
-          </div>
+</div>
 
-          <button onclick="deleteSale(${i})"
-          class="bg-red-500 px-3 py-1 rounded-xl">
-            <i class="fa fa-trash"></i>
-          </button>
-        </div>
-      </div>
-      `).join('')}
+<div class="glass rounded-3xl p-5 mt-5 space-y-4">
 
-    </div>
+<h2 class="text-xl font-bold text-emerald-600">
+Input Pengeluaran
+</h2>
 
-    ${bottomNav()}
+<input
+id="expenseDescription"
+placeholder="Nama Pengeluaran"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-  </div>
-  `;
+<input
+id="vendor"
+placeholder="Vendor"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
+
+<input
+id="expenseAmount"
+type="number"
+placeholder="Jumlah"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
+
+<button
+onclick="saveExpense('${user.fullname}')"
+class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold">
+
+Simpan Pengeluaran
+
+</button>
+
+</div>
+
+${bottomNav()}
+
+</div>
+
+`;
+
 }
 
 function redaksiDashboard(user){
 
-  return `
+document.getElementById('app').innerHTML = `
 
-  <div class="p-4 pb-28 fade-in">
+<div class="p-4 pb-28 fade">
 
-    <div class="flex justify-between items-center mb-5">
+<div class="flex justify-between items-center mb-5">
 
-      <div>
-        <h1 class="text-3xl font-black text-sky-300">Redaksi</h1>
-        <p class="text-slate-300">Tracking Naskah</p>
-      </div>
+<div>
 
-      <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-xl">Logout</button>
+<h1 class="text-3xl font-black text-pink-500">
+Redaksi
+</h1>
 
-    </div>
+<p class="text-slate-600">
+Tracking Naskah
+</p>
 
-    <div class="glass rounded-3xl p-5 space-y-4 shadow-xl">
+</div>
 
-      <input id="title" placeholder="Judul Buku"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+<button
+onclick="logout()"
+class="bg-red-500 text-white px-4 py-2 rounded-xl">
 
-      <input id="author" placeholder="Penulis"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+Logout
 
-      <input id="isbn" placeholder="ISBN/QRCBN"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+</button>
 
-      <input id="price" placeholder="Harga"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+</div>
 
-      <input id="percent" placeholder="Royalti %"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+<div class="glass rounded-3xl p-5 space-y-4">
 
-      <input id="editor" placeholder="Editor"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+<input
+id="title"
+placeholder="Judul Buku"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-      <input id="layout" placeholder="Layout"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+<input
+id="author"
+placeholder="Penulis"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-      <input id="cover" placeholder="Cover"
-      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+<input
+id="editor"
+placeholder="Editor"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-      <select id="status"
-      class="w-full p-4 rounded-2xl bg-slate-800 border border-white/10">
+<input
+id="layout"
+placeholder="Layout"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-        <option>Naskah Masuk</option>
-        <option>Editing</option>
-        <option>Layout</option>
-        <option>Cover</option>
-        <option>Cetak</option>
-        <option>Distribusi</option>
-        <option>Selesai</option>
+<input
+id="cover"
+placeholder="Cover"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-      </select>
+<select
+id="status"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
 
-      <button onclick="saveProject()"
-      class="w-full bg-sky-500 p-4 rounded-2xl font-bold">
-        Simpan Proyek
-      </button>
+<option>Naskah Masuk</option>
+<option>Editing</option>
+<option>Layout</option>
+<option>Cover</option>
+<option>Cetak</option>
+<option>Distribusi</option>
+<option>Selesai</option>
 
-    </div>
+</select>
 
-    <div class="mt-5 space-y-3">
+<button
+onclick="saveProject()"
+class="w-full bg-pink-500 text-white p-4 rounded-2xl font-bold">
 
-      ${projectsData.map((p,i)=>`
-      <div class="glass p-4 rounded-2xl">
+Simpan Proyek
 
-        <div class="flex justify-between items-start">
+</button>
 
-          <div>
-            <h2 class="font-bold text-lg">${p.title}</h2>
-            <p class="text-slate-300">${p.author}</p>
-          </div>
+</div>
 
-          <span class="bg-sky-500 px-3 py-1 rounded-full text-sm">
-            ${p.status}
-          </span>
+${bottomNav()}
 
-        </div>
+</div>
 
-        <div class="mt-3 text-sm text-slate-300">
-          Editor: ${p.editor}<br>
-          Layout: ${p.layout}<br>
-          Cover: ${p.cover}
-        </div>
+`;
 
-      </div>
-      `).join('')}
-
-    </div>
-
-    ${bottomNav()}
-
-  </div>
-  `;
 }
 
-function staffDashboard(user){
+function designDashboard(user){
 
-  if(user.role==='Desain'){
-    return `
-    <div class="p-4 pb-28 fade-in">
+document.getElementById('app').innerHTML = `
 
-      <div class="flex justify-between items-center mb-5">
-        <div>
-          <h1 class="text-3xl font-black text-pink-500">Desain</h1>
-          <p class="text-slate-700">Manajemen Cover & Layout</p>
-        </div>
+<div class="p-4 pb-28 fade">
 
-        <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-xl">Logout</button>
-      </div>
+<div class="glass rounded-3xl p-6">
 
-      <div class="glass rounded-3xl p-5 space-y-4 shadow-xl">
+<h1 class="text-3xl font-black text-purple-500 mb-2">
+Desain
+</h1>
 
-        <input id="designTitle" placeholder="Judul Buku"
-        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+<p class="text-slate-600">
+Progress Cover & Layout
+</p>
 
-        <input id="designer" placeholder="Nama Desainer"
-        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+<div class="space-y-4 mt-5">
 
-        <input id="deadline" type="date"
-        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+<input
+placeholder="Judul Buku"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
 
-        <textarea id="revision" placeholder="Catatan Revisi"
-        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"></textarea>
+<textarea
+placeholder="Catatan Revisi"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+</textarea>
 
-        <select id="designStatus"
-        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
-          <option>Draft Cover</option>
-          <option>Revisi</option>
-          <option>Final Layout</option>
-          <option>Siap Cetak</option>
-        </select>
+<select
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
 
-        <button onclick="toast('Progress desain berhasil disimpan')"
-        class="w-full bg-pink-500 text-white p-4 rounded-2xl font-bold">
-        Simpan Progress
-        </button>
+<option>Draft</option>
+<option>Revisi</option>
+<option>Final</option>
 
-      </div>
+</select>
 
-      ${bottomNav()}
+<button
+onclick="toast('Progress desain disimpan')"
+class="w-full bg-purple-500 text-white p-4 rounded-2xl font-bold">
 
-    </div>
-    `;
-  }
+Simpan
 
-  if(user.role==='Kreatif'){
-    return `
-    <div class="p-4 pb-28 fade-in">
+</button>
 
-      <div class="glass rounded-3xl p-6">
-        <h1 class="text-3xl font-black text-purple-500 mb-2">Kreatif</h1>
-        <p class="text-slate-700">Manajemen Konten Promosi</p>
+</div>
 
-        <div class="space-y-4 mt-5">
-          <input placeholder="Nama Campaign"
-          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+</div>
 
-          <textarea placeholder="Ide Konten"
-          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"></textarea>
+${bottomNav()}
 
-          <button onclick="toast('Campaign berhasil dibuat')"
-          class="w-full bg-purple-500 text-white p-4 rounded-2xl font-bold">
-          Simpan Campaign
-          </button>
-        </div>
-      </div>
+</div>
 
-      ${bottomNav()}
+`;
 
-    </div>
-    `;
-  }
+}
 
-  return `
-  <div class="min-h-screen p-5 fade-in">
+function creativeDashboard(user){
 
-    <div class="glass rounded-3xl p-6 text-center mt-20 shadow-2xl">
-      <h1 class="text-4xl font-black text-sky-500 mb-3">${user.role}</h1>
-      <p class="text-slate-700">Selamat datang ${user.fullname}</p>
+document.getElementById('app').innerHTML = `
 
-      <div class="mt-6 text-left space-y-3">
-        <div class="glass p-4 rounded-2xl">Monitoring Operasional</div>
-        <div class="glass p-4 rounded-2xl">Timeline Tim</div>
-      </div>
+<div class="p-4 pb-28 fade">
 
-      <button onclick="logout()"
-      class="w-full mt-6 bg-red-500 text-white p-4 rounded-2xl font-bold">
-      Logout
-      </button>
+<div class="glass rounded-3xl p-6">
 
-    </div>
+<h1 class="text-3xl font-black text-orange-500 mb-2">
+Kreatif
+</h1>
 
-    ${bottomNav()}
+<p class="text-slate-600">
+Manajemen Konten
+</p>
 
-  </div>
-  `;
+<div class="space-y-4 mt-5">
+
+<input
+placeholder="Nama Campaign"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
+/>
+
+<textarea
+placeholder="Ide Konten"
+class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+</textarea>
+
+<button
+onclick="toast('Campaign berhasil dibuat')"
+class="w-full bg-orange-500 text-white p-4 rounded-2xl font-bold">
+
+Simpan Campaign
+
+</button>
+
+</div>
+
+</div>
+
+${bottomNav()}
+
+</div>
+
+`;
+
 }
 
 function card(title,value,icon){
-  return `
-  <div class="glass rounded-3xl p-4">
-    <div class="flex justify-between items-center">
-      <div>
-        <p class="text-slate-300 text-sm">${title}</p>
-        <h2 class="text-xl font-black mt-2">${value}</h2>
-      </div>
 
-      <div class="text-3xl text-sky-300">
-        <i class="fa ${icon}"></i>
-      </div>
-    </div>
-  </div>
-  `;
+return `
+
+<div class="glass rounded-3xl p-4">
+
+<div class="flex justify-between items-center">
+
+<div>
+
+<p class="text-sm text-slate-600">
+${title}
+</p>
+
+<h2 class="text-xl font-black mt-2">
+${value}
+</h2>
+
+</div>
+
+<div class="text-3xl text-sky-500">
+<i class="fa ${icon}"></i>
+</div>
+
+</div>
+
+</div>
+
+`;
+
 }
 
 function bottomNav(){
-  return `
 
-  <div class="bottom-nav px-4 pb-4">
+return `
 
-    <div class="glass rounded-3xl p-4 flex justify-around items-center">
+<div class="bottom-nav px-4 pb-4">
 
-      <button onclick="checkSession()">
-        <i class="fa fa-house text-xl"></i>
-      </button>
+<div class="glass rounded-3xl p-4 flex justify-around items-center">
 
-      <button onclick="toast('Dashboard aktif')">
-        <i class="fa fa-chart-simple text-xl"></i>
-      </button>
+<button onclick="checkSession()">
+<i class="fa fa-house text-xl"></i>
+</button>
 
-      <button onclick="window.scrollTo({top:0,behavior:'smooth'})"
-      class="bg-sky-500 w-14 h-14 rounded-full -mt-10 shadow-2xl">
-        <i class="fa fa-plus"></i>
-      </button>
+<button
+onclick="window.scrollTo({top:0,behavior:'smooth'})"
+class="bg-sky-500 text-white w-14 h-14 rounded-full -mt-10">
 
-      <button onclick="toast('Laporan siap')">
-        <i class="fa fa-file text-xl"></i>
-      </button>
+<i class="fa fa-plus"></i>
 
-      <button onclick="logout()">
-        <i class="fa fa-right-from-bracket text-xl"></i>
-      </button>
+</button>
 
-    </div>
+<button onclick="logout()">
+<i class="fa fa-right-from-bracket text-xl"></i>
+</button>
 
-  </div>
-  `;
+</div>
+
+</div>
+
+`;
+
 }
 
 function calculateTotal(){
-  const qty=Number(document.getElementById('qty').value || 0);
 
-  const total=qty*85000;
-  const royalty=total*0.1;
+const title = document.getElementById('book').value;
 
-  document.getElementById('total').value='Rp '+total.toLocaleString();
-  document.getElementById('royalty').value='Rp '+royalty.toLocaleString();
+const book = books.find(x=>x.title===title);
+
+const qty = Number(document.getElementById('qty').value || 0);
+
+if(!book) return;
+
+const total = qty * Number(book.price);
+const royal = total * (Number(book.royalty_percent)/100);
+
+document.getElementById('total').value =
+'Rp ' + total.toLocaleString();
+
+document.getElementById('royaltyAmount').value =
+'Rp ' + royal.toLocaleString();
+
 }
 
 async function saveSale(user){
 
-  const sale={
-    id:Date.now(),
-    buyer:document.getElementById('buyer').value,
-    book:document.getElementById('book').value,
-    qty:document.getElementById('qty').value,
-    marketplace:document.getElementById('marketplace').value,
-    total:Number(document.getElementById('qty').value||0)*85000,
-    royalty:Number(document.getElementById('qty').value||0)*8500,
-    user:user,
-    date:new Date().toLocaleDateString()
-  };
+const title = document.getElementById('book').value;
 
-  salesData.unshift(sale);
-  saveData();
+const book = books.find(x=>x.title===title);
 
-  try{
-    await fetch(API_URL,{
-      method:'POST',
-      body:JSON.stringify({
-        action:'addSale',
-        data:sale
-      })
-    });
-  }catch(err){
-    console.log(err);
-  }
-
-  toast('Penjualan berhasil disimpan');
-
-  const current=JSON.parse(localStorage.getItem('naraUser'));
-  renderDashboard(current);
+if(!book){
+toast('Buku belum dipilih');
+return;
 }
 
-function deleteSale(i){
-  if(confirm('Hapus data?')){
-    salesData.splice(i,1);
-    saveData();
+const qty = Number(document.getElementById('qty').value || 0);
 
-    const current=JSON.parse(localStorage.getItem('naraUser'));
-    renderDashboard(current);
+const total = qty * Number(book.price);
 
-    toast('Data dihapus');
-  }
+const royal =
+total * (Number(book.royalty_percent)/100);
+
+const data = {
+
+id:Date.now(),
+
+date:new Date().toLocaleDateString(),
+
+buyer_name:document.getElementById('buyer').value,
+
+book:title,
+
+author:book.author,
+
+qty:qty,
+
+total:total,
+
+royalty:royal,
+
+marketplace:document.getElementById('marketplace').value,
+
+payment_status:'Paid',
+
+user:user
+
+};
+
+await fetch(API_URL,{
+method:'POST',
+body:JSON.stringify({
+action:'addSale',
+data:data
+})
+});
+
+toast('Penjualan berhasil disimpan');
+
+const current =
+JSON.parse(localStorage.getItem('naraUser'));
+
+loadAllData(current);
+
 }
 
-function clearSales(){
-  if(confirm('Hapus semua data penjualan?')){
-    salesData=[];
-    saveData();
+async function saveExpense(user){
 
-    const current=JSON.parse(localStorage.getItem('naraUser'));
-    renderDashboard(current);
-  }
+const data = {
+
+id:Date.now(),
+
+description:
+document.getElementById('expenseDescription').value,
+
+category:'Percetakan',
+
+vendor:
+document.getElementById('vendor').value,
+
+amount:
+document.getElementById('expenseAmount').value,
+
+receipt_file:'-',
+
+date:new Date().toLocaleDateString(),
+
+user:user
+
+};
+
+await fetch(API_URL,{
+method:'POST',
+body:JSON.stringify({
+action:'addExpense',
+data:data
+})
+});
+
+toast('Pengeluaran berhasil disimpan');
+
+const current =
+JSON.parse(localStorage.getItem('naraUser'));
+
+loadAllData(current);
+
 }
 
-function saveProject(){
+async function saveProject(){
 
-  const data={
-    title:document.getElementById('title').value,
-    author:document.getElementById('author').value,
-    isbn:document.getElementById('isbn').value,
-    price:document.getElementById('price').value,
-    percent:document.getElementById('percent').value,
-    editor:document.getElementById('editor').value,
-    layout:document.getElementById('layout').value,
-    cover:document.getElementById('cover').value,
-    status:document.getElementById('status').value
-  };
+const data = {
 
-  projectsData.unshift(data);
-  saveData();
+projectId:Date.now(),
 
-  toast('Proyek berhasil disimpan');
+title:document.getElementById('title').value,
 
-  const current=JSON.parse(localStorage.getItem('naraUser'));
-  renderDashboard(current);
+author:document.getElementById('author').value,
+
+status:document.getElementById('status').value,
+
+redaksi:'Elyna',
+
+editor:document.getElementById('editor').value,
+
+layout:document.getElementById('layout').value,
+
+cover:document.getElementById('cover').value
+
+};
+
+await fetch(API_URL,{
+method:'POST',
+body:JSON.stringify({
+action:'addProject',
+data:data
+})
+});
+
+toast('Project berhasil disimpan');
+
+const current =
+JSON.parse(localStorage.getItem('naraUser'));
+
+loadAllData(current);
+
 }
 
-function initCharts(){
+function initChart(){
 
-  const salesCtx=document.getElementById('salesChart');
-  if(salesCtx){
+const ctx = document.getElementById('salesChart');
 
-    new Chart(salesCtx,{
-      type:'line',
-      data:{
-        labels:['Jan','Feb','Mar','Apr','Mei','Jun'],
-        datasets:[{
-          label:'Penjualan',
-          data:[12,19,8,14,20,30],
-          borderColor:'#38bdf8',
-          backgroundColor:'rgba(56,189,248,.2)',
-          tension:.4,
-          fill:true
-        }]
-      }
-    });
-  }
+if(!ctx) return;
 
-  const profitCtx=document.getElementById('profitChart');
+new Chart(ctx,{
+type:'line',
+data:{
+labels:sales.map(s=>s.date),
+datasets:[{
+label:'Penjualan',
+data:sales.map(s=>s.total),
+borderColor:'#0ea5e9',
+backgroundColor:'rgba(14,165,233,.2)',
+fill:true,
+tension:.4
+}]
+}
+});
 
-  if(profitCtx){
-
-    new Chart(profitCtx,{
-      type:'bar',
-      data:{
-        labels:['Jan','Feb','Mar','Apr','Mei'],
-        datasets:[{
-          label:'Laba',
-          data:[3,4,5,7,8],
-          backgroundColor:'rgba(16,185,129,.7)'
-        }]
-      }
-    });
-  }
 }
 
 function exportManagerPDF(){
 
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF();
+const {jsPDF} = window.jspdf;
 
-  doc.setFontSize(20);
-  doc.text('Nara Pustaka',20,20);
+const doc = new jsPDF();
 
-  doc.setFontSize(12);
-  doc.text('Laporan Manager',20,30);
+doc.setFontSize(20);
 
-  doc.text('Tanggal: '+new Date().toLocaleDateString(),20,40);
+doc.text('Nara Pustaka',20,20);
 
-  doc.text('Total Pemasukan: Rp '+totalIncome().toLocaleString(),20,60);
-  doc.text('Total Royalti: Rp '+totalRoyalty().toLocaleString(),20,70);
-  doc.text('Total Penjualan: '+salesData.length,20,80);
+doc.setFontSize(12);
 
-  doc.text('Tanda Tangan',140,240);
-  doc.text('Vero',150,255);
+doc.text('Laporan Manager',20,35);
 
-  doc.save('laporan-manager.pdf');
+doc.text(
+'Total Pemasukan: Rp ' +
+totalIncome().toLocaleString(),
+20,
+55
+);
 
-  toast('PDF Manager berhasil dibuat');
-}
+doc.text(
+'Total Pengeluaran: Rp ' +
+totalExpense().toLocaleString(),
+20,
+70
+);
 
-function exportTaxPDF(){
+doc.text(
+'Total Royalti: Rp ' +
+totalRoyalty().toLocaleString(),
+20,
+85
+);
 
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF();
+doc.text(
+'Laba Bersih: Rp ' +
+(totalIncome()-totalExpense()-totalRoyalty()).toLocaleString(),
+20,
+100
+);
 
-  doc.setFontSize(20);
-  doc.text('Nara Pustaka',20,20);
+doc.text(
+'Tanggal: ' +
+new Date().toLocaleDateString(),
+20,
+120
+);
 
-  doc.text('Laporan Pajak',20,35);
+doc.text('Tanda Tangan Vero',140,250);
 
-  doc.text('Estimasi Pajak: Rp '+(totalIncome()*0.11).toLocaleString(),20,60);
+doc.save('laporan-manager.pdf');
 
-  doc.text('Disetujui Vero',140,250);
-
-  doc.save('laporan-pajak.pdf');
-
-  toast('PDF Pajak berhasil dibuat');
-}
-
-function exportRoyaltyPDF(){
-
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF();
-
-  doc.setFontSize(20);
-  doc.text('Laporan Royalti Penulis',20,20);
-
-  let y=40;
-
-  salesData.forEach((s,index)=>{
-    doc.text(`${index+1}. ${s.book} - ${s.buyer} - Rp ${s.royalty.toLocaleString()}`,20,y);
-    y+=10;
-  });
-
-  doc.text('Dicetak oleh Vero',20,260);
-
-  doc.save('laporan-royalti.pdf');
-
-  toast('PDF Royalti berhasil dibuat');
 }
 
 </script>
 
 </body>
 </html>
-
-
-Dan akun lainnya sesuai permintaan.
