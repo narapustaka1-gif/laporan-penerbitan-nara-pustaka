@@ -14,16 +14,16 @@
     *{scroll-behavior:smooth}
     body{
       font-family:Inter,sans-serif;
-      background:linear-gradient(135deg,#0f172a,#1e293b,#111827);
+      background:linear-gradient(135deg,#dbeafe,#fce7f3,#dcfce7,#fef3c7);
       min-height:100vh;
       overflow-x:hidden;
-      color:white;
+      color:#1e293b;
     }
 
     .glass{
-      background:rgba(255,255,255,.08);
+      background:rgba(255,255,255,.55);
       backdrop-filter:blur(14px);
-      border:1px solid rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.4);
       box-shadow:0 8px 32px rgba(0,0,0,.3);
     }
 
@@ -47,7 +47,7 @@
     .loader{
       position:fixed;
       inset:0;
-      background:#020617;
+      background:linear-gradient(135deg,#bfdbfe,#fbcfe8,#bbf7d0);
       display:flex;
       justify-content:center;
       align-items:center;
@@ -298,7 +298,7 @@ function adminDashboard(user){
       <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-xl">Logout</button>
     </div>
 
-    <div class="glass rounded-3xl p-5 space-y-4">
+    <div class="glass rounded-3xl p-5 space-y-4 shadow-xl">
 
       <input id="book" placeholder="Pilih Buku"
       class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
@@ -343,6 +343,29 @@ function adminDashboard(user){
 
     <div class="mt-5 space-y-3">
 
+      <div class="glass rounded-3xl p-5 mb-5 shadow-xl">
+        <h2 class="text-xl font-bold mb-4 text-emerald-600">Input Pengeluaran Cetak</h2>
+
+        <div class="space-y-4">
+          <input id="expenseName" placeholder="Nama Pengeluaran"
+          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+
+          <input id="vendor" placeholder="Vendor Percetakan"
+          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+
+          <input id="expenseAmount" type="number" placeholder="Jumlah Biaya"
+          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+
+          <input type="file"
+          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+
+          <button onclick="toast('Pengeluaran berhasil disimpan')"
+          class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold">
+            Simpan Pengeluaran
+          </button>
+        </div>
+      </div>
+
       ${salesData.map((s,i)=>`
       <div class="glass p-4 rounded-2xl">
         <div class="flex justify-between">
@@ -384,7 +407,7 @@ function redaksiDashboard(user){
 
     </div>
 
-    <div class="glass rounded-3xl p-5 space-y-4">
+    <div class="glass rounded-3xl p-5 space-y-4 shadow-xl">
 
       <input id="title" placeholder="Judul Buku"
       class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
@@ -466,21 +489,97 @@ function redaksiDashboard(user){
 }
 
 function staffDashboard(user){
+
+  if(user.role==='Desain'){
+    return `
+    <div class="p-4 pb-28 fade-in">
+
+      <div class="flex justify-between items-center mb-5">
+        <div>
+          <h1 class="text-3xl font-black text-pink-500">Desain</h1>
+          <p class="text-slate-700">Manajemen Cover & Layout</p>
+        </div>
+
+        <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-xl">Logout</button>
+      </div>
+
+      <div class="glass rounded-3xl p-5 space-y-4 shadow-xl">
+
+        <input id="designTitle" placeholder="Judul Buku"
+        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+
+        <input id="designer" placeholder="Nama Desainer"
+        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+
+        <input id="deadline" type="date"
+        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+
+        <textarea id="revision" placeholder="Catatan Revisi"
+        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"></textarea>
+
+        <select id="designStatus"
+        class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+          <option>Draft Cover</option>
+          <option>Revisi</option>
+          <option>Final Layout</option>
+          <option>Siap Cetak</option>
+        </select>
+
+        <button onclick="toast('Progress desain berhasil disimpan')"
+        class="w-full bg-pink-500 text-white p-4 rounded-2xl font-bold">
+        Simpan Progress
+        </button>
+
+      </div>
+
+      ${bottomNav()}
+
+    </div>
+    `;
+  }
+
+  if(user.role==='Kreatif'){
+    return `
+    <div class="p-4 pb-28 fade-in">
+
+      <div class="glass rounded-3xl p-6">
+        <h1 class="text-3xl font-black text-purple-500 mb-2">Kreatif</h1>
+        <p class="text-slate-700">Manajemen Konten Promosi</p>
+
+        <div class="space-y-4 mt-5">
+          <input placeholder="Nama Campaign"
+          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
+
+          <textarea placeholder="Ide Konten"
+          class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"></textarea>
+
+          <button onclick="toast('Campaign berhasil dibuat')"
+          class="w-full bg-purple-500 text-white p-4 rounded-2xl font-bold">
+          Simpan Campaign
+          </button>
+        </div>
+      </div>
+
+      ${bottomNav()}
+
+    </div>
+    `;
+  }
+
   return `
   <div class="min-h-screen p-5 fade-in">
 
-    <div class="glass rounded-3xl p-6 text-center mt-20">
-      <h1 class="text-4xl font-black text-sky-300 mb-3">${user.role}</h1>
-      <p class="text-slate-300">Selamat datang ${user.fullname}</p>
+    <div class="glass rounded-3xl p-6 text-center mt-20 shadow-2xl">
+      <h1 class="text-4xl font-black text-sky-500 mb-3">${user.role}</h1>
+      <p class="text-slate-700">Selamat datang ${user.fullname}</p>
 
       <div class="mt-6 text-left space-y-3">
-        <div class="glass p-4 rounded-2xl">Task Kreatif</div>
-        <div class="glass p-4 rounded-2xl">Monitoring Produksi</div>
+        <div class="glass p-4 rounded-2xl">Monitoring Operasional</div>
         <div class="glass p-4 rounded-2xl">Timeline Tim</div>
       </div>
 
       <button onclick="logout()"
-      class="w-full mt-6 bg-red-500 p-4 rounded-2xl font-bold">
+      class="w-full mt-6 bg-red-500 text-white p-4 rounded-2xl font-bold">
       Logout
       </button>
 
@@ -743,3 +842,5 @@ function exportRoyaltyPDF(){
 </body>
 </html>
 
+
+Dan akun lainnya sesuai permintaan.
