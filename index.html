@@ -1,1086 +1,300 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Nara Pustaka Mobile</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
 
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Inter,sans-serif;
-}
-
 body{
-background:linear-gradient(135deg,#dbeafe,#fce7f3,#dcfce7,#fef3c7);
+background:linear-gradient(135deg,#dbeafe,#fce7f3,#dcfce7);
 min-height:100vh;
-overflow-x:hidden;
-color:#1e293b;
+font-family:sans-serif;
 }
-
 .glass{
 background:rgba(255,255,255,.55);
 backdrop-filter:blur(14px);
-border:1px solid rgba(255,255,255,.5);
+border:1px solid rgba(255,255,255,.4);
 box-shadow:0 8px 32px rgba(0,0,0,.08);
 }
-
-.loader{
-position:fixed;
-inset:0;
-display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(135deg,#bfdbfe,#fbcfe8,#bbf7d0);
-z-index:99999;
-}
-
-.spin{
-width:70px;
-height:70px;
-border:6px solid rgba(255,255,255,.3);
-border-top:6px solid #0ea5e9;
-border-radius:50%;
-animation:spin 1s linear infinite;
-}
-
-@keyframes spin{
-to{
-transform:rotate(360deg);
-}
-}
-
-.bottom-nav{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-z-index:999;
-}
-
-.fade{
-animation:fade .4s ease;
-}
-
-@keyframes fade{
-from{
-opacity:0;
-transform:translateY(10px);
-}
-to{
-opacity:1;
-transform:translateY(0);
-}
-}
-
-input,
-textarea,
-select{
-outline:none;
-}
-
 </style>
 </head>
-
 <body>
-
-<div id="loader" class="loader">
-<div class="text-center">
-<div class="spin mx-auto"></div>
-
-<h1 class="text-3xl font-black text-sky-500 mt-5">
-Nara Pustaka
-</h1>
-
-</div>
-</div>
-
-<div id="toast"
-class="fixed top-5 right-5 hidden z-[9999] px-5 py-3 rounded-2xl glass">
-</div>
 
 <div id="app"></div>
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbznZWEypHjDOe3GoyVCIHFl6fjKL4KJ6MepgAGfFEjXI-bKRGu8AIyuaSBSQzGd9WbqWw/exec";
+const API_URL = 'https://script.google.com/macros/s/AKfycbznZWEypHjDOe3GoyVCIHFl6fjKL4KJ6MepgAGfFEjXI-bKRGu8AIyuaSBSQzGd9WbqWw/exec';
 
 const USERS = [
-{
-username:'vero',
-password:'vero123',
-role:'Manager',
-fullname:'Vero'
-},
-{
-username:'jeyraa',
-password:'jey123',
-role:'Team Leader',
-fullname:'Jeyraa'
-},
-{
-username:'thami',
-password:'thami123',
-role:'Administrasi',
-fullname:'Thami'
-},
-{
-username:'elyna',
-password:'ely123',
-role:'Redaksi',
-fullname:'Elyna'
-},
-{
-username:'nala',
-password:'nala123',
-role:'Desain',
-fullname:'Nala'
-},
-{
-username:'calista',
-password:'calista123',
-role:'Kreatif',
-fullname:'Calista'
-},
-{
-username:'zahra',
-password:'zahra123',
-role:'Kreatif',
-fullname:'Zahra'
-}
+{username:'vero',password:'vero123',role:'Manager',fullname:'Vero'},
+{username:'thami',password:'thami123',role:'Administrasi',fullname:'Thami'},
+{username:'elyna',password:'ely123',role:'Redaksi',fullname:'Elyna'},
+{username:'nala',password:'nala123',role:'Desain',fullname:'Nala'},
+{username:'jeyraa',password:'jey123',role:'Leader',fullname:'Jeyraa'}
 ];
 
-let books = [];
-let sales = [];
-let projects = [];
-let expenses = [];
-let royalty = [];
+let books=[];
+let sales=[];
+let projects=[];
+let expenses=[];
 
-setTimeout(()=>{
-document.getElementById('loader').style.display='none';
 checkSession();
-},1200);
-
-function toast(msg){
-
-const t = document.getElementById('toast');
-
-t.innerHTML = msg;
-
-t.classList.remove('hidden');
-
-setTimeout(()=>{
-t.classList.add('hidden');
-},2500);
-
-}
 
 function checkSession(){
-
 const user = JSON.parse(localStorage.getItem('naraUser'));
-
 if(user){
-loadAllData(user);
+loadData(user);
 }else{
 renderLogin();
 }
-
 }
 
 function renderLogin(){
-
-document.getElementById('app').innerHTML = `
-
-<div class="min-h-screen flex items-center justify-center p-5 fade">
-
+document.getElementById('app').innerHTML=`
+<div class="min-h-screen flex items-center justify-center p-5">
 <div class="glass rounded-3xl p-6 w-full max-w-md">
-
-<div class="text-center mb-8">
-
-<h1 class="text-4xl font-black text-sky-500">
+<h1 class="text-4xl font-black text-sky-500 text-center mb-6">
 Nara Pustaka
 </h1>
-
-<p class="text-slate-600 mt-2">
-Sistem Operasional Mobile
-</p>
-
-</div>
-
-<div class="space-y-4">
-
-<input
-id="username"
-placeholder="Username"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<input
-id="password"
-type="password"
-placeholder="Password"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<button
-onclick="login()"
-class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">
-
+<input id="username" placeholder="Username" class="w-full p-4 rounded-2xl mb-4 bg-white/70" />
+<input id="password" type="password" placeholder="Password" class="w-full p-4 rounded-2xl mb-4 bg-white/70" />
+<button onclick="login()" class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">
 Login
-
 </button>
-
 </div>
-
-</div>
-
-</div>
-
-`;
-
+</div>`;
 }
 
-function login(){
-
-const u = document.getElementById('username').value;
-const p = document.getElementById('password').value;
-
-const found = USERS.find(x=>x.username===u && x.password===p);
-
+async function login(){
+const u=document.getElementById('username').value;
+const p=document.getElementById('password').value;
+const found=USERS.find(x=>x.username===u && x.password===p);
 if(found){
-
 localStorage.setItem('naraUser',JSON.stringify(found));
-
-toast('Login berhasil');
-
-loadAllData(found);
-
+await loadData(found);
 }else{
-
-toast('Username/password salah');
-
+alert('Login gagal');
 }
-
 }
 
 function logout(){
-
 localStorage.removeItem('naraUser');
-
 renderLogin();
-
 }
 
-async function loadAllData(user){
-
-try{
-
-const [
-booksRes,
-salesRes,
-projectsRes,
-expensesRes,
-royaltyRes
-] = await Promise.all([
-
-fetch(API_URL + '?action=getBooks'),
-fetch(API_URL + '?action=getSales'),
-fetch(API_URL + '?action=getProjects'),
-fetch(API_URL + '?action=getExpenses'),
-fetch(API_URL + '?action=getRoyalty')
-
+async function loadData(user){
+const [b,s,p,e]=await Promise.all([
+fetch(API_URL+'?action=getBooks'),
+fetch(API_URL+'?action=getSales'),
+fetch(API_URL+'?action=getProjects'),
+fetch(API_URL+'?action=getExpenses')
 ]);
 
-books = await booksRes.json();
-sales = await salesRes.json();
-projects = await projectsRes.json();
-expenses = await expensesRes.json();
-royalty = await royaltyRes.json();
+books=await b.json();
+sales=await s.json();
+projects=await p.json();
+expenses=await e.json();
 
-renderDashboard(user);
-
-}catch(err){
-
-console.log(err);
-
-toast('Gagal memuat data');
-
-}
-
-}
-
-function renderDashboard(user){
-
-if(user.role==='Manager'){
-managerDashboard(user);
-return;
-}
-
-if(user.role==='Administrasi'){
-adminDashboard(user);
-return;
-}
-
-if(user.role==='Redaksi'){
-redaksiDashboard(user);
-return;
-}
-
-if(user.role==='Desain'){
-designDashboard(user);
-return;
-}
-
-creativeDashboard(user);
-
-}
-
-function totalIncome(){
-return sales.reduce((a,b)=>a+Number(b.total||0),0);
-}
-
-function totalExpense(){
-return expenses.reduce((a,b)=>a+Number(b.amount||0),0);
-}
-
-function totalRoyalty(){
-return royalty.reduce((a,b)=>a+Number(b.amount||0),0);
+if(user.role==='Manager') managerDashboard(user);
+if(user.role==='Administrasi') adminDashboard(user);
+if(user.role==='Redaksi') redaksiDashboard(user);
+if(user.role==='Desain') desainDashboard(user);
+if(user.role==='Leader') leaderDashboard(user);
 }
 
 function managerDashboard(user){
+const total=sales.reduce((a,b)=>a+Number(b.total||0),0);
 
-const income = totalIncome();
-const expense = totalExpense();
-const royal = totalRoyalty();
-
-const labaKotor = income - expense;
-const labaBersih = labaKotor - royal;
-
-document.getElementById('app').innerHTML = `
-
-<div class="p-4 pb-28 fade">
-
-<div class="flex justify-between items-center mb-5">
-
+document.getElementById('app').innerHTML=`
+<div class="p-4 space-y-4 pb-24">
+<div class="glass rounded-3xl p-5">
+<div class="flex justify-between items-center">
 <div>
-
-<h1 class="text-3xl font-black text-sky-500">
-Manager
-</h1>
-
-<p class="text-slate-600">
-Halo ${user.fullname}
-</p>
-
+<h1 class="text-3xl font-black text-sky-500">Manager</h1>
+<p>${user.fullname}</p>
 </div>
-
-<button
-onclick="logout()"
-class="bg-red-500 text-white px-4 py-2 rounded-xl">
-
-Logout
-
-</button>
-
+<button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-xl">Logout</button>
+</div>
 </div>
 
 <div class="grid grid-cols-2 gap-4">
-
-${card('Pemasukan','Rp '+income.toLocaleString(),'fa-wallet')}
-${card('Pengeluaran','Rp '+expense.toLocaleString(),'fa-money-bill')}
-${card('Laba Kotor','Rp '+labaKotor.toLocaleString(),'fa-chart-line')}
-${card('Laba Bersih','Rp '+labaBersih.toLocaleString(),'fa-coins')}
-${card('Royalti','Rp '+royal.toLocaleString(),'fa-crown')}
-${card('Penjualan',sales.length,'fa-cart-shopping')}
-
+<div class="glass rounded-3xl p-5">
+<p>Total Penjualan</p>
+<h2 class="text-2xl font-black">Rp ${total.toLocaleString()}</h2>
+</div>
+<div class="glass rounded-3xl p-5">
+<p>Total Buku</p>
+<h2 class="text-2xl font-black">${books.length}</h2>
+</div>
 </div>
 
-<div class="glass rounded-3xl p-5 mt-5">
-
-<h2 class="font-bold text-xl mb-4">
-Grafik Penjualan
-</h2>
-
-<canvas id="salesChart"></canvas>
-
+<div class="glass rounded-3xl p-5">
+<canvas id="chart"></canvas>
 </div>
+</div>`;
 
-<div class="glass rounded-3xl p-5 mt-5">
-
-<button
-onclick="exportManagerPDF()"
-class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">
-
-Export PDF Manager
-
-</button>
-
-</div>
-
-${bottomNav()}
-
-</div>
-
-`;
-
-setTimeout(initChart,100);
-
+setTimeout(()=>{
+new Chart(document.getElementById('chart'),{
+type:'line',
+data:{
+labels:sales.map(x=>x.date),
+datasets:[{label:'Penjualan',data:sales.map(x=>x.total)}]
+}
+});
+},100);
 }
 
 function adminDashboard(user){
-
-document.getElementById('app').innerHTML = `
-
-<div class="p-4 pb-28 fade">
-
-<div class="flex justify-between items-center mb-5">
-
-<div>
-
-<h1 class="text-3xl font-black text-sky-500">
-Administrasi
-</h1>
-
-<p class="text-slate-600">
-Input Penjualan & Pengeluaran
-</p>
-
-</div>
-
-<button
-onclick="logout()"
-class="bg-red-500 text-white px-4 py-2 rounded-xl">
-
-Logout
-
-</button>
-
+document.getElementById('app').innerHTML=`
+<div class="p-4 space-y-4 pb-24">
+<div class="glass rounded-3xl p-5">
+<h1 class="text-3xl font-black text-sky-500">Administrasi</h1>
 </div>
 
 <div class="glass rounded-3xl p-5 space-y-4">
-
-<h2 class="text-xl font-bold text-sky-600">
-Input Penjualan
-</h2>
-
-<select
-id="book"
-onchange="calculateTotal()"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
-
-<option value="">
-Pilih Buku
-</option>
-
-${books.map(b=>`
-<option value="${b.title}">
-${b.title}
-</option>
-`).join('')}
-
+<select id="book" onchange="calculateTotal()" class="w-full p-4 rounded-2xl bg-white/70">
+<option value="">Pilih Buku</option>
+${projects.map(p=>`<option value="${p.title}">${p.title}</option>`).join('')}
 </select>
 
-<input
-id="buyer"
-placeholder="Nama Pembeli"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
+<input id="buyer" placeholder="Nama Pembeli" class="w-full p-4 rounded-2xl bg-white/70" />
+<input id="qty" type="number" oninput="calculateTotal()" placeholder="Jumlah" class="w-full p-4 rounded-2xl bg-white/70" />
+<input id="marketplace" placeholder="Marketplace" class="w-full p-4 rounded-2xl bg-white/70" />
+<input id="total" readonly placeholder="Total" class="w-full p-4 rounded-2xl bg-white/70" />
+<input id="royaltyAmount" readonly placeholder="Royalti" class="w-full p-4 rounded-2xl bg-white/70" />
 
-<input
-id="qty"
-type="number"
-placeholder="Jumlah"
-oninput="calculateTotal()"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
+<input id="invoiceFile" type="file" accept="image/*" class="w-full p-4 rounded-2xl bg-white/70" />
+<input id="paymentFile" type="file" accept="image/*" class="w-full p-4 rounded-2xl bg-white/70" />
 
-<input
-id="marketplace"
-placeholder="Marketplace"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<input
-id="total"
-readonly
-placeholder="Total"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<input
-id="royaltyAmount"
-readonly
-placeholder="Royalti"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<button
-onclick="saveSale('${user.fullname}')"
-class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">
-
+<button onclick="saveSale('${user.fullname}')" class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">
 Simpan Penjualan
-
 </button>
-
 </div>
-
-<div class="glass rounded-3xl p-5 mt-5 space-y-4">
-
-<h2 class="text-xl font-bold text-emerald-600">
-Input Pengeluaran
-</h2>
-
-<input
-id="expenseDescription"
-placeholder="Nama Pengeluaran"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<input
-id="vendor"
-placeholder="Vendor"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<input
-id="expenseAmount"
-type="number"
-placeholder="Jumlah"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<button
-onclick="saveExpense('${user.fullname}')"
-class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold">
-
-Simpan Pengeluaran
-
-</button>
-
-</div>
-
-${bottomNav()}
-
-</div>
-
-`;
-
+</div>`;
 }
 
 function redaksiDashboard(user){
-
-document.getElementById('app').innerHTML = `
-
-<div class="p-4 pb-28 fade">
-
-<div class="flex justify-between items-center mb-5">
-
-<div>
-
-<h1 class="text-3xl font-black text-pink-500">
-Redaksi
-</h1>
-
-<p class="text-slate-600">
-Tracking Naskah
-</p>
-
-</div>
-
-<button
-onclick="logout()"
-class="bg-red-500 text-white px-4 py-2 rounded-xl">
-
-Logout
-
-</button>
-
+document.getElementById('app').innerHTML=`
+<div class="p-4 space-y-4 pb-24">
+<div class="glass rounded-3xl p-5">
+<h1 class="text-3xl font-black text-pink-500">Redaksi</h1>
 </div>
 
 <div class="glass rounded-3xl p-5 space-y-4">
-
-<input
-id="title"
-placeholder="Judul Buku"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<input
-id="author"
-placeholder="Penulis"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<input
-id="editor"
-placeholder="Editor"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<input
-id="layout"
-placeholder="Layout"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<input
-id="cover"
-placeholder="Cover"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<select
-id="status"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
-
-<option>Naskah Masuk</option>
-<option>Editing</option>
-<option>Layout</option>
-<option>Cover</option>
-<option>Cetak</option>
-<option>Distribusi</option>
-<option>Selesai</option>
-
-</select>
-
-<button
-onclick="saveProject()"
-class="w-full bg-pink-500 text-white p-4 rounded-2xl font-bold">
-
-Simpan Proyek
-
-</button>
-
+<input id="title" placeholder="Judul Buku" class="w-full p-4 rounded-2xl bg-white/70" />
+<input id="author" placeholder="Penulis" class="w-full p-4 rounded-2xl bg-white/70" />
+<input id="isbn" placeholder="ISBN" class="w-full p-4 rounded-2xl bg-white/70" />
+<input id="price" type="number" placeholder="Harga" class="w-full p-4 rounded-2xl bg-white/70" />
+<input id="royalty" type="number" placeholder="Royalti" class="w-full p-4 rounded-2xl bg-white/70" />
+<button onclick="saveProject()" class="w-full bg-pink-500 text-white p-4 rounded-2xl font-bold">Simpan Naskah</button>
 </div>
-
-${bottomNav()}
-
-</div>
-
-`;
-
+</div>`;
 }
 
-function designDashboard(user){
-
-document.getElementById('app').innerHTML = `
-
-<div class="p-4 pb-28 fade">
-
-<div class="glass rounded-3xl p-6">
-
-<h1 class="text-3xl font-black text-purple-500 mb-2">
-Desain
-</h1>
-
-<p class="text-slate-600">
-Progress Cover & Layout
-</p>
-
-<div class="space-y-4 mt-5">
-
-<input
-placeholder="Judul Buku"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<textarea
-placeholder="Catatan Revisi"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
-</textarea>
-
-<select
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
-
-<option>Draft</option>
-<option>Revisi</option>
-<option>Final</option>
-
-</select>
-
-<button
-onclick="toast('Progress desain disimpan')"
-class="w-full bg-purple-500 text-white p-4 rounded-2xl font-bold">
-
-Simpan
-
-</button>
-
+function desainDashboard(user){
+document.getElementById('app').innerHTML=`
+<div class="p-4">
+<div class="glass rounded-3xl p-5">
+<h1 class="text-3xl font-black text-purple-500">Desain</h1>
+<input placeholder="Judul Buku" class="w-full p-4 rounded-2xl bg-white/70 mt-4" />
+<textarea placeholder="Catatan Layout" class="w-full p-4 rounded-2xl bg-white/70 mt-4"></textarea>
 </div>
-
-</div>
-
-${bottomNav()}
-
-</div>
-
-`;
-
+</div>`;
 }
 
-function creativeDashboard(user){
-
-document.getElementById('app').innerHTML = `
-
-<div class="p-4 pb-28 fade">
-
-<div class="glass rounded-3xl p-6">
-
-<h1 class="text-3xl font-black text-orange-500 mb-2">
-Kreatif
-</h1>
-
-<p class="text-slate-600">
-Manajemen Konten
-</p>
-
-<div class="space-y-4 mt-5">
-
-<input
-placeholder="Nama Campaign"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50"
-/>
-
-<textarea
-placeholder="Ide Konten"
-class="w-full p-4 rounded-2xl bg-white/70 border border-white/50">
-</textarea>
-
-<button
-onclick="toast('Campaign berhasil dibuat')"
-class="w-full bg-orange-500 text-white p-4 rounded-2xl font-bold">
-
-Simpan Campaign
-
-</button>
-
+function leaderDashboard(user){
+document.getElementById('app').innerHTML=`
+<div class="p-4">
+<div class="glass rounded-3xl p-5">
+<h1 class="text-3xl font-black text-emerald-500">Team Leader</h1>
+<p>Total Project: ${projects.length}</p>
+<p>Total Penjualan: ${sales.length}</p>
 </div>
-
-</div>
-
-${bottomNav()}
-
-</div>
-
-`;
-
-}
-
-function card(title,value,icon){
-
-return `
-
-<div class="glass rounded-3xl p-4">
-
-<div class="flex justify-between items-center">
-
-<div>
-
-<p class="text-sm text-slate-600">
-${title}
-</p>
-
-<h2 class="text-xl font-black mt-2">
-${value}
-</h2>
-
-</div>
-
-<div class="text-3xl text-sky-500">
-<i class="fa ${icon}"></i>
-</div>
-
-</div>
-
-</div>
-
-`;
-
-}
-
-function bottomNav(){
-
-return `
-
-<div class="bottom-nav px-4 pb-4">
-
-<div class="glass rounded-3xl p-4 flex justify-around items-center">
-
-<button onclick="checkSession()">
-<i class="fa fa-house text-xl"></i>
-</button>
-
-<button
-onclick="window.scrollTo({top:0,behavior:'smooth'})"
-class="bg-sky-500 text-white w-14 h-14 rounded-full -mt-10">
-
-<i class="fa fa-plus"></i>
-
-</button>
-
-<button onclick="logout()">
-<i class="fa fa-right-from-bracket text-xl"></i>
-</button>
-
-</div>
-
-</div>
-
-`;
-
+</div>`;
 }
 
 function calculateTotal(){
-
-const title = document.getElementById('book').value;
-
-const book = books.find(x=>x.title===title);
-
-const qty = Number(document.getElementById('qty').value || 0);
-
-if(!book) return;
-
-const total = qty * Number(book.price);
-const royal = total * (Number(book.royalty_percent)/100);
-
-document.getElementById('total').value =
-'Rp ' + total.toLocaleString();
-
-document.getElementById('royaltyAmount').value =
-'Rp ' + royal.toLocaleString();
-
+const title=document.getElementById('book').value;
+const book=books.find(x=>x.title===title);
+const qty=Number(document.getElementById('qty').value||0);
+if(!book)return;
+const total=qty*Number(book.price);
+const royal=total*(Number(book.royalty_percent)/100);
+document.getElementById('total').value='Rp '+total.toLocaleString();
+document.getElementById('royaltyAmount').value='Rp '+royal.toLocaleString();
 }
 
 async function saveSale(user){
-
-const title = document.getElementById('book').value;
-
-const book = books.find(x=>x.title===title);
-
-if(!book){
-toast('Buku belum dipilih');
-return;
-}
-
-const qty = Number(document.getElementById('qty').value || 0);
-
-const total = qty * Number(book.price);
-
-const royal =
-total * (Number(book.royalty_percent)/100);
-
-const data = {
-
-id:Date.now(),
-
-date:new Date().toLocaleDateString(),
-
-buyer_name:document.getElementById('buyer').value,
-
-book:title,
-
-author:book.author,
-
-qty:qty,
-
-total:total,
-
-royalty:royal,
-
-marketplace:document.getElementById('marketplace').value,
-
-payment_status:'Paid',
-
-user:user
-
-};
+const title=document.getElementById('book').value;
+const book=books.find(x=>x.title===title);
+const qty=Number(document.getElementById('qty').value||0);
+const total=qty*Number(book.price);
+const royal=total*(Number(book.royalty_percent)/100);
 
 await fetch(API_URL,{
 method:'POST',
 body:JSON.stringify({
 action:'addSale',
-data:data
-})
-});
-
-toast('Penjualan berhasil disimpan');
-
-const current =
-JSON.parse(localStorage.getItem('naraUser'));
-
-loadAllData(current);
-
-}
-
-async function saveExpense(user){
-
-const data = {
-
+data:{
 id:Date.now(),
-
-description:
-document.getElementById('expenseDescription').value,
-
-category:'Percetakan',
-
-vendor:
-document.getElementById('vendor').value,
-
-amount:
-document.getElementById('expenseAmount').value,
-
-receipt_file:'-',
-
 date:new Date().toLocaleDateString(),
-
+buyer_name:document.getElementById('buyer').value,
+book:title,
+author:book.author,
+qty:qty,
+total:total,
+royalty:royal,
+marketplace:document.getElementById('marketplace').value,
+payment_status:'Paid',
+invoice_file:document.getElementById('invoiceFile').files[0]?.name || '-',
+payment_file:document.getElementById('paymentFile').files[0]?.name || '-',
 user:user
-
-};
-
-await fetch(API_URL,{
-method:'POST',
-body:JSON.stringify({
-action:'addExpense',
-data:data
+}
 })
 });
 
-toast('Pengeluaran berhasil disimpan');
-
-const current =
-JSON.parse(localStorage.getItem('naraUser'));
-
-loadAllData(current);
-
+alert('Penjualan berhasil');
+loadData(JSON.parse(localStorage.getItem('naraUser')));
 }
 
 async function saveProject(){
-
-const data = {
-
+const data={
 projectId:Date.now(),
-
 title:document.getElementById('title').value,
-
 author:document.getElementById('author').value,
-
-status:document.getElementById('status').value,
-
+status:'Naskah Masuk',
 redaksi:'Elyna',
-
-editor:document.getElementById('editor').value,
-
-layout:document.getElementById('layout').value,
-
-cover:document.getElementById('cover').value
-
+editor:'',
+layout:'',
+cover:''
 };
 
-await fetch(API_URL,{
-method:'POST',
-body:JSON.stringify({
-action:'addProject',
-data:data
-})
-});
+await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'addProject',data:data})});
 
-toast('Project berhasil disimpan');
-
-const current =
-JSON.parse(localStorage.getItem('naraUser'));
-
-loadAllData(current);
-
-}
-
-function initChart(){
-
-const ctx = document.getElementById('salesChart');
-
-if(!ctx) return;
-
-new Chart(ctx,{
-type:'line',
+await fetch(API_URL,{method:'POST',body:JSON.stringify({
+action:'addBook',
 data:{
-labels:sales.map(s=>s.date),
-datasets:[{
-label:'Penjualan',
-data:sales.map(s=>s.total),
-borderColor:'#0ea5e9',
-backgroundColor:'rgba(14,165,233,.2)',
-fill:true,
-tension:.4
-}]
+id:'BK'+Date.now(),
+title:data.title,
+author:data.author,
+isbn:document.getElementById('isbn').value,
+price:document.getElementById('price').value,
+royalty_percent:document.getElementById('royalty').value,
+status:'Ready'
 }
-});
+})});
 
-}
-
-function exportManagerPDF(){
-
-const {jsPDF} = window.jspdf;
-
-const doc = new jsPDF();
-
-doc.setFontSize(20);
-
-doc.text('Nara Pustaka',20,20);
-
-doc.setFontSize(12);
-
-doc.text('Laporan Manager',20,35);
-
-doc.text(
-'Total Pemasukan: Rp ' +
-totalIncome().toLocaleString(),
-20,
-55
-);
-
-doc.text(
-'Total Pengeluaran: Rp ' +
-totalExpense().toLocaleString(),
-20,
-70
-);
-
-doc.text(
-'Total Royalti: Rp ' +
-totalRoyalty().toLocaleString(),
-20,
-85
-);
-
-doc.text(
-'Laba Bersih: Rp ' +
-(totalIncome()-totalExpense()-totalRoyalty()).toLocaleString(),
-20,
-100
-);
-
-doc.text(
-'Tanggal: ' +
-new Date().toLocaleDateString(),
-20,
-120
-);
-
-doc.text('Tanda Tangan Vero',140,250);
-
-doc.save('laporan-manager.pdf');
-
+alert('Naskah berhasil disimpan');
+loadData(JSON.parse(localStorage.getItem('naraUser')));
 }
 
 </script>
-
 </body>
 </html>
