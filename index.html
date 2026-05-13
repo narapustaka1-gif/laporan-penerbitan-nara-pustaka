@@ -2,614 +2,440 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nara Pustaka System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Nara Pustaka Internal System</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    body {
-      font-family: Inter, sans-serif;
-      background: #f1f5f9;
+    *{
+      font-family:'Inter',sans-serif;
+      -webkit-tap-highlight-color:transparent;
     }
 
-    .hidden {
-      display: none;
+    body{
+      background:#0f172a;
+      color:white;
+      overflow-x:hidden;
     }
 
-    .glass {
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    ::-webkit-scrollbar{
+      display:none;
     }
 
-    .gradient-bg {
-      background:
-        radial-gradient(circle at top left, #6366f1 0%, transparent 30%),
-        radial-gradient(circle at bottom right, #8b5cf6 0%, transparent 30%),
-        #0f172a;
+    .glass{
+      background:rgba(255,255,255,.05);
+      backdrop-filter:blur(14px);
+      border:1px solid rgba(255,255,255,.08);
     }
 
-    .fade-in {
-      animation: fade .5s ease;
+    .hidden-view{
+      display:none;
     }
 
-    @keyframes fade {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .card{
+      background:#111827;
+      border-radius:28px;
+      padding:18px;
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .input{
+      width:100%;
+      padding:16px;
+      border-radius:18px;
+      background:#1e293b;
+      color:white;
+      border:none;
+      outline:none;
+      margin-top:10px;
+    }
+
+    .btn{
+      width:100%;
+      padding:16px;
+      border-radius:20px;
+      font-weight:700;
+      margin-top:14px;
     }
   </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body>
 
-<div id="loginPage" class="min-h-screen gradient-bg flex items-center justify-center p-5 relative overflow-hidden">
+<div id="loginPage" class="min-h-screen flex items-center justify-center px-5 py-10">
+  <div class="w-full max-w-md glass rounded-[40px] p-7">
 
-  <div class="absolute w-96 h-96 bg-indigo-500/20 blur-3xl rounded-full top-[-100px] left-[-100px]"></div>
-  <div class="absolute w-96 h-96 bg-violet-500/20 blur-3xl rounded-full bottom-[-120px] right-[-100px]"></div>
-
-  <div class="glass rounded-[2rem] p-8 w-full max-w-md relative z-10 fade-in">
-
-    <div class="flex justify-center mb-6">
-      <div class="w-20 h-20 rounded-[2rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      </div>
-    </div>
-
-    <h1 class="text-4xl font-black text-center text-slate-900 mb-2">
-      Nara Pustaka
-    </h1>
-
-    <p class="text-center text-slate-600 mb-8">
-      Sistem Operasional Penerbitan
-    </p>
-
-    <div class="space-y-4">
-      <input id="username" type="text" placeholder="Username"
-        class="w-full p-4 rounded-2xl bg-white/80 border border-white outline-none focus:ring-2 focus:ring-indigo-500" />
-
-      <div class="relative">
-        <input id="password" type="password" placeholder="Password"
-          class="w-full p-4 rounded-2xl bg-white/80 border border-white outline-none focus:ring-2 focus:ring-indigo-500 pr-14" />
-
-        <button onclick="togglePassword()"
-          class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">
-          👁️
-        </button>
+    <div class="text-center mb-8">
+      <div class="w-24 h-24 rounded-[32px] bg-indigo-600 mx-auto flex items-center justify-center shadow-2xl shadow-indigo-500/40 mb-5">
+        <span class="text-4xl font-black">NP</span>
       </div>
 
-      <button onclick="login()"
-        class="w-full bg-indigo-600 hover:bg-indigo-700 transition text-white p-4 rounded-2xl font-bold shadow-xl shadow-indigo-500/30">
-        Masuk Sekarang
-      </button>
+      <h1 class="text-3xl font-black">Nara Pustaka</h1>
+      <p class="text-slate-400 mt-2">Internal Management System</p>
     </div>
 
-    <div class="mt-8 text-center text-sm text-slate-500">
-      Multi Dashboard System • Nara Pustaka
+    <input id="username" class="input" placeholder="Username" />
+
+    <div class="relative">
+      <input id="password" type="password" class="input pr-16" placeholder="Password" />
+      <button onclick="togglePassword()" class="absolute right-4 top-5 text-sm text-slate-400">👁</button>
     </div>
+
+    <button onclick="login()" class="btn bg-indigo-600">Masuk</button>
 
   </div>
 </div>
 
-<div id="app" class="hidden">
-  <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-50">
+<div id="app" class="hidden-view pb-32">
+
+  <header class="sticky top-0 z-50 px-5 py-4 bg-[#0f172a]/90 backdrop-blur-xl border-b border-white/5 flex items-center justify-between">
     <div>
-      <h1 class="font-bold text-xl">Nara Pustaka</h1>
-      <p id="roleText" class="text-sm text-slate-500"></p>
+      <p class="text-xs text-indigo-400 uppercase tracking-[3px]" id="roleText">ROLE</p>
+      <h2 class="font-bold text-lg" id="userText">USER</h2>
     </div>
 
     <div class="flex gap-2">
-      <div class="flex gap-2 flex-wrap">
-      <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded-xl">
-        Export Excel
-      </button>
-
-      <button onclick="exportPDF()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl">
-        Export PDF
-      </button>
-    </div>
-
-      <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-xl">
-        Logout
-      </button>
+      <button onclick="toggleDark()" class="w-11 h-11 rounded-2xl bg-slate-800">🌙</button>
+      <button onclick="logout()" class="w-11 h-11 rounded-2xl bg-red-500">⎋</button>
     </div>
   </header>
 
-  <main class="p-5 max-w-7xl mx-auto fade-in">
+  <main class="px-5 py-5 space-y-5">
 
-    <div id="globalModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-5">
-      <div class="bg-white w-full max-w-4xl rounded-[2rem] p-6 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-5">
-          <h2 id="modalTitle" class="text-2xl font-bold"></h2>
-          <button onclick="closeModal()" class="bg-red-500 text-white px-4 py-2 rounded-xl">Tutup</button>
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-bold text-xl">Dashboard</h3>
+          <p class="text-slate-400 text-sm">Realtime Internal System</p>
         </div>
-        <div id="modalContent"></div>
+
+        <div class="bg-indigo-600 px-4 py-2 rounded-2xl text-xs font-bold">
+          LIVE
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-slate-900 rounded-3xl p-4">
+          <p class="text-xs text-slate-400">Project Aktif</p>
+          <h2 class="text-2xl font-black mt-2" id="projectCount">0</h2>
+        </div>
+
+        <div class="bg-slate-900 rounded-3xl p-4">
+          <p class="text-xs text-slate-400">Status BEP</p>
+          <h2 class="text-2xl font-black mt-2">5 Eks</h2>
+        </div>
       </div>
     </div>
 
-    <div id="managerDashboard" class="hidden">
-      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div onclick="openUserDetail('thami')" class="cursor-pointer bg-white rounded-3xl p-5 shadow hover:scale-[1.02] transition">
-          <h3 class="font-bold text-lg">Thami</h3>
-          <p class="text-slate-500">Divisi Administrasi</p>
-        </div>
-
-        <div onclick="openUserDetail('elyna')" class="cursor-pointer bg-white rounded-3xl p-5 shadow hover:scale-[1.02] transition">
-          <h3 class="font-bold text-lg">Elyna</h3>
-          <p class="text-slate-500">Divisi Redaksi</p>
-        </div>
-
-        <div onclick="openUserDetail('nala')" class="cursor-pointer bg-white rounded-3xl p-5 shadow hover:scale-[1.02] transition">
-          <h3 class="font-bold text-lg">Nala</h3>
-          <p class="text-slate-500">Media Sosial</p>
-        </div>
-
-        <div onclick="openUserDetail('calista')" class="cursor-pointer bg-white rounded-3xl p-5 shadow hover:scale-[1.02] transition">
-          <h3 class="font-bold text-lg">Calista</h3>
-          <p class="text-slate-500">Kreatif</p>
-        </div>
-      </div>
-      <h2 class="text-2xl font-bold mb-6">Dashboard Manager</h2>
-
-      <div class="grid md:grid-cols-3 gap-5 mb-6">
-        <div class="bg-white rounded-3xl p-6 shadow">
-          <p class="text-slate-500">Total Pemasukan</p>
-          <h3 id="incomeTotal" class="text-3xl font-bold mt-2">Rp0</h3>
-        </div>
-
-        <div class="bg-white rounded-3xl p-6 shadow">
-          <p class="text-slate-500">Total Pengeluaran</p>
-          <h3 id="expenseTotal" class="text-3xl font-bold mt-2">Rp0</h3>
-        </div>
-
-        <div class="bg-white rounded-3xl p-6 shadow">
-          <p class="text-slate-500">Royalti Penulis</p>
-          <h3 id="royaltyTotal" class="text-3xl font-bold mt-2">Rp0</h3>
-        </div>
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold">Tambah Penjualan</h3>
+        <button onclick="exportPDF()" class="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">PDF</button>
       </div>
 
-      <div class="bg-white rounded-3xl p-6 shadow mb-6">
-        <h3 class="font-bold mb-4">Vendor Reminder</h3>
-        <div id="vendorReminder"></div>
+      <input id="buyer" class="input" placeholder="Nama Pembeli" />
+      <input id="book" class="input" placeholder="Judul Buku" />
+      <input id="writer" class="input" placeholder="Penulis" />
+      <input id="qty" type="number" class="input" placeholder="Jumlah Buku" />
+      <input id="price" type="number" class="input" placeholder="Harga" />
 
-        <div class="mt-6 border-t pt-6">
-          <h3 class="font-bold text-xl mb-4">Ubah Password Divisi</h3>
+      <button onclick="saveSale()" class="btn bg-emerald-600">Simpan Penjualan</button>
+    </div>
 
-          <div class="grid md:grid-cols-3 gap-4">
-            <select id="changeUser" class="border p-4 rounded-2xl">
-              <option value="vero">vero</option>
-              <option value="jeyraa">jeyraa</option>
-              <option value="thami">thami</option>
-              <option value="elyna">elyna</option>
-              <option value="nala">nala</option>
-              <option value="calista">calista</option>
-              <option value="zahra">zahra</option>
-            </select>
+    <div class="card">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-bold">Tracking Buku</h3>
+        <button class="bg-slate-800 px-4 py-2 rounded-xl text-xs">Realtime</button>
+      </div>
 
-            <input id="newPassword" type="text" placeholder="Password Baru"
-              class="border p-4 rounded-2xl" />
+      <div class="space-y-4">
 
-            <button onclick="changePassword()"
-              class="bg-indigo-600 text-white rounded-2xl font-bold">
-              Simpan Password
-            </button>
+        <div class="bg-slate-900 rounded-3xl p-4">
+          <div class="flex justify-between mb-3">
+            <div>
+              <h4 class="font-bold">Novel Senja</h4>
+              <p class="text-xs text-slate-400">Editing</p>
+            </div>
+
+            <div class="text-xs bg-yellow-500 text-black px-3 py-2 rounded-xl font-bold h-fit">
+              60%
+            </div>
+          </div>
+
+          <div class="w-full h-3 rounded-full bg-slate-800 overflow-hidden">
+            <div class="h-full bg-yellow-500 w-[60%]"></div>
           </div>
         </div>
+
       </div>
     </div>
 
-    <div id="leaderDashboard" class="hidden">
-      <h2 class="text-2xl font-bold mb-6">Dashboard Team Leader</h2>
+    <div class="card">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-bold">Vendor Reminder</h3>
+        <div class="bg-red-500 px-3 py-2 rounded-xl text-xs font-bold">
+          ALERT
+        </div>
+      </div>
 
-      <div class="bg-white p-6 rounded-3xl shadow">
-        <h3 class="font-bold mb-4">Monitoring Tim</h3>
-        <div id="teamActivity"></div>
+      <div class="bg-red-500/10 border border-red-500/20 rounded-3xl p-4">
+        <p class="font-semibold">Percetakan XYZ belum selesai 4 hari.</p>
+        <button class="mt-4 bg-green-600 px-5 py-3 rounded-2xl font-bold text-sm">
+          Hubungi Vendor
+        </button>
       </div>
     </div>
 
-    <div id="adminDashboard" class="hidden">
-      <h2 class="text-2xl font-bold mb-6">Laporan Penjualan</h2>
-
-      <div class="bg-white p-6 rounded-3xl shadow mb-6">
-        <div class="grid md:grid-cols-2 gap-4">
-          <input id="buyer" type="text" placeholder="Nama Pembeli" class="border p-4 rounded-2xl" />
-          <input id="bookTitle" type="text" placeholder="Judul Buku" class="border p-4 rounded-2xl" />
-          <input id="qty" type="number" placeholder="Jumlah Buku" class="border p-4 rounded-2xl" />
-          <input id="price" type="number" placeholder="Harga" class="border p-4 rounded-2xl" />
-          <input id="writer" type="text" placeholder="Nama Penulis" class="border p-4 rounded-2xl" />
-          <input id="vendor" type="text" placeholder="Vendor Percetakan" class="border p-4 rounded-2xl" />
-          <input id="proofFile" type="file" class="border p-4 rounded-2xl" />
-        </div>
-
-        <button onclick="saveSale()"
-          class="mt-5 bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold">
-          Simpan Penjualan
-        </button>
+    <div class="card">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-bold">Evaluasi Tim</h3>
+        <div class="text-xs text-slate-400">Leader</div>
       </div>
 
-      <div class="bg-white p-6 rounded-3xl shadow mb-6">
-        <h3 class="font-bold mb-4">Laporan Pengeluaran</h3>
+      <textarea class="input min-h-[130px]" placeholder="Tulis evaluasi tim..."></textarea>
 
-        <div class="grid md:grid-cols-3 gap-4">
-          <input id="expenseBook" type="text" placeholder="Judul Buku" class="border p-4 rounded-2xl" />
-          <input id="expenseQty" type="number" placeholder="Jumlah Cetak" class="border p-4 rounded-2xl" />
-          <input id="expensePrice" type="number" placeholder="Biaya" class="border p-4 rounded-2xl" />
-        </div>
-
-        <button onclick="saveExpense()"
-          class="mt-5 bg-black text-white px-6 py-3 rounded-2xl font-bold">
-          Simpan Pengeluaran
-        </button>
-      </div>
-
-      <div class="bg-white p-6 rounded-3xl shadow">
-        <h3 class="font-bold mb-4">Data Penjualan</h3>
-        <div id="salesList"></div>
-      </div>
+      <button class="btn bg-indigo-600">Kirim Evaluasi</button>
     </div>
 
-    <div id="editorDashboard" class="hidden">
-      <h2 class="text-2xl font-bold mb-6">Data Penulis</h2>
-
-      <div class="bg-white p-6 rounded-3xl shadow mb-6">
-        <div class="grid md:grid-cols-2 gap-4">
-          <input id="authorName" type="text" placeholder="Nama Penulis" class="border p-4 rounded-2xl" />
-          <input id="publishBook" type="text" placeholder="Judul Buku" class="border p-4 rounded-2xl" />
-          <input id="royalty" type="number" placeholder="Royalti" class="border p-4 rounded-2xl" />
-          <input id="releaseDate" type="date" class="border p-4 rounded-2xl" />
-        </div>
-
-        <button onclick="saveAuthor()"
-          class="mt-5 bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold">
-          Tambah Penulis
-        </button>
+    <div class="card">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-bold">Grafik Operasional</h3>
       </div>
 
-      <div class="bg-white p-6 rounded-3xl shadow">
-        <div id="authorList"></div>
+      <canvas id="chart"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-bold">Riwayat Aktivitas</h3>
+        <div class="text-xs text-slate-400">Realtime</div>
       </div>
+
+      <div id="logs" class="space-y-3"></div>
     </div>
 
   </main>
+
+  <nav class="fixed bottom-0 left-0 right-0 bg-[#111827] border-t border-white/5 p-4 flex justify-around">
+
+    <button onclick="switchMenu('dashboard')" class="flex flex-col items-center text-xs gap-1">
+      <span>🏠</span>
+      Dashboard
+    </button>
+
+    <button onclick="switchMenu('sales')" class="flex flex-col items-center text-xs gap-1">
+      <span>💰</span>
+      Sales
+    </button>
+
+    <button onclick="switchMenu('books')" class="flex flex-col items-center text-xs gap-1">
+      <span>📚</span>
+      Buku
+    </button>
+
+    <button onclick="switchMenu('reports')" class="flex flex-col items-center text-xs gap-1">
+      <span>📄</span>
+      Laporan
+    </button>
+
+  </nav>
+
 </div>
 
 <script>
+
+const API_URL = 'https://script.google.com/macros/s/AKfycby-X_EEt6sf_WIjXUyWWlULShgqpHkBK21sxeYbcQYp62mUvCWO1VLN5fDt_pn5pDze/exec';
+
 const users = {
-  vero: { password: 'vero123', role: 'Manager' },
-  jeyraa: { password: 'jey123', role: 'Leader' },
-  thami: { password: 'thami123', role: 'Admin' },
-  elyna: { password: 'elyna123', role: 'Editor' },
-  nala: { password: 'nala123', role: 'Designer' },
-  calista: { password: 'calista123', role: 'Creative' },
-  zahra: { password: 'zahra123', role: 'Creative' }
-};
+  vero:{password:'vero_nara',role:'Manager'},
+  jeyraa:{password:'jeyraa_nara',role:'Leader'},
+  thami:{password:'thami_nara',role:'Admin'},
+  elyna:{password:'elyna_nara',role:'Redaksi'},
+  nala:{password:'nala_nara',role:'Designer'},
+  calista:{password:'calista_nara',role:'Illustrator'},
+  zahra:{password:'zahra_nara',role:'Illustrator'}
+}
 
-let sales = JSON.parse(localStorage.getItem('sales')) || [];
-let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-let authors = JSON.parse(localStorage.getItem('authors')) || [];
-let evaluations = JSON.parse(localStorage.getItem('evaluations')) || [];
-let logs = JSON.parse(localStorage.getItem('logs')) || [];
+let currentUser = null;
 
-function login() {
+window.onload = ()=>{
+
+  const savedUser = localStorage.getItem('np_user');
+
+  if(savedUser){
+    currentUser = JSON.parse(savedUser);
+    openApp();
+  }
+
+  initChart();
+
+}
+
+function login(){
+
   const username = document.getElementById('username').value.toLowerCase();
   const password = document.getElementById('password').value;
 
   if(users[username] && users[username].password === password){
-    localStorage.setItem('currentUser', username);
-    loadDashboard(username);
-  } else {
+
+    currentUser = {
+      username,
+      role:users[username].role
+    }
+
+    localStorage.setItem('np_user',JSON.stringify(currentUser));
+
+    openApp();
+
+  }else{
     alert('Login gagal');
   }
 }
 
+function openApp(){
+
+  document.getElementById('loginPage').classList.add('hidden-view');
+  document.getElementById('app').classList.remove('hidden-view');
+
+  document.getElementById('userText').innerText = currentUser.username;
+  document.getElementById('roleText').innerText = currentUser.role;
+
+}
+
 function logout(){
-  localStorage.removeItem('currentUser');
+  localStorage.removeItem('np_user');
   location.reload();
 }
 
-function loadDashboard(username){
-  document.getElementById('loginPage').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
+function togglePassword(){
 
-  const role = users[username].role;
-  document.getElementById('roleText').innerText = role;
+  const input = document.getElementById('password');
 
-  if(role === 'Manager'){
-    document.getElementById('managerDashboard').classList.remove('hidden');
-    renderManager();
-  }
+  input.type = input.type === 'password' ? 'text' : 'password';
 
-  if(role === 'Leader'){
-    document.getElementById('leaderDashboard').classList.remove('hidden');
-    renderLeader();
-  }
-
-  if(role === 'Admin'){
-    document.getElementById('adminDashboard').classList.remove('hidden');
-    renderSales();
-  }
-
-  if(role === 'Editor'){
-    document.getElementById('editorDashboard').classList.remove('hidden');
-    renderAuthors();
-  }
 }
 
-function saveSale(){
+async function saveSale(){
+
+  const buyer = document.getElementById('buyer').value;
+  const book = document.getElementById('book').value;
+  const writer = document.getElementById('writer').value;
   const qty = Number(document.getElementById('qty').value);
   const price = Number(document.getElementById('price').value);
 
-  const file = document.getElementById('proofFile').files[0];
+  const total = qty * price;
 
   const data = {
-    proof:file ? file.name : '-',
-    buyer: document.getElementById('buyer').value,
-    book: document.getElementById('bookTitle').value,
-    qty,
-    price,
-    total: qty * price,
-    writer: document.getElementById('writer').value,
-    vendor: document.getElementById('vendor').value,
-    date: new Date().toLocaleDateString('id-ID')
-  };
+    type:'sale',
+    id_sale:'SALE-'+Date.now(),
+    pembeli:buyer,
+    judul_buku:book,
+    penulis:writer,
+    jumlah:qty,
+    harga:price,
+    total:total,
+    admin:currentUser.username
+  }
 
-  sales.push(data);
-  logs.push({ user:'Thami', action:`Menambahkan penjualan ${data.book}`, date:new Date().toLocaleString('id-ID') });
-  localStorage.setItem('logs', JSON.stringify(logs));
-  localStorage.setItem('sales', JSON.stringify(sales));
+  try{
 
-  renderSales();
-  alert('Penjualan berhasil disimpan');
+    await fetch(API_URL,{ 
+      method:'POST',
+      body:JSON.stringify(data)
+    });
+
+    addLog(`Penjualan ${book} berhasil disimpan`);
+
+    lockInputs();
+
+    alert('Data berhasil masuk spreadsheet');
+
+  }catch(err){
+    alert('Gagal menyimpan');
+  }
 }
 
-function saveExpense(){
-  const data = {
-    book: document.getElementById('expenseBook').value,
-    qty: document.getElementById('expenseQty').value,
-    price: document.getElementById('expensePrice').value,
-    date: new Date().toLocaleDateString('id-ID')
-  };
+function lockInputs(){
 
-  expenses.push(data);
-  localStorage.setItem('expenses', JSON.stringify(expenses));
+  document.querySelectorAll('input').forEach(el=>{
+    if(el.id !== 'username' && el.id !== 'password'){
+      el.disabled = true;
+    }
+  });
 
-  alert('Pengeluaran berhasil disimpan');
 }
 
-function saveAuthor(){
-  const data = {
-    name: document.getElementById('authorName').value,
-    book: document.getElementById('publishBook').value,
-    royalty: document.getElementById('royalty').value,
-    releaseDate: document.getElementById('releaseDate').value
-  };
+function addLog(text){
 
-  authors.push(data);
-  logs.push({ user:'Elyna', action:`Menambahkan penulis ${data.name}`, date:new Date().toLocaleString('id-ID') });
-  localStorage.setItem('logs', JSON.stringify(logs));
-  localStorage.setItem('authors', JSON.stringify(authors));
+  const logs = document.getElementById('logs');
 
-  renderAuthors();
-  alert('Data penulis disimpan');
-}
+  const div = document.createElement('div');
 
-function renderSales(){
-  const list = document.getElementById('salesList');
+  div.className = 'bg-slate-900 rounded-2xl p-4';
 
-  list.innerHTML = sales.map((item, index) => `
-    <div class="border rounded-2xl p-4 mb-3 flex justify-between items-center">
-      <div>
-        <h4 class="font-bold">${item.book}</h4>
-        <p>${item.buyer}</p>
-        <p>Total: Rp${item.total.toLocaleString()}</p>
-      </div>
-
-      <button onclick="deleteSale(${index})"
-        class="bg-red-500 text-white px-4 py-2 rounded-xl">
-        Hapus
-      </button>
-    </div>
-  `).join('');
-}
-
-function renderAuthors(){
-  const list = document.getElementById('authorList');
-
-  list.innerHTML = authors.map((item, index) => `
-    <div class="border rounded-2xl p-4 mb-3 flex justify-between items-center">
-      <div>
-        <h4 class="font-bold">${item.name}</h4>
-        <p>${item.book}</p>
-        <p>Royalti: Rp${Number(item.royalty).toLocaleString()}</p>
-      </div>
-
-      <button onclick="deleteAuthor(${index})"
-        class="bg-red-500 text-white px-4 py-2 rounded-xl">
-        Hapus
-      </button>
-    </div>
-  `).join('');
-}
-
-function renderManager(){
-  const income = sales.reduce((a,b)=>a+b.total,0);
-  const expense = expenses.reduce((a,b)=>a+Number(b.price),0);
-  const royalty = authors.reduce((a,b)=>a+Number(b.royalty),0);
-
-  document.getElementById('incomeTotal').innerText = 'Rp' + income.toLocaleString();
-  document.getElementById('expenseTotal').innerText = 'Rp' + expense.toLocaleString();
-  document.getElementById('royaltyTotal').innerText = 'Rp' + royalty.toLocaleString();
-
-  document.getElementById('vendorReminder').innerHTML = sales.map(item => `
-    <div class="border rounded-2xl p-4 mb-3">
-      Vendor ${item.vendor} - Pesanan ${item.book}
-    </div>
-  `).join('');
-}
-
-function renderLeader(){
-  document.getElementById('teamActivity').innerHTML = `
-    <div class="space-y-3">
-      <div class="border p-4 rounded-2xl">Total Penjualan: ${sales.length}</div>
-      <div class="border p-4 rounded-2xl">Total Pengeluaran: ${expenses.length}</div>
-      <div class="border p-4 rounded-2xl">Total Penulis: ${authors.length}</div>
-    </div>
+  div.innerHTML = `
+    <p class="font-semibold">${text}</p>
+    <p class="text-xs text-slate-400 mt-1">${new Date().toLocaleString()}</p>
   `;
-}
 
-function deleteSale(index){
-  sales.splice(index,1);
-  localStorage.setItem('sales', JSON.stringify(sales));
-  renderSales();
-}
+  logs.prepend(div);
 
-function deleteAuthor(index){
-  authors.splice(index,1);
-  localStorage.setItem('authors', JSON.stringify(authors));
-  renderAuthors();
 }
 
 function exportPDF(){
+
   const { jsPDF } = window.jspdf;
+
   const doc = new jsPDF();
 
   doc.setFontSize(20);
-  doc.text('Laporan Nara Pustaka', 20, 20);
+  doc.text('Nara Pustaka Report',20,20);
 
-  let y = 40;
+  doc.setFontSize(12);
+  doc.text('Internal System Export',20,40);
 
-  sales.forEach((item,index)=>{
-    doc.text(`${index+1}. ${item.book} - ${item.buyer} - Rp${item.total.toLocaleString()}`,20,y);
-    y += 10;
-  });
+  doc.save('nara-report.pdf');
 
-  doc.save('Laporan-Nara-Pustaka.pdf');
 }
 
-function exportExcel(){
-  const workbook = XLSX.utils.book_new();
-
-  const salesSheet = XLSX.utils.json_to_sheet(sales);
-  const expenseSheet = XLSX.utils.json_to_sheet(expenses);
-  const authorSheet = XLSX.utils.json_to_sheet(authors);
-
-  XLSX.utils.book_append_sheet(workbook, salesSheet, 'Penjualan');
-  XLSX.utils.book_append_sheet(workbook, expenseSheet, 'Pengeluaran');
-  XLSX.utils.book_append_sheet(workbook, authorSheet, 'Penulis');
-
-  XLSX.writeFile(workbook, 'NaraPustaka.xlsx');
+function switchMenu(menu){
+  localStorage.setItem('last_menu',menu);
 }
 
-function openUserDetail(user){
-  document.getElementById('globalModal').classList.remove('hidden');
-  document.getElementById('modalTitle').innerText = 'Detail ' + user;
-
-  let html = '';
-
-  if(user === 'thami'){
-    html += '<h3 class="font-bold text-xl mb-4">Laporan Penjualan</h3>';
-
-    sales.forEach((item,index)=>{
-      html += `
-        <details class="border rounded-2xl p-4 mb-3">
-          <summary class="font-bold cursor-pointer">${item.writer}</summary>
-          <div class="mt-3 space-y-2">
-            <p>Buku: ${item.book}</p>
-            <p>Pembeli: ${item.buyer}</p>
-            <p>Total: Rp${item.total.toLocaleString()}</p>
-            <button class="bg-indigo-600 text-white px-4 py-2 rounded-xl mr-2">PDF</button>
-            <button onclick="deleteSale(${index})" class="bg-red-500 text-white px-4 py-2 rounded-xl">Hapus</button>
-          </div>
-        </details>
-      `;
-    });
-  }
-
-  if(user === 'elyna'){
-    html += '<h3 class="font-bold text-xl mb-4">Data Penulis</h3>';
-
-    authors.forEach((item,index)=>{
-      html += `
-        <div class="border rounded-2xl p-4 mb-3">
-          <p class="font-bold">${item.name}</p>
-          <p>${item.book}</p>
-          <p>Royalti: Rp${Number(item.royalty).toLocaleString()}</p>
-          <button onclick="deleteAuthor(${index})" class="mt-3 bg-red-500 text-white px-4 py-2 rounded-xl">Hapus</button>
-        </div>
-      `;
-    });
-  }
-
-  html += `
-    <div class="mt-6 bg-slate-100 rounded-2xl p-4">
-      <h3 class="font-bold mb-3">Evaluasi Team Leader</h3>
-      <textarea id="evaluationText" class="w-full p-4 rounded-2xl border" placeholder="Tulis evaluasi..."></textarea>
-      <button onclick="saveEvaluation('${user}')" class="mt-3 bg-black text-white px-5 py-3 rounded-2xl">
-        Simpan Evaluasi
-      </button>
-    </div>
-  `;
-
-  document.getElementById('modalContent').innerHTML = html;
+function toggleDark(){
+  document.body.classList.toggle('bg-white');
 }
 
-function closeModal(){
-  document.getElementById('globalModal').classList.add('hidden');
+function initChart(){
+
+  setTimeout(()=>{
+
+    const ctx = document.getElementById('chart');
+
+    if(!ctx) return;
+
+    new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:['M1','M2','M3','M4'],
+        datasets:[{
+          label:'Project',
+          data:[2,5,4,8],
+          borderColor:'#6366f1',
+          tension:.4
+        }]
+      }
+    })
+
+  },500)
+
 }
 
-function saveEvaluation(user){
-  const text = document.getElementById('evaluationText').value;
-
-  evaluations.push({
-    user,
-    text,
-    leader:'Jeyraa',
-    date:new Date().toLocaleString('id-ID')
-  });
-
-  localStorage.setItem('evaluations', JSON.stringify(evaluations));
-
-  alert('Evaluasi berhasil disimpan');
-}
-
-function changePassword(){
-  const username = document.getElementById('changeUser').value;
-  const newPassword = document.getElementById('newPassword').value;
-
-  if(!newPassword){
-    alert('Isi password baru');
-    return;
-  }
-
-  users[username].password = newPassword;
-
-  localStorage.setItem('dynamicUsers', JSON.stringify(users));
-
-  alert('Password berhasil diubah');
-}
-
-const savedUsers = localStorage.getItem('dynamicUsers');
-if(savedUsers){
-  Object.assign(users, JSON.parse(savedUsers));
-}
-
-function togglePassword(){
-  const password = document.getElementById('password');
-  password.type = password.type === 'password' ? 'text' : 'password';
-}
-
-const currentUser = localStorage.getItem('currentUser');
-if(currentUser){
-  loadDashboard(currentUser);
-}
 </script>
 
 </body>
