@@ -1,577 +1,745 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nara Pustaka Internal System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nara Pustaka Operasional</title>
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-        }
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-        .bottom-nav {
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-        }
+  <style>
+    *{scroll-behavior:smooth}
+    body{
+      font-family:Inter,sans-serif;
+      background:linear-gradient(135deg,#0f172a,#1e293b,#111827);
+      min-height:100vh;
+      overflow-x:hidden;
+      color:white;
+    }
 
-        .active-nav {
-            color: #4f46e5;
-        }
+    .glass{
+      background:rgba(255,255,255,.08);
+      backdrop-filter:blur(14px);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 8px 32px rgba(0,0,0,.3);
+    }
 
-        .loading-shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
+    .fade-in{
+      animation:fade .5s ease;
+    }
 
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
+    @keyframes fade{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:translateY(0)}
+    }
 
-        .page-transition {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+    .bottom-nav{
+      position:fixed;
+      bottom:0;
+      left:0;
+      right:0;
+      z-index:999;
+    }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
+    .loader{
+      position:fixed;
+      inset:0;
+      background:#020617;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      z-index:99999;
+    }
 
-        .toast-enter { transform: translateY(100px); opacity: 0; }
-        .toast-active { transform: translateY(0); opacity: 1; transition: all 0.4s ease; }
-    </style>
+    .spin{
+      width:70px;
+      height:70px;
+      border:6px solid rgba(255,255,255,.1);
+      border-top:6px solid #38bdf8;
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+    }
+
+    @keyframes spin{
+      to{transform:rotate(360deg)}
+    }
+
+    .hidden-scroll::-webkit-scrollbar{
+      display:none;
+    }
+  </style>
 </head>
-<body class="bg-white text-slate-800">
+<body>
 
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-        <p class="text-slate-500 font-medium animate-pulse">Nara Pustaka System</p>
+<div id="loader" class="loader">
+  <div class="text-center">
+    <div class="spin mx-auto"></div>
+    <p class="mt-4 text-sky-300 text-xl font-bold">Nara Pustaka</p>
+  </div>
+</div>
+
+<div id="toast" class="fixed top-5 right-5 hidden z-[9999] px-5 py-3 rounded-2xl glass text-white"></div>
+
+<div id="app"></div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzU6OXHUHXHUPeSD9560gUy5F-XAdegvadeQOhq3e0I2Z5rZmny9ww_JY5qGtLiz2Y/exec";
+
+const USERS = [
+  {username:'vero',password:'vero123',role:'Manager',fullname:'Vero'},
+  {username:'jeyraa',password:'jey123',role:'Team Leader',fullname:'Jeyraa'},
+  {username:'thami',password:'thami123',role:'Administrasi',fullname:'Thami'},
+  {username:'elyna',password:'ely123',role:'Redaksi',fullname:'Elyna'},
+  {username:'nala',password:'nala123',role:'Desain',fullname:'Nala'},
+  {username:'calista',password:'calista123',role:'Kreatif',fullname:'Calista'},
+  {username:'zahra',password:'zahra123',role:'Kreatif',fullname:'Zahra'}
+];
+
+let salesData = JSON.parse(localStorage.getItem('salesData')) || [];
+let projectsData = JSON.parse(localStorage.getItem('projectsData')) || [];
+
+setTimeout(()=>{
+  document.getElementById('loader').style.display='none';
+  checkSession();
+},1200);
+
+function saveData(){
+  localStorage.setItem('salesData',JSON.stringify(salesData));
+  localStorage.setItem('projectsData',JSON.stringify(projectsData));
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg;
+  t.classList.remove('hidden');
+
+  setTimeout(()=>{
+    t.classList.add('hidden');
+  },2500);
+}
+
+function checkSession(){
+  const user = JSON.parse(localStorage.getItem('naraUser'));
+
+  if(user){
+    renderDashboard(user);
+  }else{
+    renderLogin();
+  }
+}
+
+function renderLogin(){
+  document.getElementById('app').innerHTML=`
+
+  <div class="min-h-screen flex items-center justify-center p-5 fade-in">
+
+    <div class="glass w-full max-w-md p-6 rounded-3xl">
+
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-black text-sky-300">Nara Pustaka</h1>
+        <p class="text-slate-300 mt-2">Sistem Operasional Penerbit</p>
+      </div>
+
+      <div class="space-y-4">
+        <input id="username" type="text" placeholder="Username"
+        class="w-full p-4 rounded-2xl bg-white/10 border border-white/10 outline-none">
+
+        <input id="password" type="password" placeholder="Password"
+        class="w-full p-4 rounded-2xl bg-white/10 border border-white/10 outline-none">
+
+        <button onclick="login()"
+        class="w-full bg-sky-500 hover:bg-sky-600 transition p-4 rounded-2xl font-bold">
+          Login
+        </button>
+      </div>
+
+    </div>
+  </div>
+  `;
+}
+
+function login(){
+  const u=document.getElementById('username').value;
+  const p=document.getElementById('password').value;
+
+  const found=USERS.find(x=>x.username===u && x.password===p);
+
+  if(found){
+    localStorage.setItem('naraUser',JSON.stringify(found));
+    toast('Login berhasil');
+    renderDashboard(found);
+  }else{
+    toast('Username/password salah');
+  }
+}
+
+function logout(){
+  localStorage.removeItem('naraUser');
+  renderLogin();
+}
+
+function renderDashboard(user){
+
+  let content='';
+
+  if(user.role==='Manager') content=managerDashboard(user);
+  else if(user.role==='Administrasi') content=adminDashboard(user);
+  else if(user.role==='Redaksi') content=redaksiDashboard(user);
+  else content=staffDashboard(user);
+
+  document.getElementById('app').innerHTML=content;
+
+  if(user.role==='Manager') initCharts();
+}
+
+function totalIncome(){
+  return salesData.reduce((a,b)=>a+Number(b.total||0),0);
+}
+
+function totalRoyalty(){
+  return salesData.reduce((a,b)=>a+Number(b.royalty||0),0);
+}
+
+function managerDashboard(user){
+
+  const income=totalIncome();
+  const royalty=totalRoyalty();
+  const expense=500000;
+  const gross=income-expense;
+  const net=gross-royalty;
+
+  return `
+
+  <div class="pb-28 p-4 fade-in">
+
+    <div class="flex justify-between items-center mb-5">
+      <div>
+        <h1 class="text-3xl font-black text-sky-300">Manager</h1>
+        <p class="text-slate-300">Halo ${user.fullname}</p>
+      </div>
+
+      <button onclick="logout()"
+      class="bg-red-500 px-4 py-2 rounded-xl">
+        Logout
+      </button>
     </div>
 
-    <!-- Login Container -->
-    <div id="login-page" class="hidden min-h-screen flex items-center justify-center p-6 bg-slate-50">
-        <div class="w-full max-w-md glass-card p-8 rounded-[2rem]">
-            <div class="text-center mb-10">
-                <div class="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
-                    <i class="fas fa-book-open text-white text-3xl"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-slate-800">Nara Pustaka</h1>
-                <p class="text-slate-500">Internal Operational System</p>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Username</label>
-                    <input type="text" id="username" class="w-full mt-1 p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="Masukkan username">
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Password</label>
-                    <input type="password" id="password" class="w-full mt-1 p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="••••••••">
-                </div>
-                <button onclick="handleLogin()" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-200 active:scale-95 transition-transform mt-4">
-                    MASUK SISTEM
-                </button>
-            </div>
+    <div class="grid grid-cols-2 gap-4">
+
+      ${card('Total Pemasukan','Rp '+income.toLocaleString(),'fa-wallet')}
+      ${card('Pengeluaran','Rp '+expense.toLocaleString(),'fa-money-bill')}
+      ${card('Laba Kotor','Rp '+gross.toLocaleString(),'fa-chart-line')}
+      ${card('Laba Bersih','Rp '+net.toLocaleString(),'fa-coins')}
+      ${card('Royalti','Rp '+royalty.toLocaleString(),'fa-crown')}
+      ${card('Penjualan',salesData.length,'fa-cart-shopping')}
+
+    </div>
+
+    <div class="glass rounded-3xl p-5 mt-5">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold text-xl">Grafik Penjualan</h2>
+      </div>
+      <canvas id="salesChart"></canvas>
+    </div>
+
+    <div class="glass rounded-3xl p-5 mt-5">
+      <h2 class="font-bold text-xl mb-4">Grafik Laba</h2>
+      <canvas id="profitChart"></canvas>
+    </div>
+
+    <div class="glass rounded-3xl p-5 mt-5 overflow-auto hidden-scroll">
+
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold text-xl">Laporan</h2>
+      </div>
+
+      <div class="space-y-3">
+
+        <button onclick="exportManagerPDF()"
+        class="w-full bg-sky-500 p-4 rounded-2xl font-bold">
+        Export PDF Manager
+        </button>
+
+        <button onclick="exportTaxPDF()"
+        class="w-full bg-emerald-500 p-4 rounded-2xl font-bold">
+        Export PDF Pajak
+        </button>
+
+        <button onclick="exportRoyaltyPDF()"
+        class="w-full bg-purple-500 p-4 rounded-2xl font-bold">
+        Export Royalti
+        </button>
+
+      </div>
+
+    </div>
+
+    ${bottomNav()}
+
+  </div>
+  `;
+}
+
+function adminDashboard(user){
+
+  return `
+
+  <div class="p-4 pb-28 fade-in">
+
+    <div class="flex justify-between items-center mb-5">
+      <div>
+        <h1 class="text-3xl font-black text-sky-300">Administrasi</h1>
+        <p class="text-slate-300">Input Penjualan</p>
+      </div>
+
+      <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-xl">Logout</button>
+    </div>
+
+    <div class="glass rounded-3xl p-5 space-y-4">
+
+      <input id="book" placeholder="Pilih Buku"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="buyer" placeholder="Nama Pembeli"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="qty" type="number" placeholder="Jumlah"
+      oninput="calculateTotal()"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="marketplace" placeholder="Marketplace"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="total" readonly placeholder="Total Otomatis"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="royalty" readonly placeholder="Royalti Otomatis"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input type="file"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input type="file"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <div class="grid grid-cols-2 gap-3">
+
+        <button onclick="saveSale('${user.fullname}')"
+        class="bg-sky-500 p-4 rounded-2xl font-bold">
+          Simpan
+        </button>
+
+        <button onclick="clearSales()"
+        class="bg-red-500 p-4 rounded-2xl font-bold">
+          Hapus
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="mt-5 space-y-3">
+
+      ${salesData.map((s,i)=>`
+      <div class="glass p-4 rounded-2xl">
+        <div class="flex justify-between">
+          <div>
+            <h3 class="font-bold">${s.book}</h3>
+            <p class="text-sm text-slate-300">${s.buyer}</p>
+          </div>
+
+          <button onclick="deleteSale(${i})"
+          class="bg-red-500 px-3 py-1 rounded-xl">
+            <i class="fa fa-trash"></i>
+          </button>
         </div>
+      </div>
+      `).join('')}
+
     </div>
 
-    <!-- App Main Container -->
-    <div id="app-container" class="hidden min-h-screen pb-24">
-        
-        <!-- Header -->
-        <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-slate-100">
-            <div>
-                <h2 id="role-title" class="text-xs font-bold text-indigo-600 uppercase tracking-widest">DASHBOARD</h2>
-                <h1 id="user-display-name" class="text-xl font-bold text-slate-800">Halo, User!</h1>
-            </div>
-            <button onclick="handleLogout()" class="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center active:scale-90 transition-transform">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
-        </header>
+    ${bottomNav()}
 
-        <!-- Main Content (Dynamic) -->
-        <main id="main-content" class="px-5 py-6">
-            <!-- Content Injected via JS -->
-        </main>
+  </div>
+  `;
+}
 
-        <!-- Bottom Navigation -->
-        <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-t border-slate-100 h-20 flex items-center justify-around px-4">
-            <!-- Navigation items will change based on Role -->
-        </nav>
+function redaksiDashboard(user){
+
+  return `
+
+  <div class="p-4 pb-28 fade-in">
+
+    <div class="flex justify-between items-center mb-5">
+
+      <div>
+        <h1 class="text-3xl font-black text-sky-300">Redaksi</h1>
+        <p class="text-slate-300">Tracking Naskah</p>
+      </div>
+
+      <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-xl">Logout</button>
+
     </div>
 
-    <!-- Modals & Toasts -->
-    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] px-6 py-3 bg-slate-800 text-white rounded-full text-sm font-medium shadow-2xl opacity-0 pointer-events-none transition-all duration-300">
-        Pesan Toast
+    <div class="glass rounded-3xl p-5 space-y-4">
+
+      <input id="title" placeholder="Judul Buku"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="author" placeholder="Penulis"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="isbn" placeholder="ISBN/QRCBN"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="price" placeholder="Harga"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="percent" placeholder="Royalti %"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="editor" placeholder="Editor"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="layout" placeholder="Layout"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <input id="cover" placeholder="Cover"
+      class="w-full p-4 rounded-2xl bg-white/10 border border-white/10">
+
+      <select id="status"
+      class="w-full p-4 rounded-2xl bg-slate-800 border border-white/10">
+
+        <option>Naskah Masuk</option>
+        <option>Editing</option>
+        <option>Layout</option>
+        <option>Cover</option>
+        <option>Cetak</option>
+        <option>Distribusi</option>
+        <option>Selesai</option>
+
+      </select>
+
+      <button onclick="saveProject()"
+      class="w-full bg-sky-500 p-4 rounded-2xl font-bold">
+        Simpan Proyek
+      </button>
+
     </div>
 
-    <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="fixed inset-0 z-[70] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-6">
-        <div class="bg-white rounded-[2rem] p-8 w-full max-w-sm text-center">
-            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-trash-alt text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">Konfirmasi Hapus</h3>
-            <p class="text-slate-500 mb-6">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak bisa dibatalkan.</p>
-            <div class="flex gap-3">
-                <button onclick="closeConfirmModal()" class="flex-1 py-3 font-semibold text-slate-500 bg-slate-100 rounded-xl">Batal</button>
-                <button id="btn-confirm-delete" class="flex-1 py-3 font-semibold text-white bg-red-500 rounded-xl shadow-lg shadow-red-200">Hapus</button>
-            </div>
+    <div class="mt-5 space-y-3">
+
+      ${projectsData.map((p,i)=>`
+      <div class="glass p-4 rounded-2xl">
+
+        <div class="flex justify-between items-start">
+
+          <div>
+            <h2 class="font-bold text-lg">${p.title}</h2>
+            <p class="text-slate-300">${p.author}</p>
+          </div>
+
+          <span class="bg-sky-500 px-3 py-1 rounded-full text-sm">
+            ${p.status}
+          </span>
+
         </div>
+
+        <div class="mt-3 text-sm text-slate-300">
+          Editor: ${p.editor}<br>
+          Layout: ${p.layout}<br>
+          Cover: ${p.cover}
+        </div>
+
+      </div>
+      `).join('')}
+
     </div>
 
-    <script>
-        // CONFIGURATION
-        const API_URL = "https://script.google.com/macros/s/AKfycbzvSNto-MQycc_rqZBv_AnxQsdSlNvdAlogJvNZTjO-4QVdihm3M_RCm9hRQ4zxo0tD/exec";
-        
-        const USERS = {
-            'vero': { pass: 'vero123', role: 'manager', name: 'Vero' },
-            'jeyraa': { pass: 'jey123', role: 'team_leader', name: 'Jeyraa' },
-            'thami': { pass: 'thami123', role: 'administrasi', name: 'Thami' },
-            'elyna': { pass: 'ely123', role: 'redaksi', name: 'Elyna' },
-            'nala': { pass: 'nala123', role: 'desain', name: 'Nala' },
-            'calista': { pass: 'calista123', role: 'kreatif', name: 'Calista' },
-            'zahra': { pass: 'zahra123', role: 'kreatif', name: 'Zahra' }
-        };
+    ${bottomNav()}
 
-        let currentUser = null;
-        let currentTab = 'home';
-        let booksData = [];
-        let salesData = [];
+  </div>
+  `;
+}
 
-        // INITIALIZATION
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                const savedUser = localStorage.getItem('np_user');
-                const savedTab = localStorage.getItem('np_last_tab');
-                
-                if (savedUser) {
-                    currentUser = JSON.parse(savedUser);
-                    currentTab = savedTab || 'home';
-                    showApp();
-                } else {
-                    showLogin();
-                }
-                document.getElementById('loading-screen').classList.add('opacity-0');
-                setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
-            }, 1500);
-        });
+function staffDashboard(user){
+  return `
+  <div class="min-h-screen p-5 fade-in">
 
-        function showLogin() {
-            document.getElementById('login-page').style.display = 'flex';
-            document.getElementById('app-container').style.display = 'none';
-        }
+    <div class="glass rounded-3xl p-6 text-center mt-20">
+      <h1 class="text-4xl font-black text-sky-300 mb-3">${user.role}</h1>
+      <p class="text-slate-300">Selamat datang ${user.fullname}</p>
 
-        function showApp() {
-            document.getElementById('login-page').style.display = 'none';
-            document.getElementById('app-container').style.display = 'block';
-            document.getElementById('user-display-name').innerText = `Halo, ${currentUser.name}!`;
-            document.getElementById('role-title').innerText = currentUser.role.replace('_', ' ');
-            
-            renderNavigation();
-            switchTab(currentTab);
-        }
+      <div class="mt-6 text-left space-y-3">
+        <div class="glass p-4 rounded-2xl">Task Kreatif</div>
+        <div class="glass p-4 rounded-2xl">Monitoring Produksi</div>
+        <div class="glass p-4 rounded-2xl">Timeline Tim</div>
+      </div>
 
-        function handleLogin() {
-            const user = document.getElementById('username').value.toLowerCase();
-            const pass = document.getElementById('password').value;
+      <button onclick="logout()"
+      class="w-full mt-6 bg-red-500 p-4 rounded-2xl font-bold">
+      Logout
+      </button>
 
-            if (USERS[user] && USERS[user].pass === pass) {
-                currentUser = {
-                    username: user,
-                    role: USERS[user].role,
-                    name: USERS[user].name
-                };
-                localStorage.setItem('np_user', JSON.stringify(currentUser));
-                showToast("Berhasil masuk!");
-                showApp();
-            } else {
-                showToast("Username atau Password salah!", "error");
-            }
-        }
+    </div>
 
-        function handleLogout() {
-            localStorage.removeItem('np_user');
-            localStorage.removeItem('np_last_tab');
-            location.reload();
-        }
+    ${bottomNav()}
 
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.classList.add('toast-active');
-            setTimeout(() => t.classList.remove('toast-active'), 3000);
-        }
+  </div>
+  `;
+}
 
-        // NAVIGATION ENGINE
-        function renderNavigation() {
-            const nav = document.getElementById('bottom-nav');
-            let items = [
-                { id: 'home', icon: 'fa-home', label: 'Home' }
-            ];
+function card(title,value,icon){
+  return `
+  <div class="glass rounded-3xl p-4">
+    <div class="flex justify-between items-center">
+      <div>
+        <p class="text-slate-300 text-sm">${title}</p>
+        <h2 class="text-xl font-black mt-2">${value}</h2>
+      </div>
 
-            if (currentUser.role === 'manager') {
-                items.push({ id: 'stats', icon: 'fa-chart-pie', label: 'Laporan' });
-                items.push({ id: 'logs', icon: 'fa-history', label: 'Log' });
-            } else if (currentUser.role === 'administrasi') {
-                items.push({ id: 'sales', icon: 'fa-shopping-cart', label: 'Sales' });
-                items.push({ id: 'books', icon: 'fa-book', label: 'Buku' });
-            } else if (currentUser.role === 'redaksi') {
-                items.push({ id: 'projects', icon: 'fa-tasks', label: 'Projek' });
-                items.push({ id: 'royalty', icon: 'fa-hand-holding-usd', label: 'Royalti' });
-            } else {
-                items.push({ id: 'projects', icon: 'fa-pencil-ruler', label: 'Kerja' });
-            }
+      <div class="text-3xl text-sky-300">
+        <i class="fa ${icon}"></i>
+      </div>
+    </div>
+  </div>
+  `;
+}
 
-            nav.innerHTML = items.map(item => `
-                <button onclick="switchTab('${item.id}')" class="flex flex-col items-center gap-1 transition-all ${currentTab === item.id ? 'active-nav scale-110' : 'text-slate-400'}">
-                    <i class="fas ${item.icon} text-xl"></i>
-                    <span class="text-[10px] font-bold uppercase tracking-tighter">${item.label}</span>
-                </button>
-            `).join('');
-        }
+function bottomNav(){
+  return `
 
-        function switchTab(tabId) {
-            currentTab = tabId;
-            localStorage.setItem('np_last_tab', tabId);
-            renderNavigation();
-            
-            const main = document.getElementById('main-content');
-            main.innerHTML = `<div class="space-y-4">
-                <div class="h-10 w-48 loading-shimmer rounded-lg"></div>
-                <div class="h-40 w-full loading-shimmer rounded-[2rem]"></div>
-                <div class="h-64 w-full loading-shimmer rounded-[2rem]"></div>
-            </div>`;
+  <div class="bottom-nav px-4 pb-4">
 
-            setTimeout(() => {
-                if (tabId === 'home') renderDashboard();
-                if (tabId === 'stats') renderManagerStats();
-                if (tabId === 'sales') renderAdminSales();
-                if (tabId === 'projects') renderRedaksiProjects();
-                if (tabId === 'royalty') renderRoyaltySystem();
-                if (tabId === 'logs') renderActivityLogs();
-            }, 500);
-        }
+    <div class="glass rounded-3xl p-4 flex justify-around items-center">
 
-        // --- VIEWS ---
+      <button onclick="checkSession()">
+        <i class="fa fa-house text-xl"></i>
+      </button>
 
-        function renderDashboard() {
-            const main = document.getElementById('main-content');
-            main.innerHTML = `
-                <div class="space-y-6 animate-in slide-in-from-bottom duration-500">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xl font-bold">Ringkasan Hari Ini</h2>
-                        <span class="text-sm text-slate-400">${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long'})}</span>
-                    </div>
+      <button onclick="toast('Dashboard aktif')">
+        <i class="fa fa-chart-simple text-xl"></i>
+      </button>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="glass-card p-5 rounded-[2rem] bg-indigo-50/50">
-                            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white mb-3">
-                                <i class="fas fa-book"></i>
-                            </div>
-                            <p class="text-slate-500 text-xs font-bold uppercase">Buku Terbit</p>
-                            <h3 class="text-2xl font-black">124</h3>
-                        </div>
-                        <div class="glass-card p-5 rounded-[2rem] bg-emerald-50/50">
-                            <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white mb-3">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <p class="text-slate-500 text-xs font-bold uppercase">Penjualan</p>
-                            <h3 class="text-2xl font-black">892</h3>
-                        </div>
-                    </div>
+      <button onclick="window.scrollTo({top:0,behavior:'smooth'})"
+      class="bg-sky-500 w-14 h-14 rounded-full -mt-10 shadow-2xl">
+        <i class="fa fa-plus"></i>
+      </button>
 
-                    <div class="glass-card p-6 rounded-[2rem]">
-                        <h3 class="font-bold mb-4">Aktivitas Terkini</h3>
-                        <div class="space-y-4">
-                            ${[1,2,3].map(() => `
-                                <div class="flex items-center gap-4">
-                                    <div class="w-2 h-10 bg-indigo-100 rounded-full"></div>
-                                    <div>
-                                        <p class="text-sm font-bold">Input Penjualan Baru</p>
-                                        <p class="text-xs text-slate-400">Oleh Thami • 2 jam yang lalu</p>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+      <button onclick="toast('Laporan siap')">
+        <i class="fa fa-file text-xl"></i>
+      </button>
 
-        function renderManagerStats() {
-            const main = document.getElementById('main-content');
-            main.innerHTML = `
-                <div class="space-y-6">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xl font-bold">Statistik Keuangan</h2>
-                        <button onclick="exportFullReport()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-indigo-100">
-                            <i class="fas fa-file-pdf mr-2"></i> Export
-                        </button>
-                    </div>
+      <button onclick="logout()">
+        <i class="fa fa-right-from-bracket text-xl"></i>
+      </button>
 
-                    <div class="glass-card p-6 rounded-[2rem] bg-slate-900 text-white">
-                        <p class="text-indigo-300 text-xs font-bold uppercase">Total Laba Bersih</p>
-                        <h2 class="text-3xl font-black mt-1">Rp 154.250.000</h2>
-                        <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between">
-                            <div>
-                                <p class="text-[10px] text-slate-500 uppercase">Pemasukan</p>
-                                <p class="text-sm font-bold text-emerald-400">Rp 420jt</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] text-slate-500 uppercase">Pengeluaran</p>
-                                <p class="text-sm font-bold text-red-400">Rp 265jt</p>
-                            </div>
-                        </div>
-                    </div>
+    </div>
 
-                    <div class="glass-card p-6 rounded-[2rem]">
-                        <h3 class="font-bold mb-4">Tren Bulanan</h3>
-                        <canvas id="mainChart" height="200"></canvas>
-                    </div>
-                </div>
-            `;
-            initChart();
-        }
+  </div>
+  `;
+}
 
-        function initChart() {
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                    datasets: [{
-                        label: 'Penjualan',
-                        data: [65, 59, 80, 81, 56, 95],
-                        borderColor: '#4f46e5',
-                        tension: 0.4,
-                        borderWidth: 4,
-                        pointRadius: 0,
-                        fill: true,
-                        backgroundColor: 'rgba(79, 70, 229, 0.05)'
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: { y: { display: false }, x: { grid: { display: false } } }
-                }
-            });
-        }
+function calculateTotal(){
+  const qty=Number(document.getElementById('qty').value || 0);
 
-        function renderAdminSales() {
-            const main = document.getElementById('main-content');
-            main.innerHTML = `
-                <div class="space-y-6">
-                    <h2 class="text-xl font-bold">Input Penjualan</h2>
-                    <div class="glass-card p-6 rounded-[2rem] space-y-4">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold uppercase text-slate-400">Cari Buku</label>
-                            <input type="text" class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Judul Buku / ISBN">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold uppercase text-slate-400">Jumlah</label>
-                                <input type="number" id="qty" oninput="calcTotal()" class="w-full p-4 bg-slate-50 rounded-2xl outline-none" value="1">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold uppercase text-slate-400">Marketplace</label>
-                                <select class="w-full p-4 bg-slate-50 rounded-2xl outline-none">
-                                    <option>Shopee</option>
-                                    <option>Tokopedia</option>
-                                    <option>TikTok Shop</option>
-                                    <option>Website</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="p-4 bg-indigo-50 rounded-2xl">
-                            <p class="text-xs text-indigo-600 font-bold">Total Pembayaran</p>
-                            <h3 id="total-price" class="text-xl font-black text-indigo-900">Rp 0</h3>
-                        </div>
-                        <button onclick="handleSaveSales()" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 active:scale-95 transition-all">
-                            SIMPAN TRANSAKSI
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
+  const total=qty*85000;
+  const royalty=total*0.1;
 
-        function renderRoyaltySystem() {
-            const main = document.getElementById('main-content');
-            main.innerHTML = `
-                <div class="space-y-6">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xl font-bold">Royalti Penulis</h2>
-                        <i class="fas fa-search text-slate-400"></i>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        ${['Andrea Hirata', 'Tere Liye', 'Dee Lestari'].map(name => `
-                            <div class="glass-card p-5 rounded-[2rem] flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-bold text-slate-800">${name}</h4>
-                                    <p class="text-xs text-slate-400">12 Buku Aktif</p>
-                                </div>
-                                <button onclick="generateRoyaltyPDF('${name}')" class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
-                                    <i class="fas fa-file-pdf"></i>
-                                </button>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
+  document.getElementById('total').value='Rp '+total.toLocaleString();
+  document.getElementById('royalty').value='Rp '+royalty.toLocaleString();
+}
 
-        function renderRedaksiProjects() {
-             const main = document.getElementById('main-content');
-             main.innerHTML = `
-                <div class="space-y-6">
-                    <h2 class="text-xl font-bold">Tracking Naskah</h2>
-                    <div class="space-y-4">
-                        ${[
-                            {t:'The Art of Focus', s:'Editing', p:65},
-                            {t:'Filosofi Kopi V2', s:'Layout', p:40},
-                            {t:'Membangun Narasi', s:'Cetak', p:95}
-                        ].map(proj => `
-                            <div class="glass-card p-5 rounded-[2rem]">
-                                <div class="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h4 class="font-bold">${proj.t}</h4>
-                                        <span class="px-2 py-1 bg-indigo-100 text-indigo-600 rounded-md text-[10px] font-bold uppercase">${proj.s}</span>
-                                    </div>
-                                    <p class="text-xs font-black text-slate-400">${proj.p}%</p>
-                                </div>
-                                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-indigo-500 rounded-full" style="width: ${proj.p}%"></div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                <button class="fixed bottom-28 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform">
-                    <i class="fas fa-plus"></i>
-                </button>
-             `;
-        }
+async function saveSale(user){
 
-        // --- UTILS & API ---
+  const sale={
+    id:Date.now(),
+    buyer:document.getElementById('buyer').value,
+    book:document.getElementById('book').value,
+    qty:document.getElementById('qty').value,
+    marketplace:document.getElementById('marketplace').value,
+    total:Number(document.getElementById('qty').value||0)*85000,
+    royalty:Number(document.getElementById('qty').value||0)*8500,
+    user:user,
+    date:new Date().toLocaleDateString()
+  };
 
-        async function fetchAPI(action, data = {}) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action, ...data })
-                });
-                return await response.json();
-            } catch (e) {
-                console.error(e);
-                showToast("Gagal menyambung ke server", "error");
-            }
-        }
+  salesData.unshift(sale);
+  saveData();
 
-        function calcTotal() {
-            const qty = document.getElementById('qty').value;
-            const price = 85000; // Contoh harga statis
-            document.getElementById('total-price').innerText = `Rp ${(qty * price).toLocaleString('id-ID')}`;
-        }
+  try{
+    await fetch(API_URL,{
+      method:'POST',
+      body:JSON.stringify({
+        action:'addSale',
+        data:sale
+      })
+    });
+  }catch(err){
+    console.log(err);
+  }
 
-        function generateRoyaltyPDF(author) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // Header
-            doc.setFontSize(22);
-            doc.setTextColor(79, 70, 229);
-            doc.text("NARA PUSTAKA", 20, 30);
-            
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text("Laporan Royalti Penulis Resmi", 20, 38);
-            
-            doc.setDrawColor(230);
-            doc.line(20, 45, 190, 45);
-            
-            // Info
-            doc.setFontSize(12);
-            doc.setTextColor(40);
-            doc.text(`Penulis: ${author}`, 20, 60);
-            doc.text(`Periode: Mei 2026`, 20, 68);
-            
-            // Table
-            doc.autoTable({
-                startY: 80,
-                head: [['Judul Buku', 'Terjual', 'Royalti (10%)', 'Total']],
-                body: [
-                    ['The Art of Focus', '120 eks', 'Rp 8.500', 'Rp 1.020.000'],
-                    ['Filosofi Kopi V2', '45 eks', 'Rp 9.200', 'Rp 414.000'],
-                ],
-                theme: 'grid',
-                headStyles: { fillColor: [79, 70, 229] }
-            });
-            
-            // Footer
-            const finalY = doc.lastAutoTable.finalY + 30;
-            doc.text("Tanda Tangan Manager,", 140, finalY);
-            doc.text("( Vero )", 140, finalY + 30);
-            
-            doc.save(`Royalti_${author}_Mei2026.pdf`);
-            showToast("PDF Berhasil diunduh!");
-        }
+  toast('Penjualan berhasil disimpan');
 
-        function exportFullReport() {
-            showToast("Menyiapkan Laporan Manager...");
-            setTimeout(() => {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                doc.text("Laporan Keuangan Nara Pustaka", 20, 20);
-                doc.autoTable({
-                    startY: 30,
-                    head: [['Kategori', 'Jumlah']],
-                    body: [['Pemasukan', 'Rp 420.000.000'], ['Pengeluaran', 'Rp 265.000.000'], ['Laba Bersih', 'Rp 155.000.000']]
-                });
-                doc.save("Laporan_Manager_2026.pdf");
-            }, 1000);
-        }
+  const current=JSON.parse(localStorage.getItem('naraUser'));
+  renderDashboard(current);
+}
 
-        function closeConfirmModal() {
-            document.getElementById('confirm-modal').classList.add('hidden');
-        }
+function deleteSale(i){
+  if(confirm('Hapus data?')){
+    salesData.splice(i,1);
+    saveData();
 
-        function renderActivityLogs() {
-            const main = document.getElementById('main-content');
-            main.innerHTML = `
-                <div class="space-y-6">
-                    <h2 class="text-xl font-bold">Activity Logs</h2>
-                    <div class="space-y-2">
-                        ${Array.from({length: 10}).map((_, i) => `
-                            <div class="p-4 border-b border-slate-50 flex gap-4">
-                                <div class="text-xs font-mono text-slate-300">14:0${i}</div>
-                                <div class="text-sm">
-                                    <span class="font-bold text-indigo-600">Admin Thami</span>
-                                    menambahkan penjualan <span class="italic">#TX-9021${i}</span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
+    const current=JSON.parse(localStorage.getItem('naraUser'));
+    renderDashboard(current);
 
-    </script>
+    toast('Data dihapus');
+  }
+}
+
+function clearSales(){
+  if(confirm('Hapus semua data penjualan?')){
+    salesData=[];
+    saveData();
+
+    const current=JSON.parse(localStorage.getItem('naraUser'));
+    renderDashboard(current);
+  }
+}
+
+function saveProject(){
+
+  const data={
+    title:document.getElementById('title').value,
+    author:document.getElementById('author').value,
+    isbn:document.getElementById('isbn').value,
+    price:document.getElementById('price').value,
+    percent:document.getElementById('percent').value,
+    editor:document.getElementById('editor').value,
+    layout:document.getElementById('layout').value,
+    cover:document.getElementById('cover').value,
+    status:document.getElementById('status').value
+  };
+
+  projectsData.unshift(data);
+  saveData();
+
+  toast('Proyek berhasil disimpan');
+
+  const current=JSON.parse(localStorage.getItem('naraUser'));
+  renderDashboard(current);
+}
+
+function initCharts(){
+
+  const salesCtx=document.getElementById('salesChart');
+  if(salesCtx){
+
+    new Chart(salesCtx,{
+      type:'line',
+      data:{
+        labels:['Jan','Feb','Mar','Apr','Mei','Jun'],
+        datasets:[{
+          label:'Penjualan',
+          data:[12,19,8,14,20,30],
+          borderColor:'#38bdf8',
+          backgroundColor:'rgba(56,189,248,.2)',
+          tension:.4,
+          fill:true
+        }]
+      }
+    });
+  }
+
+  const profitCtx=document.getElementById('profitChart');
+
+  if(profitCtx){
+
+    new Chart(profitCtx,{
+      type:'bar',
+      data:{
+        labels:['Jan','Feb','Mar','Apr','Mei'],
+        datasets:[{
+          label:'Laba',
+          data:[3,4,5,7,8],
+          backgroundColor:'rgba(16,185,129,.7)'
+        }]
+      }
+    });
+  }
+}
+
+function exportManagerPDF(){
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+
+  doc.setFontSize(20);
+  doc.text('Nara Pustaka',20,20);
+
+  doc.setFontSize(12);
+  doc.text('Laporan Manager',20,30);
+
+  doc.text('Tanggal: '+new Date().toLocaleDateString(),20,40);
+
+  doc.text('Total Pemasukan: Rp '+totalIncome().toLocaleString(),20,60);
+  doc.text('Total Royalti: Rp '+totalRoyalty().toLocaleString(),20,70);
+  doc.text('Total Penjualan: '+salesData.length,20,80);
+
+  doc.text('Tanda Tangan',140,240);
+  doc.text('Vero',150,255);
+
+  doc.save('laporan-manager.pdf');
+
+  toast('PDF Manager berhasil dibuat');
+}
+
+function exportTaxPDF(){
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+
+  doc.setFontSize(20);
+  doc.text('Nara Pustaka',20,20);
+
+  doc.text('Laporan Pajak',20,35);
+
+  doc.text('Estimasi Pajak: Rp '+(totalIncome()*0.11).toLocaleString(),20,60);
+
+  doc.text('Disetujui Vero',140,250);
+
+  doc.save('laporan-pajak.pdf');
+
+  toast('PDF Pajak berhasil dibuat');
+}
+
+function exportRoyaltyPDF(){
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+
+  doc.setFontSize(20);
+  doc.text('Laporan Royalti Penulis',20,20);
+
+  let y=40;
+
+  salesData.forEach((s,index)=>{
+    doc.text(`${index+1}. ${s.book} - ${s.buyer} - Rp ${s.royalty.toLocaleString()}`,20,y);
+    y+=10;
+  });
+
+  doc.text('Dicetak oleh Vero',20,260);
+
+  doc.save('laporan-royalti.pdf');
+
+  toast('PDF Royalti berhasil dibuat');
+}
+
+</script>
+
 </body>
 </html>
+
