@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>Nara Pustaka | Mobile Publishing ERP</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Nara Pustaka | Sistem Penerbitan Mobile</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Chart.js & jsPDF -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -30,7 +26,6 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         input, select, textarea { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; border-radius: 1rem; padding: 0.75rem 1rem; font-size: 0.875rem; width: 100%; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 2px rgba(139,92,246,0.2); }
-        button { transition: all 0.15s ease; }
         .bottom-nav-item { transition: all 0.2s; }
         .progress-step { transition: width 0.3s; }
         .modal-backdrop { background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); }
@@ -38,15 +33,15 @@
 </head>
 <body class="bg-gradient-to-b from-slate-900 to-slate-800">
 
-<!-- GLOBAL LOADER -->
+<!-- LOADING GLOBAL -->
 <div id="globalLoader" class="fixed inset-0 z-50 flex items-center justify-center flex-col gap-3 bg-slate-900">
     <div class="loader-spinner"></div>
-    <p class="text-indigo-300 text-sm font-medium">Memuat Nara Pustaka System...</p>
+    <p class="text-indigo-300 text-sm font-medium">Memuat Sistem Nara Pustaka...</p>
 </div>
 
-<!-- MAIN APP (hidden until auth) -->
+<!-- APP UTAMA -->
 <div id="app" class="hidden max-w-md mx-auto relative min-h-screen pb-24">
-    <!-- Sticky Header Glass -->
+    <!-- HEADER STICKY -->
     <div class="sticky top-0 z-20 glass-card rounded-none rounded-b-2xl px-5 py-3 flex justify-between items-center border-b border-white/10">
         <div>
             <h1 class="text-2xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Nara Pustaka</h1>
@@ -55,22 +50,22 @@
         <button id="logoutBtn" class="bg-slate-800/80 px-3 py-1.5 rounded-full text-sm text-slate-200 flex items-center gap-1"><i class="fas fa-sign-out-alt"></i> Keluar</button>
     </div>
 
-    <!-- DYNAMIC DASHBOARD CONTENT -->
+    <!-- KONTEN DASHBOARD DINAMIS -->
     <div id="dashboardContainer" class="p-4 space-y-5"></div>
 
-    <!-- BOTTOM NAVIGATION (role based menu) -->
+    <!-- BOTTOM NAVIGATION -->
     <div class="glass-nav fixed bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around items-center py-2 border-t border-indigo-500/30 z-20">
         <div id="navHome" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-indigo-400"><i class="fas fa-home text-xl"></i><span class="text-[10px] mt-1">Beranda</span></div>
-        <div id="navTracking" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-slate-400"><i class="fas fa-book-open text-xl"></i><span class="text-[10px] mt-1">Tracking</span></div>
+        <div id="navTracking" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-slate-400"><i class="fas fa-book-open text-xl"></i><span class="text-[10px] mt-1">Pelacakan</span></div>
         <div id="navReport" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-slate-400"><i class="fas fa-chart-line text-xl"></i><span class="text-[10px] mt-1">Laporan</span></div>
         <div id="navTeam" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-slate-400"><i class="fas fa-users text-xl"></i><span class="text-[10px] mt-1">Tim</span></div>
         <div id="navMore" class="bottom-nav-item flex flex-col items-center p-2 rounded-xl text-slate-400"><i class="fas fa-ellipsis-h text-xl"></i><span class="text-[10px] mt-1">Lainnya</span></div>
     </div>
 </div>
 
-<!-- GLOBAL POPUP MODAL -->
+<!-- POPUP MODAL GLOBAL -->
 <div id="popupModal" class="fixed inset-0 z-30 hidden modal-backdrop items-end justify-center" onclick="if(event.target===this) closePopup()">
-    <div class="bg-slate-800 w-full max-w-md rounded-t-3xl p-5 max-h-[80vh] overflow-y-auto border-t-4 border-indigo-500 animate-in slide-in-from-bottom" style="animation: slideUp 0.25s ease;">
+    <div class="bg-slate-800 w-full max-w-md rounded-t-3xl p-5 max-h-[80vh] overflow-y-auto border-t-4 border-indigo-500" style="animation: slideUp 0.25s ease;">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-3">
             <h3 id="popupTitle" class="font-bold text-indigo-300 text-xl"></h3>
             <button onclick="closePopup()" class="text-slate-400 text-2xl hover:text-white">&times;</button>
@@ -80,16 +75,14 @@
 </div>
 
 <script>
-    // ======================== KONFIGURASI API ========================
-    const API_BASE = "https://script.google.com/macros/s/AKfycby-X_EEt6sf_WIjXUyWWlULShgqpHkBK21sxeYbcQYp62mUvCWO1VLN5fDt_pn5pDze/exec";
+    const API_BASE = https://script.google.com/macros/s/AKfycbxEzxXPBtCwxHmn_091kBEFNR1riSmH6lJvqAAhH3pBOLH_jLeLNx61Kg9A1rJcQozO/exec
+    
     let currentUser = null;
     let currentTab = "home";
-    let globalData = {
-        users: [], books: [], sales: [], expenses: [], royalty: [], projects: [], evaluations: [], vendors: [], logs: [], notifications: []
-    };
+    let globalData = { users: [], books: [], sales: [], expenses: [], royalty: [], projects: [], evaluations: [], vendors: [], logs: [], notifications: [] };
     let chartProfit = null;
 
-    // DEFAULT AKUN (tidak diubah otomatis)
+    // AKUN DEFAULT (TIDAK DIUBAH OTOMATIS)
     const DEFAULT_USERS = [
         { username: "vero", password: "vero123", role: "Manager", fullname: "Vero Manager" },
         { username: "jeyraa", password: "jey123", role: "Leader", fullname: "Jeyra Leader" },
@@ -100,7 +93,6 @@
         { username: "zahra", password: "zahra123", role: "Illustrator", fullname: "Zahra Illustrator" }
     ];
 
-    // Helper: fetch data realtime dari API + cache localStorage
     async function fetchAllData() {
         try {
             const res = await fetch(`${API_BASE}?action=getAllData&t=${Date.now()}`);
@@ -109,9 +101,9 @@
                 globalData = { ...globalData, ...json.data };
                 for(let k in globalData) if(!globalData[k]) globalData[k] = [];
                 localStorage.setItem("nara_cache", JSON.stringify({ data: globalData, ts: Date.now() }));
-            } else throw new Error("API response invalid");
+            } else throw new Error("Respons API tidak valid");
         } catch(e) {
-            console.warn("API fetch error, using cache", e);
+            console.warn("Gagal fetch API, gunakan cache", e);
             const cache = localStorage.getItem("nara_cache");
             if(cache) {
                 const cached = JSON.parse(cache);
@@ -154,7 +146,6 @@
         setTimeout(() => { toastDiv.innerHTML = ""; }, 3000);
     }
 
-    // AUTHENTICATION & PERSISTENCE
     async function initLogin() {
         const savedSession = localStorage.getItem("nara_session");
         if(savedSession) {
@@ -166,7 +157,7 @@
                     renderAppByRole();
                     document.getElementById("globalLoader")?.classList.add("hidden");
                     document.getElementById("app")?.classList.remove("hidden");
-                    saveLog("Login via session");
+                    saveLog("Login via sesi");
                     return;
                 }
             } catch(e) {}
@@ -181,13 +172,13 @@
             <div class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-indigo-950 to-slate-900">
                 <div class="glass-card p-6 w-full max-w-sm shadow-2xl">
                     <h2 class="text-3xl font-bold text-center bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">Nara Pustaka</h2>
-                    <p class="text-center text-slate-300 text-sm mb-6">Mobile Publishing System</p>
+                    <p class="text-center text-slate-300 text-sm mb-6">Sistem Penerbitan Mobile</p>
                     <div class="space-y-4">
-                        <input type="text" id="loginUsername" placeholder="Username" class="w-full bg-slate-800/80 border-slate-600 text-white placeholder:text-slate-400">
-                        <input type="password" id="loginPassword" placeholder="Password" class="w-full bg-slate-800/80 border-slate-600 text-white">
+                        <input type="text" id="loginUsername" placeholder="Nama Pengguna" class="w-full bg-slate-800/80 border-slate-600 text-white placeholder:text-slate-400">
+                        <input type="password" id="loginPassword" placeholder="Kata Sandi" class="w-full bg-slate-800/80 border-slate-600 text-white">
                         <button id="doLoginBtn" class="btn-primary w-full py-3 rounded-xl font-semibold text-white">Masuk</button>
                     </div>
-                    <p class="text-xs text-center text-slate-400 mt-5">Demo: vero/vero123 (Manager), jeyraa/jey123 (Leader), dll</p>
+                    <p class="text-xs text-center text-slate-400 mt-5">Demo: vero/vero123 (Manajer), jeyraa/jey123 (Leader), dll</p>
                 </div>
             </div>
         `;
@@ -204,13 +195,18 @@
                 document.body.innerHTML = "";
                 location.reload();
             } else {
-                showToast("Username atau password salah", "error");
+                showToast("Nama pengguna atau kata sandi salah", "error");
             }
         };
     }
 
+    function translateRole(role) {
+        const map = { Manager: "Manajer", Leader: "Leader", Admin: "Admin", Redaksi: "Redaksi", Illustrator: "Ilustrator", Designer: "Desainer" };
+        return map[role] || role;
+    }
+
     function renderAppByRole() {
-        document.getElementById("userRoleBadge").innerHTML = `${currentUser.role} • ${currentUser.username}`;
+        document.getElementById("userRoleBadge").innerHTML = `${translateRole(currentUser.role)} • ${currentUser.username}`;
         setupBottomNav();
         loadDashboard(currentTab);
     }
@@ -251,7 +247,6 @@
         saveLog(`Membuka tab ${tab}`);
     }
 
-    // ========================== DASHBOARD HOME (ROLE BASED) ==========================
     async function renderHome(container) {
         const role = currentUser.role;
         const totalSales = globalData.sales?.reduce((a,b)=>a+(b.total||0),0) || 0;
@@ -263,11 +258,11 @@
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div class="glass-card p-4"><p class="text-slate-300 text-xs">Total Penjualan</p><p class="text-2xl font-bold text-indigo-300">Rp ${totalSales.toLocaleString()}</p></div>
-                        <div class="glass-card p-4"><p class="text-slate-300 text-xs">Laba/Rugi</p><p class="text-2xl font-bold ${profit>=0?'text-green-400':'text-red-400'}">Rp ${profit.toLocaleString()}</p></div>
+                        <div class="glass-card p-4"><p class="text-slate-300 text-xs">Laba / Rugi</p><p class="text-2xl font-bold ${profit>=0?'text-green-400':'text-red-400'}">Rp ${profit.toLocaleString()}</p></div>
                     </div>
                     <div class="glass-card p-4"><canvas id="profitChartCanvas" height="150"></canvas></div>
                     <div class="glass-card p-4"><h3 class="font-semibold text-indigo-200">📊 Royalti & BEP</h3><p class="text-slate-300 text-sm">Minimal 5 eksemplar untuk BEP</p><button onclick="showManagerStats()" class="mt-3 w-full btn-primary py-2 rounded-xl text-white">📋 Lihat Detail Anggota</button></div>
-                    <div class="glass-card p-4"><h3 class="font-semibold text-indigo-200">📈 Monitoring Vendor & Log</h3><button onclick="viewActivityLogs()" class="text-sm text-indigo-300">Aktivitas Terkini →</button></div>
+                    <div class="glass-card p-4"><h3 class="font-semibold text-indigo-200">📈 Monitoring Vendor & Log</h3><button onclick="viewActivityLogs()" class="text-sm text-indigo-300">Lihat Aktivitas Terkini →</button></div>
                 </div>
             `;
             setTimeout(() => {
@@ -281,31 +276,31 @@
         else if(role === "Leader") {
             const members = DEFAULT_USERS.filter(u => u.role !== "Manager");
             container.innerHTML = `
-                <div class="glass-card p-5 space-y-3"><h2 class="text-xl font-bold text-indigo-300">📋 Monitoring Tim</h2><div id="leaderTeamList" class="space-y-2"></div><button onclick="showReminderPopup()" class="w-full btn-primary py-2 rounded-xl text-white">⏰ Buat Reminder Deadline</button></div>
+                <div class="glass-card p-5 space-y-3"><h2 class="text-xl font-bold text-indigo-300">📋 Monitoring Tim</h2><div id="leaderTeamList" class="space-y-2"></div><button onclick="showReminderPopup()" class="w-full btn-primary py-2 rounded-xl text-white">⏰ Buat Pengingat Deadline</button></div>
             `;
-            document.getElementById("leaderTeamList").innerHTML = members.map(m => `<div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl"><span class="font-medium">${m.fullname} (${m.role})</span><button onclick="showUserEvalPopup('${m.username}')" class="bg-purple-600 px-3 py-1 rounded-full text-xs text-white">Evaluasi</button></div>`).join("");
+            document.getElementById("leaderTeamList").innerHTML = members.map(m => `<div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl"><span class="font-medium">${m.fullname} (${translateRole(m.role)})</span><button onclick="showUserEvalPopup('${m.username}')" class="bg-purple-600 px-3 py-1 rounded-full text-xs text-white">Evaluasi</button></div>`).join("");
         }
         else if(role === "Admin") {
             container.innerHTML = `
                 <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">💰 Input Penjualan</h3><input id="saleBook" placeholder="Judul Buku"><input id="saleQty" placeholder="Jumlah" type="number"><input id="salePrice" placeholder="Harga Satuan" type="number"><button onclick="submitSale()" class="btn-primary w-full py-2 rounded-xl text-white">Simpan Penjualan</button></div>
                 <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">📉 Pengeluaran</h3><input id="expDesc" placeholder="Deskripsi"><input id="expAmount" placeholder="Nominal" type="number"><button onclick="submitExpense()" class="bg-amber-600 w-full py-2 rounded-xl text-white">Tambah Pengeluaran</button></div>
-                <div class="glass-card p-4"><p class="text-indigo-300 text-sm">Upload Invoice/Bukti Transfer (simulasi)</p><input type="file" id="invoiceFile" class="text-sm"><button onclick="uploadInvoiceSim()" class="mt-2 bg-cyan-700 w-full py-2 rounded-xl text-white">Upload</button></div>
+                <div class="glass-card p-4"><p class="text-indigo-300 text-sm">Upload Invoice / Bukti Transfer</p><input type="file" id="invoiceFile" class="text-sm"><button onclick="uploadInvoiceSim()" class="mt-2 bg-cyan-700 w-full py-2 rounded-xl text-white">Upload</button></div>
             `;
         }
         else if(role === "Redaksi") {
             container.innerHTML = `
-                <div class="glass-card p-5 space-y-3"><h3 class="font-bold text-indigo-300">📖 Input Naskah & Penulis</h3><input id="penulisName" placeholder="Nama Penulis"><input id="judulNaskah" placeholder="Judul Buku"><select id="statusNaskah"><option>Naskah Masuk</option><option>Seleksi</option><option>Editing</option><option>Cover</option><option>Layout</option></select><button onclick="submitNaskah()" class="bg-purple-600 w-full py-2 rounded-xl text-white">Simpan Naskah</button><div class="text-slate-300 text-sm">Total Proyek: ${globalData.projects?.length || 0}</div></div>
-                <div class="glass-card p-4"><h3 class="font-semibold text-indigo-300">Tracking ISBN</h3><p class="text-slate-300">ISBN terdaftar otomatis</p></div>
+                <div class="glass-card p-5 space-y-3"><h3 class="font-bold text-indigo-300">📖 Input Naskah & Penulis</h3><input id="penulisName" placeholder="Nama Penulis"><input id="judulNaskah" placeholder="Judul Buku"><select id="statusNaskah"><option>Naskah Masuk</option><option>Seleksi</option><option>Penyuntingan</option><option>Sampul</option><option>Tata Letak</option></select><button onclick="submitNaskah()" class="bg-purple-600 w-full py-2 rounded-xl text-white">Simpan Naskah</button><div class="text-slate-300 text-sm">Total Proyek: ${globalData.projects?.length || 0}</div></div>
+                <div class="glass-card p-4"><h3 class="font-semibold text-indigo-300">Pelacakan ISBN</h3><p class="text-slate-300">ISBN terdaftar otomatis</p></div>
             `;
         }
         else if(role === "Illustrator") {
             container.innerHTML = `
-                <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">🎨 Upload Cover/Ilustrasi</h3><input type="file" id="coverUpload" accept="image/*"><button onclick="uploadCoverArt()" class="bg-pink-600 w-full py-2 rounded-xl text-white">Upload & Kirim Revisi</button><div id="historiDesain" class="text-slate-300 text-sm space-y-1">${globalData.projects?.filter(p=>p.illustrator===currentUser.username).map(p=>`📘 ${p.title} - ${p.status}`).join('<br>') || 'Belum ada proyek'}</div></div>
+                <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">🎨 Upload Sampul / Ilustrasi</h3><input type="file" id="coverUpload" accept="image/*"><button onclick="uploadCoverArt()" class="bg-pink-600 w-full py-2 rounded-xl text-white">Upload & Kirim Revisi</button><div id="historiDesain" class="text-slate-300 text-sm space-y-1">${globalData.projects?.filter(p=>p.illustrator===currentUser.username).map(p=>`📘 ${p.title} - ${p.status}`).join('<br>') || 'Belum ada proyek'}</div></div>
             `;
         }
         else if(role === "Designer") {
             container.innerHTML = `
-                <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">📱 Desain Feed / Promosi</h3><button onclick="generateCanvaLink()" class="bg-sky-600 w-full py-2 rounded-xl text-white">🎨 Buat Link Canva</button><label class="text-slate-300 text-sm">Mockup PO</label><input type="file" id="mockupFile"><button onclick="uploadMockupDesign()" class="bg-emerald-600 w-full py-2 rounded-xl text-white">Kirim Mockup</button></div>
+                <div class="glass-card p-4 space-y-3"><h3 class="font-bold text-indigo-300">📱 Desain Feed / Promosi</h3><button onclick="generateCanvaLink()" class="bg-sky-600 w-full py-2 rounded-xl text-white">🎨 Buat Tautan Canva</button><label class="text-slate-300 text-sm">Mockup PO</label><input type="file" id="mockupFile"><button onclick="uploadMockupDesign()" class="bg-emerald-600 w-full py-2 rounded-xl text-white">Kirim Mockup</button></div>
             `;
         }
         else {
@@ -313,11 +308,10 @@
         }
     }
 
-    // TRACKING SYSTEM dengan progress bar
     function renderTracking(container) {
-        const stages = ["Naskah Masuk","Seleksi","Editing","Cover","Layout","Cetak","Distribusi","Selesai"];
+        const stages = ["Naskah Masuk","Seleksi","Penyuntingan","Sampul","Tata Letak","Cetak","Distribusi","Selesai"];
         const projects = globalData.projects || [];
-        container.innerHTML = `<div class="space-y-4"><h2 class="text-xl font-bold text-indigo-300">📌 Tracking Penerbitan</h2>${projects.map(proj => {
+        container.innerHTML = `<div class="space-y-4"><h2 class="text-xl font-bold text-indigo-300">📌 Pelacakan Penerbitan</h2>${projects.map(proj => {
             const idx = stages.indexOf(proj.status);
             const progress = ((idx+1)/stages.length)*100;
             return `<div class="glass-card p-4"><div class="flex justify-between"><span class="font-semibold text-white">${proj.title}</span><span class="text-xs text-indigo-300">${proj.status}</span></div><div class="w-full bg-slate-700 h-2 rounded-full mt-2"><div class="progress-step bg-indigo-500 h-2 rounded-full" style="width: ${progress}%"></div></div><div class="flex flex-wrap gap-1 mt-3 text-[10px]">${stages.map(s => `<span class="px-2 py-0.5 rounded-full ${proj.status === s ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-400'}">${s}</span>`).join('')}</div></div>`;
@@ -326,32 +320,31 @@
 
     function renderReport(container) {
         container.innerHTML = `
-            <div class="glass-card p-5 space-y-3"><h3 class="font-bold text-indigo-300">📑 Export Laporan</h3><button onclick="exportFullPDF()" class="bg-red-700 w-full py-2 rounded-xl text-white">📄 Export PDF Lengkap</button><button onclick="exportExcelCSV()" class="bg-green-700 w-full py-2 rounded-xl text-white">📊 Export Excel (CSV)</button><div class="mt-4"><h4 class="font-semibold text-indigo-200">Statistik Keuangan</h4><p class="text-slate-300">Total Penjualan: Rp ${globalData.sales?.reduce((a,b)=>a+b.total,0).toLocaleString()}</p><p>Total Royalti: Rp ${globalData.royalty?.reduce((a,b)=>a+b.amount,0).toLocaleString()}</p></div></div>
+            <div class="glass-card p-5 space-y-3"><h3 class="font-bold text-indigo-300">📑 Ekspor Laporan</h3><button onclick="exportFullPDF()" class="bg-red-700 w-full py-2 rounded-xl text-white">📄 Ekspor PDF Lengkap</button><button onclick="exportExcelCSV()" class="bg-green-700 w-full py-2 rounded-xl text-white">📊 Ekspor Excel (CSV)</button><div class="mt-4"><h4 class="font-semibold text-indigo-200">Statistik Keuangan</h4><p class="text-slate-300">Total Penjualan: Rp ${globalData.sales?.reduce((a,b)=>a+b.total,0).toLocaleString()}</p><p>Total Royalti: Rp ${globalData.royalty?.reduce((a,b)=>a+b.amount,0).toLocaleString()}</p></div></div>
         `;
     }
 
     function renderTeam(container) {
         const members = DEFAULT_USERS;
-        container.innerHTML = `<div class="glass-card p-4"><h3 class="font-bold text-indigo-300">👥 Anggota Tim</h3><div class="space-y-2 mt-3">${members.map(m => `<div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl"><div><span class="font-medium text-white">${m.fullname}</span><p class="text-xs text-slate-400">${m.role}</p></div><button onclick="showUserDetailPopup('${m.username}')" class="text-indigo-300 text-sm"><i class="fas fa-eye"></i> Detail</button></div>`).join('')}</div></div>`;
+        container.innerHTML = `<div class="glass-card p-4"><h3 class="font-bold text-indigo-300">👥 Anggota Tim</h3><div class="space-y-2 mt-3">${members.map(m => `<div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl"><div><span class="font-medium text-white">${m.fullname}</span><p class="text-xs text-slate-400">${translateRole(m.role)}</p></div><button onclick="showUserDetailPopup('${m.username}')" class="text-indigo-300 text-sm"><i class="fas fa-eye"></i> Detail</button></div>`).join('')}</div></div>`;
     }
 
     function renderMore(container) {
-        container.innerHTML = `<div class="glass-card p-4 space-y-2"><button onclick="viewActivityLogs()" class="w-full text-left p-3 bg-slate-800/50 rounded-xl text-white"><i class="fas fa-history mr-2"></i> Log Aktivitas</button><button onclick="changePasswordUI()" class="w-full text-left p-3 bg-slate-800/50 rounded-xl text-white"><i class="fas fa-key mr-2"></i> Ganti Password</button><button onclick="exportMyData()" class="w-full text-left p-3 bg-slate-800/50 rounded-xl text-white"><i class="fas fa-download mr-2"></i> Export Data Saya</button></div>`;
+        container.innerHTML = `<div class="glass-card p-4 space-y-2"><button onclick="viewActivityLogs()" class="w-full text-left p-3 bg-slate-800/50 rounded-xl text-white"><i class="fas fa-history mr-2"></i> Log Aktivitas</button><button onclick="changePasswordUI()" class="w-full text-left p-3 bg-slate-800/50 rounded-xl text-white"><i class="fas fa-key mr-2"></i> Ganti Kata Sandi</button><button onclick="exportMyData()" class="w-full text-left p-3 bg-slate-800/50 rounded-xl text-white"><i class="fas fa-download mr-2"></i> Ekspor Data Saya</button></div>`;
     }
 
-    // ======================== GLOBAL FUNCTIONS & API INTEGRATION ========================
-    window.submitSale = async () => {
+      window.submitSale = async () => {
         const book = document.getElementById("saleBook")?.value;
         const qty = parseInt(document.getElementById("saleQty")?.value);
         const price = parseInt(document.getElementById("salePrice")?.value);
-        if(!book || !qty || !price) return showToast("Lengkapi data", "error");
+        if(!book || !qty || !price) return showToast("Lengkapi semua data", "error");
         await callAPI("saveSales", { book, qty, total: qty*price, date: new Date().toISOString() });
         loadDashboard(currentTab);
     };
     window.submitExpense = async () => {
         const desc = document.getElementById("expDesc")?.value;
         const amount = parseInt(document.getElementById("expAmount")?.value);
-        if(!desc || !amount) return;
+        if(!desc || !amount) return showToast("Isi deskripsi dan nominal", "error");
         await callAPI("saveExpense", { desc, amount, date: new Date().toISOString() });
         loadDashboard(currentTab);
     };
@@ -359,26 +352,26 @@
         const author = document.getElementById("penulisName")?.value;
         const title = document.getElementById("judulNaskah")?.value;
         const status = document.getElementById("statusNaskah")?.value;
-        if(!author || !title) return;
+        if(!author || !title) return showToast("Isi nama penulis dan judul", "error");
         const projectId = "PROJ-" + Date.now();
         await callAPI("saveProject", { projectId, title, author, status, redaksi: currentUser.username });
         loadDashboard(currentTab);
     };
-    window.uploadCoverArt = () => showToast("Cover berhasil diupload (simulasi integrate Google Drive)");
-    window.generateCanvaLink = () => { navigator.clipboard.writeText("https://canva.com/narapustaka/template"); showToast("Link Canva disalin!"); };
-    window.uploadMockupDesign = () => showToast("Mockup PO terkirim ke tim marketing");
-    window.uploadInvoiceSim = () => showToast("Invoice terupload (simulasi)");
-    window.showReminderPopup = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Buat Reminder"; document.getElementById("popupContent").innerHTML = `<input id="reminderMsg" placeholder="Pesan deadline" class="w-full"><button onclick="sendReminderNow()" class="mt-3 btn-primary w-full py-2 rounded-xl text-white">Kirim ke Tim</button>`; };
-    window.sendReminderNow = () => { showToast("Reminder deadline dikirim"); closePopup(); };
+    window.uploadCoverArt = () => showToast("Sampul berhasil diunggah (simulasi)");
+    window.generateCanvaLink = () => { navigator.clipboard.writeText("https://canva.com/narapustaka/template"); showToast("Tautan Canva disalin!"); };
+    window.uploadMockupDesign = () => showToast("Mockup PO terkirim ke tim");
+    window.uploadInvoiceSim = () => showToast("Invoice terunggah (simulasi)");
+    window.showReminderPopup = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Buat Pengingat"; document.getElementById("popupContent").innerHTML = `<input id="reminderMsg" placeholder="Pesan deadline" class="w-full"><button onclick="sendReminderNow()" class="mt-3 btn-primary w-full py-2 rounded-xl text-white">Kirim ke Tim</button>`; };
+    window.sendReminderNow = () => { showToast("Pengingat deadline dikirim"); closePopup(); };
     window.viewActivityLogs = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Log Aktivitas"; const logs = globalData.logs?.slice(-15).map(l=>`<div class="border-b border-slate-700 py-2 text-sm">👤 ${l.user} - ${l.activity}<br><span class="text-xs text-slate-400">${new Date(l.timestamp).toLocaleString()}</span></div>`).join('') || "Belum ada log"; document.getElementById("popupContent").innerHTML = logs; };
-    window.changePasswordUI = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Ganti Password"; document.getElementById("popupContent").innerHTML = `<input type="password" id="newPass" placeholder="Password Baru" class="w-full"><button onclick="updateUserPassword()" class="mt-3 btn-primary w-full py-2 rounded-xl text-white">Simpan</button>`; };
-    window.updateUserPassword = () => { showToast("Password berhasil diubah (simulasi)"); closePopup(); };
+    window.changePasswordUI = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Ganti Kata Sandi"; document.getElementById("popupContent").innerHTML = `<input type="password" id="newPass" placeholder="Kata Sandi Baru" class="w-full"><button onclick="updateUserPassword()" class="mt-3 btn-primary w-full py-2 rounded-xl text-white">Simpan</button>`; };
+    window.updateUserPassword = () => { showToast("Kata sandi berhasil diubah (simulasi)"); closePopup(); };
     window.showUserDetailPopup = (username) => {
         const user = DEFAULT_USERS.find(u => u.username === username);
         openPopup();
         document.getElementById("popupTitle").innerHTML = `Detail ${user?.fullname}`;
         const userLogs = globalData.logs?.filter(l => l.user === username).slice(-5).map(l=>`<li class="text-sm">${l.activity} - ${new Date(l.timestamp).toLocaleTimeString()}</li>`).join('');
-        document.getElementById("popupContent").innerHTML = `<div><p class="font-semibold">Role: ${user?.role}</p><p class="mt-2">Histori Kerja:</p><ul class="list-disc pl-5 text-sm text-slate-300">${userLogs || '<li>Belum ada aktivitas</li>'}</ul><button onclick="exportUserPDF('${username}')" class="mt-4 btn-primary w-full py-2 rounded-xl text-white">Export PDF User</button></div>`;
+        document.getElementById("popupContent").innerHTML = `<div><p class="font-semibold">Peran: ${translateRole(user?.role)}</p><p class="mt-2">Riwayat Kerja:</p><ul class="list-disc pl-5 text-sm text-slate-300">${userLogs || '<li>Belum ada aktivitas</li>'}</ul><button onclick="exportUserPDF('${username}')" class="mt-4 btn-primary w-full py-2 rounded-xl text-white">Ekspor PDF Pengguna</button></div>`;
     };
     window.showUserEvalPopup = (username) => { openPopup(); document.getElementById("popupTitle").innerHTML = `Evaluasi ${username}`; document.getElementById("popupContent").innerHTML = `<textarea id="evalText" placeholder="Catatan evaluasi kinerja..." class="w-full h-24"></textarea><button onclick="saveEvaluationNow('${username}')" class="mt-3 bg-purple-600 w-full py-2 rounded-xl text-white">Simpan Evaluasi</button>`; };
     window.saveEvaluationNow = async (username) => {
@@ -386,7 +379,7 @@
         if(note) await callAPI("saveEvaluation", { user: username, evaluator: currentUser.username, note, date: new Date().toISOString() });
         closePopup();
     };
-    window.showManagerStats = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Statistik Anggota"; document.getElementById("popupContent").innerHTML = DEFAULT_USERS.map(u => `<div class="flex justify-between items-center p-2 border-b border-slate-700"><span>${u.fullname} (${u.role})</span><button onclick="showUserDetailPopup('${u.username}')" class="text-indigo-300 text-sm">Lihat</button></div>`).join(''); };
+    window.showManagerStats = () => { openPopup(); document.getElementById("popupTitle").innerHTML = "Statistik Anggota"; document.getElementById("popupContent").innerHTML = DEFAULT_USERS.map(u => `<div class="flex justify-between items-center p-2 border-b border-slate-700"><span>${u.fullname} (${translateRole(u.role)})</span><button onclick="showUserDetailPopup('${u.username}')" class="text-indigo-300 text-sm">Lihat</button></div>`).join(''); };
     window.exportFullPDF = () => { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text("Laporan Nara Pustaka", 10,10); doc.text(`Total Penjualan: Rp ${globalData.sales?.reduce((a,b)=>a+b.total,0).toLocaleString()}`, 10,30); doc.save("laporan_nara.pdf"); showToast("PDF diunduh"); };
     window.exportExcelCSV = () => { let csv = "Judul,Penjualan\n"; globalData.sales?.forEach(s=>{ csv+=`${s.book},${s.total}\n`;}); const blob = new Blob([csv],{type:"text/csv"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "laporan_penjualan.csv"; a.click(); showToast("CSV siap"); };
     window.exportUserPDF = (uname) => showToast(`PDF untuk ${uname} sedang diproses`);
