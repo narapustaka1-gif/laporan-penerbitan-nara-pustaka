@@ -1,516 +1,620 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Nara Pustaka Internal System</title>
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <style>
-
-    *{
-      font-family:'Inter',sans-serif;
-      box-sizing:border-box;
-    }
-
-    body{
-      margin:0;
-      background:#0f172a;
-      color:white;
-      overflow-x:hidden;
-    }
-
-    .glass{
-      background:rgba(30,41,59,.75);
-      backdrop-filter:blur(14px);
-      border:1px solid rgba(255,255,255,.08);
-    }
-
-    .card{
-      background:linear-gradient(135deg,#1e293b,#111827);
-      border-radius:24px;
-      padding:16px;
-      border:1px solid rgba(255,255,255,.05);
-      box-shadow:0 10px 30px rgba(0,0,0,.25);
-    }
-
-    input,select,textarea{
-      width:100%;
-      background:#1e293b;
-      border:1px solid #334155;
-      color:white;
-      padding:12px;
-      border-radius:14px;
-      margin-top:8px;
-    }
-
-    button{
-      border:none;
-      cursor:pointer;
-      transition:.2s;
-    }
-
-    button:active{
-      transform:scale(.97);
-    }
-
-    .hidden{
-      display:none;
-    }
-
-    .toast{
-      position:fixed;
-      bottom:90px;
-      left:50%;
-      transform:translateX(-50%);
-      background:#7c3aed;
-      padding:14px 20px;
-      border-radius:16px;
-      z-index:999;
-      box-shadow:0 10px 30px rgba(0,0,0,.4);
-    }
-
-  </style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nara Pustaka - Internal System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:active {
+            transform: scale(0.97);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            z-index: 50;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #64748b;
+            font-size: 10px;
+            transition: 0.3s;
+        }
+        .nav-item.active {
+            color: #38bdf8;
+        }
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .page-content {
+            padding-bottom: 90px;
+            min-height: 100vh;
+        }
+        input, select, textarea {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border-radius: 12px !important;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            z-index: 1000;
+            transition: 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite linear;
+        }
+        @keyframes skeleton-loading {
+            from { background-position: 200% 0; }
+            to { background-position: -200% 0; }
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+    </style>
 </head>
-<body>
+<body class="antialiased">
 
-<div id="loginPage" class="min-h-screen flex items-center justify-center p-5">
-
-  <div class="glass w-full max-w-sm rounded-3xl p-6">
-
-    <h1 class="text-3xl font-bold">
-      Nara Pustaka
-    </h1>
-
-    <p class="text-slate-300 text-sm mt-2">
-      Internal Publishing System
-    </p>
-
-    <div class="mt-6">
-      <label>Username</label>
-      <input id="username" placeholder="Masukkan username">
+    <!-- Loading Screen -->
+    <div id="loading" class="loading-screen">
+        <div class="flex flex-col items-center">
+            <div class="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="mt-4 text-sky-400 font-medium tracking-widest">NARA PUSTAKA</p>
+        </div>
     </div>
 
-    <div class="mt-4">
-      <label>Password</label>
-      <input id="password" type="password" placeholder="Masukkan password">
+    <!-- Toast Notification -->
+    <div id="toast" class="toast glass px-6 py-3 rounded-2xl flex items-center shadow-2xl">
+        <span id="toast-icon" class="mr-3"></span>
+        <span id="toast-message" class="text-sm font-medium"></span>
     </div>
 
-    <button onclick="login()" class="w-full bg-purple-600 py-3 rounded-2xl mt-6 font-semibold">
-      Masuk
-    </button>
-
-  </div>
-
-</div>
-
-<div id="app" class="hidden pb-28">
-
-  <div class="sticky top-0 z-50 glass p-4 flex items-center justify-between">
-
-    <div>
-      <h2 id="roleTitle" class="font-bold text-lg"></h2>
-      <p id="userTitle" class="text-xs text-slate-300"></p>
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div class="glass w-full max-w-xs rounded-3xl p-6 text-center scale-90 transition-transform">
+            <h3 class="text-xl font-bold mb-2">Konfirmasi</h3>
+            <p id="confirm-text" class="text-slate-400 text-sm mb-6">Apakah Anda yakin ingin menghapus data ini?</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl bg-slate-800 text-sm">Batal</button>
+                <button id="confirm-btn" class="flex-1 py-3 rounded-xl bg-red-500 text-sm font-bold">Hapus</button>
+            </div>
+        </div>
     </div>
 
-    <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-xl text-sm">
-      Logout
-    </button>
-
-  </div>
-
-  <div class="p-4 space-y-4">
-
-    <div class="grid grid-cols-2 gap-3">
-
-      <div class="card bg-gradient-to-br from-purple-600 to-indigo-700">
-        <p class="text-xs opacity-80">Laba Bersih</p>
-        <h2 class="text-2xl font-bold mt-2">
-          Rp 0
-        </h2>
-      </div>
-
-      <div class="card bg-gradient-to-br from-emerald-600 to-teal-700">
-        <p class="text-xs opacity-80">Penjualan</p>
-        <h2 class="text-2xl font-bold mt-2">
-          0
-        </h2>
-      </div>
-
+    <!-- Login Section -->
+    <div id="login-page" class="hidden min-h-screen flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
+        <div class="w-full max-w-sm">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-extrabold gradient-text tracking-tighter">NARA</h1>
+                <p class="text-slate-400 text-sm tracking-widest uppercase">Internal Ecosystem</p>
+            </div>
+            <div class="glass p-8 rounded-[2rem] shadow-2xl">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase ml-1 mb-2">Username</label>
+                        <input type="text" id="username" class="w-full p-4 outline-none focus:ring-2 ring-sky-500 transition-all" placeholder="Enter username">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase ml-1 mb-2">Password</label>
+                        <input type="password" id="password" class="w-full p-4 outline-none focus:ring-2 ring-sky-500 transition-all" placeholder="••••••••">
+                    </div>
+                    <button onclick="handleLogin()" class="w-full bg-gradient-to-r from-sky-500 to-indigo-600 py-4 rounded-2xl font-bold shadow-lg shadow-sky-500/20 active:scale-95 transition-all mt-4">
+                        Login Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-      <canvas id="salesChart"></canvas>
-    </div>
+    <!-- Main App Container -->
+    <div id="main-app" class="hidden">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-40 glass border-none px-6 py-4 flex justify-between items-center">
+            <div>
+                <p id="greeting" class="text-xs text-slate-400 font-medium">Selamat Datang,</p>
+                <h2 id="display-name" class="text-lg font-bold">User</h2>
+            </div>
+            <button onclick="handleLogout()" class="p-2 bg-red-500/10 text-red-500 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </button>
+        </header>
 
-    <div id="adminSection" class="hidden">
-
-      <div class="card">
-
-        <div class="flex items-center justify-between">
-          <h3 class="font-bold text-lg">
-            Input Penjualan
-          </h3>
-
-          <button onclick="showToast('Pencarian Buku')" class="bg-slate-700 px-3 py-2 rounded-xl text-sm">
-            Cari
-          </button>
+        <div id="content-area" class="page-content px-6 pt-6">
+            <!-- Content will be injected here -->
         </div>
 
-        <input id="saleBook" placeholder="Judul Buku">
-
-        <input id="saleQty" type="number" placeholder="Jumlah">
-
-        <input id="saleTotal" type="number" placeholder="Total">
-
-        <select id="saleMarketplace">
-          <option>Shopee</option>
-          <option>TikTok Shop</option>
-          <option>WhatsApp</option>
-        </select>
-
-        <button onclick="saveSale()" class="w-full bg-purple-600 py-3 rounded-2xl mt-4">
-          Simpan Penjualan
-        </button>
-
-        <button onclick="openDeleteModal()" class="w-full bg-red-600 py-3 rounded-2xl mt-3">
-          Hapus Laporan
-        </button>
-
-      </div>
-
+        <!-- Bottom Nav -->
+        <nav id="bottom-navigation" class="bottom-nav">
+            <!-- Nav items based on role will be injected here -->
+        </nav>
     </div>
 
-    <div id="redaksiSection" class="hidden">
-
-      <div class="card">
-
-        <h3 class="font-bold text-lg">
-          Input Naskah
-        </h3>
-
-        <input id="bookTitle" placeholder="Judul Buku">
-
-        <input id="bookAuthor" placeholder="Nama Penulis">
-
-        <input id="bookISBN" placeholder="ISBN / QRCBN">
-
-        <input id="bookPrice" placeholder="Harga Buku">
-
-        <button onclick="saveBook()" class="w-full bg-indigo-600 py-3 rounded-2xl mt-4">
-          Simpan Buku
-        </button>
-
-      </div>
-
-    </div>
-
-    <div class="card">
-
-      <div class="flex items-center justify-between">
-
-        <h3 class="font-bold text-lg">
-          Aktivitas
-        </h3>
-
-        <button onclick="exportPDF()" class="bg-purple-600 px-4 py-2 rounded-xl text-sm">
-          Export PDF
-        </button>
-
-      </div>
-
-      <div id="activityList" class="space-y-3 mt-4"></div>
-
-    </div>
-
-  </div>
-
-</div>
-
-<div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass p-3 flex justify-around z-50">
-
-  <button onclick="showToast('Dashboard Dibuka')">
-    🏠
-  </button>
-
-  <button onclick="showToast('Laporan Dibuka')">
-    📊
-  </button>
-
-  <button onclick="showToast('Penjualan Dibuka')">
-    💰
-  </button>
-
-  <button onclick="showToast('Profile Dibuka')">
-    👤
-  </button>
-
-</div>
-
-<div id="toast" class="toast hidden"></div>
-
-<div id="deleteModal" class="hidden fixed inset-0 bg-black/70 z-[999] flex items-center justify-center p-5">
-
-  <div class="glass rounded-3xl p-5 w-full max-w-sm">
-
-    <h3 class="font-bold text-lg">
-      Hapus Data?
-    </h3>
-
-    <p class="text-sm text-slate-300 mt-2">
-      Apakah anda yakin ingin menghapus laporan ini?
-    </p>
-
-    <div class="grid grid-cols-2 gap-3 mt-5">
-
-      <button onclick="closeDeleteModal()" class="bg-slate-700 py-3 rounded-2xl">
-        Batal
-      </button>
-
-      <button onclick="confirmDelete()" class="bg-red-600 py-3 rounded-2xl">
-        Hapus
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
-
-<script>
-
-const API_URL = "https://script.google.com/macros/s/AKfycbzvSNto-MQycc_rqZBv_AnxQsdSlNvdAlogJvNZTjO-4QVdihm3M_RCm9hRQ4zxo0tD/exec";
-
-const USERS = [
-  {username:"vero",password:"vero123",role:"Manager"},
-  {username:"jeyraa",password:"jey123",role:"Leader"},
-  {username:"thami",password:"thami123",role:"Admin"},
-  {username:"elyna",password:"elyna123",role:"Redaksi"},
-  {username:"nala",password:"nala123",role:"Designer"},
-  {username:"calista",password:"calista123",role:"Illustrator"},
-  {username:"zahra",password:"zahra123",role:"Illustrator"}
-];
-
-let currentUser = null;
-
-function login(){
-
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
-
-  const user = USERS.find(
-    u=>u.username===username && u.password===password
-  );
-
-  if(!user){
-    alert('Login gagal');
-    return;
-  }
-
-  currentUser = user;
-
-  localStorage.setItem(
-    'naraUser',
-    JSON.stringify(user)
-  );
-
-  document.getElementById('loginPage').classList.add('hidden');
-
-  document.getElementById('app').classList.remove('hidden');
-
-  document.getElementById('roleTitle').innerText = user.role;
-
-  document.getElementById('userTitle').innerText = user.username;
-
-  if(user.role === 'Admin'){
-    document.getElementById('adminSection').classList.remove('hidden');
-  }
-
-  if(user.role === 'Redaksi'){
-    document.getElementById('redaksiSection').classList.remove('hidden');
-  }
-
-  addActivity('Login berhasil');
-
-}
-
-function logout(){
-
-  localStorage.removeItem('naraUser');
-
-  location.reload();
-
-}
-
-window.onload = ()=>{
-
-  const saved = localStorage.getItem('naraUser');
-
-  if(saved){
-
-    currentUser = JSON.parse(saved);
-
-    document.getElementById('loginPage').classList.add('hidden');
-
-    document.getElementById('app').classList.remove('hidden');
-
-    document.getElementById('roleTitle').innerText = currentUser.role;
-
-    document.getElementById('userTitle').innerText = currentUser.username;
-
-    if(currentUser.role === 'Admin'){
-      document.getElementById('adminSection').classList.remove('hidden');
-    }
-
-    if(currentUser.role === 'Redaksi'){
-      document.getElementById('redaksiSection').classList.remove('hidden');
-    }
-
-  }
-
-  renderChart();
-
-}
-
-function renderChart(){
-
-  new Chart(
-    document.getElementById('salesChart'),
-    {
-      type:'line',
-      data:{
-        labels:['Sen','Sel','Rab','Kam','Jum'],
-        datasets:[
-          {
-            label:'Penjualan',
-            data:[12,19,3,5,9]
-          }
-        ]
-      }
-    }
-  )
-
-}
-
-async function saveSale(){
-
-  const data = {
-    type:'sale',
-    id:'SALE-'+Date.now(),
-    invoice_number:'INV-'+Date.now(),
-    book:document.getElementById('saleBook').value,
-    qty:document.getElementById('saleQty').value,
-    total:document.getElementById('saleTotal').value,
-    marketplace:document.getElementById('saleMarketplace').value,
-    payment_status:'Paid',
-    invoice_file:'-',
-    payment_proof:'-',
-    date:new Date().toLocaleDateString(),
-    user:currentUser.username
-  }
-
-  await fetch(API_URL,{
-    method:'POST',
-    body:JSON.stringify(data)
-  })
-
-  addActivity('Penjualan berhasil disimpan');
-
-  showToast('Penjualan berhasil disimpan');
-
-}
-
-async function saveBook(){
-
-  const data = {
-    type:'book',
-    id:'BOOK-'+Date.now(),
-    title:document.getElementById('bookTitle').value,
-    author:document.getElementById('bookAuthor').value,
-    isbn:document.getElementById('bookISBN').value,
-    qrcbn:'-',
-    price:document.getElementById('bookPrice').value,
-    royalty_percent:'10%',
-    status:'Aktif',
-    contract_end:'-',
-    created_at:new Date().toLocaleDateString()
-  }
-
-  await fetch(API_URL,{
-    method:'POST',
-    body:JSON.stringify(data)
-  })
-
-  addActivity('Buku berhasil disimpan');
-
-  showToast('Buku berhasil disimpan');
-
-}
-
-function exportPDF(){
-
-  showToast('PDF berhasil dibuat');
-
-}
-
-function showToast(message){
-
-  const toast = document.getElementById('toast');
-
-  toast.innerText = message;
-
-  toast.classList.remove('hidden');
-
-  setTimeout(()=>{
-    toast.classList.add('hidden');
-  },2500)
-
-}
-
-function openDeleteModal(){
-
-  document.getElementById('deleteModal').classList.remove('hidden');
-
-}
-
-function closeDeleteModal(){
-
-  document.getElementById('deleteModal').classList.add('hidden');
-
-}
-
-function confirmDelete(){
-
-  closeDeleteModal();
-
-  showToast('Data berhasil dihapus');
-
-}
-
-function addActivity(text){
-
-  const item = document.createElement('div');
-
-  item.className = 'bg-slate-800 rounded-2xl p-3';
-
-  item.innerHTML = `
-    <p class="font-medium">${text}</p>
-    <p class="text-xs text-slate-400 mt-1">
-      ${new Date().toLocaleString()}
-    </p>
-  `;
-
-  document.getElementById('activityList').prepend(item);
-
-}
-
-</script>
-
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbzvSNto-MQycc_rqZBv_AnxQsdSlNvdAlogJvNZTjO-4QVdihm3M_RCm9hRQ4zxo0tD/exec";
+        
+        const ROLES = {
+            'vero': { name: 'Vero (Manager)', role: 'manager', pass: 'vero123' },
+            'jeyraa': { name: 'Jeyraa (Team Leader)', role: 'team_leader', pass: 'jey123' },
+            'thami': { name: 'Thami (Administrasi)', role: 'admin', pass: 'thami123' },
+            'elyna': { name: 'Elyna (Redaksi)', role: 'redaksi', pass: 'elyna123' },
+            'nala': { name: 'Nala (Media & Desain)', role: 'kreatif', pass: 'nala123' },
+            'calista': { name: 'Calista (Kreatif)', role: 'kreatif', pass: 'calista123' },
+            'zahra': { name: 'Zahra (Kreatif)', role: 'kreatif', pass: 'zahra123' }
+        };
+
+        let currentUser = null;
+        let activeTab = 'dashboard';
+        let cachedData = {};
+
+        // Initialization
+        window.onload = () => {
+            setTimeout(() => {
+                checkSession();
+                document.getElementById('loading').classList.add('hidden');
+            }, 1500);
+        };
+
+        function checkSession() {
+            const session = localStorage.getItem('nara_session');
+            if (session) {
+                currentUser = JSON.parse(session);
+                activeTab = localStorage.getItem('nara_active_tab') || 'dashboard';
+                showApp();
+            } else {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('display-name').innerText = currentUser.name;
+            renderNav();
+            navigateTo(activeTab);
+            fetchData();
+        }
+
+        function handleLogin() {
+            const user = document.getElementById('username').value.toLowerCase();
+            const pass = document.getElementById('password').value;
+
+            if (ROLES[user] && ROLES[user].pass === pass) {
+                currentUser = ROLES[user];
+                localStorage.setItem('nara_session', JSON.stringify(currentUser));
+                showToast('Login Berhasil!', 'success');
+                showApp();
+            } else {
+                showToast('Username atau Password Salah!', 'error');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('nara_session');
+            localStorage.removeItem('nara_active_tab');
+            location.reload();
+        }
+
+        function navigateTo(tab) {
+            activeTab = tab;
+            localStorage.setItem('nara_active_tab', tab);
+            updateNavUI();
+            renderContent();
+        }
+
+        function renderNav() {
+            const nav = document.getElementById('bottom-navigation');
+            let items = [
+                { id: 'dashboard', label: 'Home', icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />` }
+            ];
+
+            if (currentUser.role === 'manager') {
+                items.push(
+                    { id: 'reports', label: 'Reports', icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />` },
+                    { id: 'logs', label: 'Logs', icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />` }
+                );
+            } else if (currentUser.role === 'admin') {
+                items.push(
+                    { id: 'sales', label: 'Sales', icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />` },
+                    { id: 'books', label: 'Inventory', icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />` }
+                );
+            } else if (currentUser.role === 'redaksi') {
+                items.push(
+                    { id: 'manuscripts', label: 'Naskah', icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />` },
+                    { id: 'royalty', label: 'Royalti', icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />` }
+                );
+            }
+
+            nav.innerHTML = items.map(item => `
+                <div onclick="navigateTo('${item.id}')" id="nav-${item.id}" class="nav-item">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">${item.icon}</svg>
+                    <span>${item.label}</span>
+                </div>
+            `).join('');
+            updateNavUI();
+        }
+
+        function updateNavUI() {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const active = document.getElementById(`nav-${activeTab}`);
+            if (active) active.classList.add('active');
+        }
+
+        function renderContent() {
+            const container = document.getElementById('content-area');
+            container.innerHTML = `<div class="animate-pulse space-y-4">
+                <div class="h-32 skeleton rounded-3xl"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="h-24 skeleton rounded-3xl"></div>
+                    <div class="h-24 skeleton rounded-3xl"></div>
+                </div>
+                <div class="h-64 skeleton rounded-3xl"></div>
+            </div>`;
+
+            if (activeTab === 'dashboard') {
+                if (currentUser.role === 'manager') renderManagerDashboard();
+                else if (currentUser.role === 'admin') renderAdminDashboard();
+                else if (currentUser.role === 'redaksi') renderRedaksiDashboard();
+                else renderKreatifDashboard();
+            } else if (activeTab === 'sales') {
+                renderSalesInput();
+            } else if (activeTab === 'manuscripts') {
+                renderManuscriptInput();
+            } else if (activeTab === 'reports') {
+                renderFinancialReport();
+            } else {
+                container.innerHTML = `<div class="flex flex-col items-center justify-center py-20 opacity-50">
+                    <p class="text-sm">Fitur ${activeTab} sedang dalam pengembangan</p>
+                </div>`;
+            }
+        }
+
+        // --- ROLE SPECIFIC RENDERS ---
+
+        function renderManagerDashboard() {
+            const container = document.getElementById('content-area');
+            container.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="glass-card p-4 rounded-3xl col-span-2">
+                        <p class="text-xs text-slate-400 mb-1">Total Pemasukan (Bulan Ini)</p>
+                        <h3 class="text-2xl font-bold text-emerald-400">Rp 128.450.000</h3>
+                    </div>
+                    <div class="glass-card p-4 rounded-3xl">
+                        <p class="text-[10px] text-slate-400 mb-1">Pajak (Estimate)</p>
+                        <h3 class="text-lg font-bold text-orange-400">Rp 1.2M</h3>
+                    </div>
+                    <div class="glass-card p-4 rounded-3xl">
+                        <p class="text-[10px] text-slate-400 mb-1">Laba Bersih</p>
+                        <h3 class="text-lg font-bold text-sky-400">Rp 92M</h3>
+                    </div>
+                </div>
+                <div class="glass-card p-6 rounded-3xl mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="font-bold">Grafik Penjualan</h4>
+                        <button onclick="exportPDF('sales')" class="text-[10px] bg-sky-500/20 text-sky-400 px-3 py-1 rounded-full border border-sky-500/30">Export PDF</button>
+                    </div>
+                    <canvas id="mainChart" height="200"></canvas>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold px-1">Log Aktivitas Terbaru</h4>
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="p-3 border-b border-white/5 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-medium">Input Penjualan - Thami</p>
+                                <p class="text-[10px] text-slate-500">2 menit yang lalu</p>
+                            </div>
+                            <span class="text-emerald-400 text-xs">+Rp 450rb</span>
+                        </div>
+                        <div class="p-3 border-b border-white/5 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-medium">Kontrak Baru - Elyna</p>
+                                <p class="text-[10px] text-slate-500">1 jam yang lalu</p>
+                            </div>
+                            <span class="text-sky-400 text-xs">ISBN: 978-002</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            initChart();
+        }
+
+        function renderAdminDashboard() {
+            const container = document.getElementById('content-area');
+            container.innerHTML = `
+                <div class="glass-card p-6 rounded-[2rem] bg-gradient-to-br from-indigo-600/20 to-transparent border-indigo-500/20 mb-6">
+                    <h2 class="text-xl font-bold mb-1">Halo, Admin Thami</h2>
+                    <p class="text-xs text-slate-400">Kelola operasional harian Nara Pustaka di sini.</p>
+                    <div class="mt-6 flex gap-3">
+                        <button onclick="navigateTo('sales')" class="flex-1 bg-white text-slate-900 py-3 rounded-2xl font-bold text-sm">Input Jual</button>
+                        <button onclick="navigateTo('books')" class="flex-1 glass py-3 rounded-2xl font-bold text-sm">Stok Buku</button>
+                    </div>
+                </div>
+                <h4 class="font-bold mb-3">Transaksi Terakhir</h4>
+                <div id="sales-list" class="space-y-3">
+                    ${[1,2,3].map(i => `
+                        <div class="glass-card p-4 rounded-2xl flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center font-bold text-sky-500">B${i}</div>
+                            <div class="flex-1">
+                                <h5 class="text-xs font-bold">Rahasia Semesta Vol ${i}</h5>
+                                <p class="text-[10px] text-slate-500">Invoice: NP-00${i}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold text-emerald-400">Rp 95.000</p>
+                                <p class="text-[9px] text-slate-500">Marketplace</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderSalesInput() {
+            const container = document.getElementById('content-area');
+            container.innerHTML = `
+                <div class="flex items-center gap-4 mb-6">
+                    <button onclick="navigateTo('dashboard')" class="p-2 glass rounded-xl">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15 19l-7-7 7-7" stroke-width="2"/></svg>
+                    </button>
+                    <h2 class="text-xl font-bold">Input Penjualan</h2>
+                </div>
+                <div class="glass-card p-6 rounded-3xl space-y-4">
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Pilih Buku</label>
+                        <select id="sale-book" class="w-full p-4">
+                            <option>Filosofi Teras</option>
+                            <option>Seni Hidup Minimalis</option>
+                            <option>Dunia Sophie</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Jumlah</label>
+                            <input type="number" id="sale-qty" value="1" oninput="calcTotal()" class="w-full p-4">
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Harga Satuan</label>
+                            <input type="number" id="sale-price" value="85000" oninput="calcTotal()" class="w-full p-4">
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                        <p class="text-[10px] text-slate-400">Total Pembayaran</p>
+                        <h2 id="sale-total" class="text-2xl font-black text-sky-400">Rp 85.000</h2>
+                    </div>
+                    <button onclick="saveSale()" class="w-full bg-sky-500 py-4 rounded-2xl font-bold mt-4 shadow-lg shadow-sky-500/20 active:scale-95 transition-all">Simpan Transaksi</button>
+                </div>
+            `;
+        }
+
+        function renderManuscriptInput() {
+             const container = document.getElementById('content-area');
+            container.innerHTML = `
+                <h2 class="text-xl font-bold mb-6">Database Naskah</h2>
+                <div class="glass-card p-5 rounded-3xl mb-6">
+                    <input type="text" placeholder="Cari judul atau penulis..." class="w-full p-4 text-sm mb-4">
+                    <button class="w-full bg-indigo-500 py-3 rounded-xl text-sm font-bold">+ Input Naskah Baru</button>
+                </div>
+                <div class="space-y-4">
+                    <div class="glass-card p-4 rounded-2xl border-l-4 border-indigo-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <h5 class="font-bold text-sm">Mentari Pagi di Desa</h5>
+                            <span class="status-badge bg-indigo-500/20 text-indigo-400">Editing</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Penulis: Ahmad Riyadi</p>
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span class="text-slate-500">ISBN: 978-623-XXX</span>
+                            <button class="text-indigo-400 font-bold">Detail Progres</button>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 rounded-2xl border-l-4 border-emerald-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <h5 class="font-bold text-sm">Puisi Senja Terakhir</h5>
+                            <span class="status-badge bg-emerald-500/20 text-emerald-400">Selesai</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Penulis: Siti Sarah</p>
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span class="text-slate-500">ISBN: 978-623-122</span>
+                            <button class="text-emerald-400 font-bold">Laporan Royalti</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- UTILITIES ---
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const message = document.getElementById('toast-message');
+            
+            message.innerText = msg;
+            icon.innerHTML = type === 'success' 
+                ? `<svg class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7" stroke-width="3"/></svg>`
+                : `<svg class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" stroke-width="3"/></svg>`;
+            
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function openConfirm(text, onConfirm) {
+            document.getElementById('confirm-text').innerText = text;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            document.getElementById('confirm-btn').onclick = () => {
+                onConfirm();
+                closeConfirm();
+            };
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        function calcTotal() {
+            const qty = document.getElementById('sale-qty').value;
+            const price = document.getElementById('sale-price').value;
+            const total = qty * price;
+            document.getElementById('sale-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+        }
+
+        function saveSale() {
+            showToast('Menyimpan ke Cloud...', 'success');
+            setTimeout(() => {
+                showToast('Transaksi Berhasil Disimpan!', 'success');
+                navigateTo('dashboard');
+            }, 1000);
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [65, 59, 80, 81, 56, 95],
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function exportPDF(type) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Header
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.text("NARA PUSTAKA", 20, 25);
+            doc.setFontSize(10);
+            doc.text("LAPORAN INTERNAL OPERASIONAL", 20, 32);
+            
+            // Content
+            doc.setTextColor(30, 30, 30);
+            doc.setFontSize(14);
+            doc.text("Ringkasan Penjualan - Mei 2026", 20, 55);
+            
+            const data = [
+                ["ID", "Judul Buku", "Qty", "Total"],
+                ["NP-001", "Rahasia Semesta", "45", "Rp 4.275.000"],
+                ["NP-002", "Filosofi Teras", "120", "Rp 10.200.000"],
+                ["NP-003", "Dunia Sophie", "30", "Rp 3.150.000"],
+            ];
+            
+            doc.autoTable({
+                startY: 65,
+                head: [data[0]],
+                body: data.slice(1),
+                theme: 'striped',
+                headStyles: { fillColor: [56, 189, 248] }
+            });
+            
+            // Footer
+            doc.setFontSize(10);
+            doc.text("Dicetak oleh: " + currentUser.name, 20, doc.lastAutoTable.finalY + 20);
+            doc.text("Tanggal: " + new Date().toLocaleDateString('id-ID'), 20, doc.lastAutoTable.finalY + 26);
+            
+            doc.save(`NaraPustaka_Report_${Date.now()}.pdf`);
+            showToast('PDF Berhasil Diunduh');
+        }
+
+        // Logic for fetching from Google Sheet API
+        async function fetchData() {
+            try {
+                // Simulasi fetching, aslinya panggil API_URL
+                // const res = await fetch(API_URL + "?action=read&sheet=sales");
+                // cachedData.sales = await res.json();
+                console.log("Fetching from: " + API_URL);
+            } catch (e) {
+                console.warn("API Offline, using local dummy data");
+            }
+        }
+    </script>
 </body>
 </html>
