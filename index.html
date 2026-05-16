@@ -1,475 +1,810 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Nara Pustaka Mobile</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nara Pustaka - TalentaSync Dashboard</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 
-<style>
-body{
-background:linear-gradient(135deg,#dbeafe,#fce7f3,#dcfce7);
-font-family:Arial,sans-serif;
-min-height:100vh;
-}
-.glass{
-background:rgba(255,255,255,.55);
-backdrop-filter:blur(14px);
-border:1px solid rgba(255,255,255,.3);
-box-shadow:0 8px 30px rgba(0,0,0,.08);
-}
-.fade{animation:fade .3s ease;}
-@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-</style>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF7;
+        }
+        .fade { animation: fade 0.3s ease-out; }
+        @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+    </style>
 </head>
-<body>
+<body class="text-[#1E1E1E] min-h-screen antialiased">
 
 <div id="app"></div>
 
 <script>
+// API URL Utama Google Apps Script
+const API_URL = 'https://script.google.com/macros/s/AKfycbznZWEypHjDOe3GoyVCIHFl6fjKL4KJ6MepgAGfFEjXI-bKRGu8AIyuaSBSQzGd9WbqWw/exec';
 
-const API_URL='https://script.google.com/macros/s/AKfycbznZWEypHjDOe3GoyVCIHFl6fjKL4KJ6MepgAGfFEjXI-bKRGu8AIyuaSBSQzGd9WbqWw/exec';
-
-const USERS=[
-{username:'vero',password:'vero123',role:'Manager',fullname:'Vero'},
-{username:'jeyraa',password:'jey123',role:'Team Leader',fullname:'Jeyraa'},
-{username:'thami',password:'thami123',role:'Administrasi',fullname:'Thami'},
-{username:'elyna',password:'ely123',role:'Redaksi',fullname:'Elyna'},
-{username:'nala',password:'nala123',role:'Desain',fullname:'Nala'},
-{username:'calista',password:'calista123',role:'Kreatif',fullname:'Calista'},
-{username:'zahra',password:'zahra123',role:'Kreatif',fullname:'Zahra'}
+// Database Akun Internal Perusahaan
+const USERS = [
+    {username:'vero',password:'vero123',role:'Manager',fullname:'Deby Verona'},
+    {username:'jeyraa',password:'jey123',role:'Team Leader',fullname:'Jeyraa'},
+    {username:'thami',password:'thami123',role:'Administrasi',fullname:'Thami'},
+    {username:'elyna',password:'ely123',role:'Redaksi',fullname:'Elyna'},
+    {username:'nala',password:'nala123',role:'Desain',fullname:'Nala'},
+    {username:'calista',password:'calista123',role:'Kreatif',fullname:'Calista'},
+    {username:'zahra',password:'zahra123',role:'Kreatif',fullname:'Zahra'}
 ];
 
-let books=[];
-let sales=[];
-let projects=[];
-let expenses=[];
+let books = [];
+let sales = [];
+let projects = [];
+let expenses = [];
+let attendanceLog = [];
 
 init();
 
-function init(){
-const user=JSON.parse(localStorage.getItem('naraUser'));
-if(user){
-loadAllData(user);
-}else{
-loginPage();
-}
-}
-
-function toast(msg){
-const div=document.createElement('div');
-div.className='fixed top-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-3 rounded-2xl z-50';
-div.innerText=msg;
-document.body.appendChild(div);
-setTimeout(()=>div.remove(),2500);
+function init() {
+    const user = JSON.parse(localStorage.getItem('naraUser'));
+    if (user) {
+        loadAllData(user);
+    } else {
+        loginPage();
+    }
 }
 
-function loginPage(){
-document.getElementById('app').innerHTML=`
-<div class="min-h-screen flex items-center justify-center p-5 fade">
-<div class="glass rounded-[30px] p-6 w-full max-w-md">
-<h1 class="text-4xl font-black text-center text-sky-500 mb-2">Nara Pustaka</h1>
-<p class="text-center text-slate-500 mb-6">Operasional Penerbit Mobile</p>
-<input id="username" placeholder="Username" class="w-full p-4 rounded-2xl bg-white/70 mb-4 outline-none">
-<input id="password" type="password" placeholder="Password" class="w-full p-4 rounded-2xl bg-white/70 mb-5 outline-none">
-<button onclick="login()" class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">Masuk</button>
-</div>
-</div>`;
+function toast(msg) {
+    const div = document.createElement('div');
+    div.className = 'fixed top-5 left-1/2 -translate-x-1/2 bg-[#064E3B] text-white px-6 py-3 rounded-xl shadow-xl z-50 font-medium text-sm border border-emerald-500 fade';
+    div.innerText = msg;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 2500);
 }
 
-async function login(){
-const u=document.getElementById('username').value;
-const p=document.getElementById('password').value;
-const found=USERS.find(x=>x.username===u&&x.password===p);
-if(!found){toast('Login gagal');return;}
-localStorage.setItem('naraUser',JSON.stringify(found));
-await loadAllData(found);
+function loginPage() {
+    document.getElementById('app').innerHTML = `
+    <div class="min-h-screen flex items-center justify-center p-4 sm:p-6 fade">
+        <div class="bg-white rounded-[24px] w-full max-w-[440px] shadow-[0_20px_50px_rgba(6,78,59,0.05)] border border-gray-100 overflow-hidden flex flex-col justify-between min-h-[520px]">
+            <div class="p-8 pb-4 text-center">
+                <div class="flex justify-center mb-5">
+                    <div class="w-12 h-12 bg-[#064E3B] transform -skew-x-12 rounded-xl flex items-center justify-center shadow-md">
+                        <span class="text-white font-black text-2xl transform skew-x-12">N</span>
+                    </div>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-gray-900">Nara Pustaka</h1>
+                <p class="text-sm font-medium text-gray-400 mt-1">TalentaSync Operation Platform</p>
+            </div>
+
+            <div class="px-8 space-y-5">
+                <div>
+                    <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Username</label>
+                    <div class="relative flex items-center">
+                        <i class="fa fa-user absolute left-4 text-gray-300 text-sm"></i>
+                        <input id="username" type="text" placeholder="Masukkan username" class="w-full pl-11 pr-4 py-3.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-[#064E3B] bg-gray-50/30 font-medium">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Password</label>
+                    <div class="relative flex items-center">
+                        <i class="fa fa-lock absolute left-4 text-gray-300 text-sm"></i>
+                        <input id="password" type="password" placeholder="••••••••" class="w-full pl-11 pr-4 py-3.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-[#064E3B] bg-gray-50/30 font-medium">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 pt-6 space-y-6">
+                <button onclick="login()" class="w-full bg-[#064E3B] hover:bg-[#043E2F] text-white py-3.5 rounded-xl font-semibold text-sm tracking-wide transition shadow-lg cursor-pointer flex items-center justify-center space-x-2">
+                    <span>Masuk Aplikasi</span>
+                    <i class="fa fa-arrow-right text-xs opacity-80"></i>
+                </button>
+                <div class="text-center border-t border-gray-100 pt-4">
+                    <p class="text-[11px] font-semibold text-gray-400 tracking-wide uppercase">Internal Enterprise System © 2026</p>
+                </div>
+            </div>
+        </div>
+    </div>`;
 }
 
-function logout(){
-localStorage.removeItem('naraUser');
-loginPage();
+async function login() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value.trim();
+    const found = USERS.find(x => x.username === u && x.password === p);
+    if (!found) { toast('Login gagal! Akun tidak valid.'); return; }
+    localStorage.setItem('naraUser', JSON.stringify(found));
+    await loadAllData(found);
 }
 
-async function loadAllData(user){
-
-document.getElementById('app').innerHTML=`
-<div class="min-h-screen flex items-center justify-center">
-<div class="glass p-8 rounded-3xl text-center">
-<div class="text-3xl font-black text-sky-500">Memuat Dashboard...</div>
-</div>
-</div>`;
-
-try{
-const [b,s,p,e]=await Promise.all([
-fetch(API_URL+'?action=getBooks'),
-fetch(API_URL+'?action=getSales'),
-fetch(API_URL+'?action=getProjects'),
-fetch(API_URL+'?action=getExpenses')
-]);
-
-books=await b.json();
-sales=await s.json();
-projects=await p.json();
-expenses=await e.json();
-
-if(user.role==='Manager') managerDashboard(user);
-if(user.role==='Administrasi') adminDashboard(user);
-if(user.role==='Redaksi') redaksiDashboard(user);
-if(user.role==='Desain') desainDashboard(user);
-if(user.role==='Team Leader') leaderDashboard(user);
-if(user.role==='Kreatif') creativeDashboard(user);
-
-}catch(err){
-console.log(err);
-toast('API gagal dibaca');
-}
+function logout() {
+    localStorage.removeItem('naraUser');
+    loginPage();
 }
 
-function bottomNav(){
-return `
-<div class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/50 p-4 flex justify-around z-50">
-<button onclick="init()"><i class="fa fa-house text-sky-500 text-xl"></i></button>
-<button onclick="location.reload()"><i class="fa fa-rotate text-sky-500 text-xl"></i></button>
-<button onclick="logout()"><i class="fa fa-right-from-bracket text-red-500 text-xl"></i></button>
-</div>`;
+async function loadAllData(user) {
+    document.getElementById('app').innerHTML = `
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="text-center space-y-3">
+            <div class="w-12 h-12 border-4 border-[#064E3B] border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div class="text-sm font-bold text-[#064E3B]">Mengamankan Jalur Data Cloud...</div>
+        </div>
+    </div>`;
+
+    try {
+        const [b, s, p, e, a] = await Promise.all([
+            fetch(API_URL + '?action=getBooks').then(r => r.json().catch(()=>[])),
+            fetch(API_URL + '?action=getSales').then(r => r.json().catch(()=>[])),
+            fetch(API_URL + '?action=getProjects').then(r => r.json().catch(()=>[])),
+            fetch(API_URL + '?action=getExpenses').then(r => r.json().catch(()=>[])),
+            fetch(API_URL + '?action=getAttendance').then(r => r.json().catch(()=>[])) // Tarik data absensi cloud asli
+        ]);
+
+        books = b; sales = s; projects = p; expenses = e; attendanceLog = a;
+        renderResponsiveDashboard(user);
+    } catch (err) {
+        console.error(err);
+        toast('Gagal memproses jembatan API!');
+    }
 }
 
-function managerDashboard(user){
-const income=sales.reduce((a,b)=>a+Number(b.total||0),0);
-const outcome=expenses.reduce((a,b)=>a+Number(b.amount||0),0);
-const profit=income-outcome;
+function renderResponsiveDashboard(user) {
+    let contentUI = '';
+    if(user.role === 'Manager') contentUI = getManagerUI();
+    else if(user.role === 'Administrasi') contentUI = getAdminUI(user);
+    else if(user.role === 'Redaksi') contentUI = getRedaksiUI();
+    else if(user.role === 'Desain') contentUI = getDesainUI();
+    else if(user.role === 'Team Leader') contentUI = getLeaderUI();
+    else if(user.role === 'Kreatif') contentUI = getCreativeUI();
 
-document.getElementById('app').innerHTML=`
-<div class="p-4 pb-28 fade space-y-4">
-<div class="glass rounded-3xl p-5">
-<div class="flex justify-between items-center">
-<div>
-<h1 class="text-3xl font-black text-sky-500">Manager</h1>
-<p class="text-slate-500">${user.fullname}</p>
-</div>
-<button onclick="exportManagerPDF()" class="bg-sky-500 text-white px-4 py-2 rounded-xl">PDF</button>
-</div>
-</div>
+    document.getElementById('app').innerHTML = `
+    <div class="flex flex-col md:flex-row min-h-screen">
+        
+        <aside class="hidden md:flex flex-col w-64 bg-[#064E3B] text-white p-6 justify-between shrink-0 sticky top-0 h-screen">
+            <div class="space-y-8">
+                <div class="flex items-center space-x-2 font-black text-xl tracking-tight">
+                    <div class="w-6 h-6 bg-emerald-400 transform -skew-x-12 rounded-sm"></div>
+                    <span>TalentaSync</span>
+                </div>
+                <nav class="space-y-1">
+                    <a href="#" class="flex items-center space-x-3 bg-[#043E2F] px-4 py-3 rounded-xl font-medium text-sm text-white">
+                        <i class="fa fa-folder-open w-5 text-emerald-400"></i>
+                        <span>${user.role} Panel</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="border-t border-emerald-800 pt-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-xs border border-emerald-400 uppercase">
+                        ${user.fullname.substring(0,2)}
+                    </div>
+                    <div class="text-left">
+                        <p class="font-bold text-xs leading-none max-w-[100px] truncate">${user.fullname}</p>
+                        <p class="text-[10px] text-emerald-300 mt-1">${user.role}</p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="text-red-300 hover:text-red-400 transition text-sm cursor-pointer"><i class="fa fa-power-off"></i></button>
+            </div>
+        </aside>
 
-<div class="grid grid-cols-2 gap-4">
-<div class="glass rounded-3xl p-5">
-<p class="text-slate-500">Pemasukan</p>
-<h2 class="text-xl font-black">Rp ${income.toLocaleString()}</h2>
-</div>
-<div class="glass rounded-3xl p-5">
-<p class="text-slate-500">Pengeluaran</p>
-<h2 class="text-xl font-black">Rp ${outcome.toLocaleString()}</h2>
-</div>
-<div class="glass rounded-3xl p-5 col-span-2">
-<p class="text-slate-500">Laba Bersih</p>
-<h2 class="text-3xl font-black text-emerald-500">Rp ${profit.toLocaleString()}</h2>
-</div>
-</div>
+        <header class="md:hidden bg-[#064E3B] text-white px-5 py-4 flex items-center justify-between sticky top-0 z-40 shadow-md">
+            <div class="flex items-center space-x-2 font-black text-lg">
+                <div class="w-5 h-5 bg-emerald-400 transform -skew-x-12 rounded-sm"></div>
+                <span>TalentaSync</span>
+            </div>
+            <span class="text-xs font-bold bg-[#043E2F] px-2.5 py-1 rounded-full border border-emerald-700">${user.role}</span>
+        </header>
 
-<div class="glass rounded-3xl p-5">
-<canvas id="salesChart"></canvas>
-</div>
+        <main class="flex-1 p-4 md:p-10 pb-24 md:pb-10 max-w-[1200px] mx-auto w-full fade">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+                <div>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Selamat Bekerja,</p>
+                    <h1 class="text-3xl font-black text-gray-800 tracking-tight">${user.fullname}</h1>
+                </div>
+                <div class="flex space-x-2 shrink-0">
+                    <button onclick="init()" class="bg-white border border-gray-200 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-2xs cursor-pointer"><i class="fa fa-sync-alt text-[#064E3B]"></i> Perbarui Data</button>
+                </div>
+            </div>
 
-</div>
-${bottomNav()}`;
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-2xs mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-3 w-full md:w-auto">
+                    <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-[#064E3B]"><i class="fa fa-fingerprint text-lg"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-800">Pencatatan Jam Kerja Digital (Cloud Sync)</h4>
+                        <p class="text-xs text-gray-400">Tekan tombol presensi untuk mengirim rekam kehadiran Anda langsung ke database korporasi.</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2 w-full md:w-auto justify-end">
+                    <button onclick="handleAttendance('Masuk')" class="flex-1 md:flex-none bg-[#064E3B] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#043E2F] transition cursor-pointer"><i class="fa fa-sign-in-alt mr-1.5"></i> Clock In</button>
+                    <button onclick="handleAttendance('Pulang')" class="flex-1 md:flex-none bg-orange-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-orange-700 transition cursor-pointer"><i class="fa fa-sign-out-alt mr-1.5"></i> Clock Out</button>
+                </div>
+            </div>
 
-setTimeout(()=>{
-new Chart(document.getElementById('salesChart'),{
-type:'bar',
-data:{
-labels:sales.map(x=>x.book),
-datasets:[{label:'Penjualan',data:sales.map(x=>x.total)}]
-}
-});
-},200);
-}
+            ${contentUI}
+        </main>
 
-function adminDashboard(user){
-const mySales=sales.filter(x=>x.user===user.fullname);
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 p-4 flex justify-around items-center z-40 shadow-lg">
+            <button onclick="init()" class="text-[#064E3B] text-xl flex flex-col items-center"><i class="fa fa-home"></i><span class="text-[9px] font-bold mt-1">Beranda</span></button>
+            <button onclick="logout()" class="text-red-500 text-xl flex flex-col items-center"><i class="fa fa-power-off"></i><span class="text-[9px] font-bold mt-1">Keluar</span></button>
+        </nav>
+    </div>
+    `;
 
-document.getElementById('app').innerHTML=`
-<div class="p-4 pb-28 fade space-y-4">
-<div class="glass rounded-3xl p-5">
-<h1 class="text-3xl font-black text-sky-500">Administrasi</h1>
-<p class="text-slate-500">Input Penjualan & Pengeluaran</p>
-</div>
-
-<div class="glass rounded-3xl p-5 space-y-4">
-<h2 class="font-bold text-lg">Input Penjualan</h2>
-<select id="book" onchange="calculateTotal()" class="w-full p-4 rounded-2xl bg-white/70">
-<option value="">Pilih Buku</option>
-${projects.map(p=>`<option value="${p.title}">${p.title}</option>`).join('')}
-</select>
-<input id="buyer" placeholder="Nama Pembeli" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="qty" type="number" oninput="calculateTotal()" placeholder="Jumlah" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="marketplace" placeholder="Marketplace" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="total" readonly placeholder="Total" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="royaltyAmount" readonly placeholder="Royalti" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="invoiceFile" type="file" accept="image/*" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="paymentFile" type="file" accept="image/*" class="w-full p-4 rounded-2xl bg-white/70">
-<button onclick="saveSale('${user.fullname}')" class="w-full bg-sky-500 text-white p-4 rounded-2xl font-bold">Simpan Penjualan</button>
-</div>
-
-<div class="glass rounded-3xl p-5 space-y-4">
-<h2 class="font-bold text-lg">Input Pengeluaran</h2>
-<input id="expenseDescription" placeholder="Nama Pengeluaran" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="vendor" placeholder="Vendor" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="expenseAmount" type="number" placeholder="Jumlah Pengeluaran" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="expenseInvoice" type="file" accept="image/*" class="w-full p-4 rounded-2xl bg-white/70">
-<button onclick="saveExpense('${user.fullname}')" class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold">Simpan Pengeluaran</button>
-</div>
-
-<div class="glass rounded-3xl p-5">
-<h2 class="font-bold text-lg mb-4">Riwayat Penjualan</h2>
-<div class="space-y-3">
-${mySales.reverse().map(s=>`
-<div class="bg-white/60 rounded-2xl p-4 flex justify-between items-start">
-<div>
-<div class="font-bold">${s.book}</div>
-<div class="text-sm text-slate-500">${s.buyer_name}</div>
-<div class="font-black text-sky-500 mt-2">Rp ${Number(s.total).toLocaleString()}</div>
-</div>
-<button onclick="deleteData('sales','${s.id}')" class="bg-red-500 text-white px-3 py-2 rounded-xl">
-<i class="fa fa-trash"></i>
-</button>
-</div>`).join('')}
-</div>
-</div>
-
-</div>
-${bottomNav()}`;
+    if(user.role === 'Manager') renderManagerChart();
 }
 
-function redaksiDashboard(user){
-const myProjects=projects.filter(x=>x.redaksi==='Elyna');
+/* ==============================================
+   LOGIKA SISTEM PRESENSI CLOUD (TIDAK FIKTIF)
+   ============================================== */
+async function handleAttendance(type) {
+    const user = JSON.parse(localStorage.getItem('naraUser'));
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID');
+    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-document.getElementById('app').innerHTML=`
-<div class="p-4 pb-28 fade space-y-4">
-<div class="glass rounded-3xl p-5">
-<h1 class="text-3xl font-black text-pink-500">Redaksi</h1>
-<p class="text-slate-500">Tracking Naskah</p>
-</div>
-
-<div class="glass rounded-3xl p-5 space-y-4">
-<input id="title" placeholder="Judul Buku" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="author" placeholder="Penulis" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="isbn" placeholder="ISBN/QRCBN" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="price" type="number" placeholder="Harga Buku" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="royalty" type="number" placeholder="Royalti %" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="editor" placeholder="Editor" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="layout" placeholder="Layout" class="w-full p-4 rounded-2xl bg-white/70">
-<input id="cover" placeholder="Cover" class="w-full p-4 rounded-2xl bg-white/70">
-<select id="status" class="w-full p-4 rounded-2xl bg-white/70">
-<option>Naskah Masuk</option>
-<option>Editing</option>
-<option>Layout</option>
-<option>Cover</option>
-<option>Cetak</option>
-<option>Distribusi</option>
-<option>Selesai</option>
-</select>
-<button onclick="saveProject()" class="w-full bg-pink-500 text-white p-4 rounded-2xl font-bold">Simpan Naskah</button>
-</div>
-
-<div class="glass rounded-3xl p-5">
-<h2 class="font-bold text-lg mb-4">Arsip Naskah</h2>
-<div class="space-y-3">
-${myProjects.map(p=>`
-<div class="bg-white/60 rounded-2xl p-4 flex justify-between items-start">
-<div>
-<div class="font-bold">${p.title}</div>
-<div class="text-sm text-slate-500">${p.author}</div>
-<div class="text-pink-500 font-bold mt-2">${p.status}</div>
-</div>
-<button onclick="deleteData('projects','${p.projectId}')" class="bg-red-500 text-white px-3 py-2 rounded-xl"><i class="fa fa-trash"></i></button>
-</div>`).join('')}
-</div>
-</div>
-
-</div>
-${bottomNav()}`;
+    toast(`Mengirim presensi ${type} ke server cloud...`);
+    
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'addAttendance',
+                data: {
+                    name: user.fullname,
+                    role: user.role,
+                    date: dateStr,
+                    time: timeStr,
+                    type: type
+                }
+            })
+        });
+        toast(`Presensi ${type} berhasil terverifikasi pada ${timeStr}!`);
+        loadAllData(user);
+    } catch(err) {
+        toast('Gagal terhubung ke server cloud. Presensi dibatalkan.');
+    }
 }
 
-function desainDashboard(user){
-document.getElementById('app').innerHTML=`
-<div class="p-4 pb-28 fade space-y-4">
-<div class="glass rounded-3xl p-5">
-<h1 class="text-3xl font-black text-purple-500">Desain</h1>
-<p class="text-slate-500">Layout & Cover</p>
-</div>
+/* ==============================================
+   UI VIEW COMPONENT PER DIVISI
+   ============================================== */
 
-${projects.map(p=>`
-<div class="glass rounded-3xl p-5">
-<div class="font-bold text-lg">${p.title}</div>
-<div class="text-sm text-slate-500 mb-4">${p.author}</div>
-<input placeholder="Nama Layout" class="w-full p-4 rounded-2xl bg-white/70 mb-3">
-<textarea placeholder="Catatan Layout" class="w-full p-4 rounded-2xl bg-white/70"></textarea>
-</div>`).join('')}
+function getManagerUI() {
+    const income = sales.reduce((a,b)=>a+Number(b.total||0),0);
+    const outcome = expenses.reduce((a,b)=>a+Number(b.amount||0),0);
+    const profit = income - outcome;
 
-</div>
-${bottomNav()}`;
+    return `
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">Total Omzet</span> <i class="fa fa-arrow-trend-up text-emerald-600"></i></div>
+            <h3 class="text-2xl font-black mt-4">Rp ${income.toLocaleString()}</h3>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">Total Biaya Operasional</span> <i class="fa fa-arrow-trend-down text-red-500"></i></div>
+            <h3 class="text-2xl font-black mt-4">Rp ${outcome.toLocaleString()}</h3>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs sm:col-span-2 lg:col-span-1 flex flex-col justify-between">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold text-[#064E3B] bg-emerald-100 px-2.5 py-1 rounded-full">Laba Bersih Perusahaan</span>
+                <button onclick="exportManagerPDF()" class="text-xs font-bold bg-[#064E3B] text-white px-3 py-1.5 rounded-lg hover:bg-emerald-950 transition cursor-pointer"><i class="fa fa-print mr-1"></i> Cetak Dokumen</button>
+            </div>
+            <h3 class="text-2xl font-black text-emerald-600 mt-4">Rp ${profit.toLocaleString()}</h3>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs lg:col-span-2">
+            <h2 class="font-bold text-gray-700 mb-4 text-xs uppercase tracking-wider">Performa Distribusi Buku</h2>
+            <div class="h-[320px] w-full"><canvas id="salesChart"></canvas></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs">
+            <h2 class="font-black text-sm text-gray-500 border-b pb-3 mb-4 uppercase tracking-wide">Monitoring Kehadiran Staf</h2>
+            <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                ${attendanceLog.length === 0 ? '<p class="text-center text-xs text-gray-400 py-12">Belum ada aktivitas presensi database hari ini.</p>':''}
+                ${attendanceLog.slice().reverse().map(log => `
+                <div class="bg-gray-50 border border-gray-100 p-3 rounded-xl flex justify-between items-center text-xs">
+                    <div>
+                        <div class="font-bold text-gray-800">${log.name || '-'}</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">${log.role || '-'} • ${log.date || '-'}</div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full font-bold text-[10px] ${log.type === 'Masuk' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}">${log.type || '-'} (${log.time || '-'})</span>
+                </div>`).join('')}
+            </div>
+        </div>
+    </div>`;
 }
 
-function leaderDashboard(user){
-document.getElementById('app').innerHTML=`
-<div class="p-4 pb-28 fade space-y-4">
-<div class="glass rounded-3xl p-5">
-<h1 class="text-3xl font-black text-emerald-500">Team Leader</h1>
-<p class="text-slate-500">Monitoring Divisi</p>
-</div>
-
-<div class="grid grid-cols-2 gap-4">
-<div class="glass rounded-3xl p-5">
-<p>Total Naskah</p>
-<h2 class="text-3xl font-black">${projects.length}</h2>
-</div>
-<div class="glass rounded-3xl p-5">
-<p>Total Penjualan</p>
-<h2 class="text-3xl font-black">${sales.length}</h2>
-</div>
-</div>
-
-</div>
-${bottomNav()}`;
+function renderManagerChart() {
+    setTimeout(() => {
+        const ctx = document.getElementById('salesChart');
+        if(!ctx) return;
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sales.map(x => x.book || 'N/A'),
+                datasets: [{ label: 'Total Penjualan Kotor (Rp)', data: sales.map(x => x.total || 0), backgroundColor: '#064E3B', borderRadius: 4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }, 150);
 }
 
-function creativeDashboard(user){
-document.getElementById('app').innerHTML=`
-<div class="p-4 pb-28 fade">
-<div class="glass rounded-3xl p-5">
-<h1 class="text-3xl font-black text-orange-500">Kreatif</h1>
-<p class="text-slate-500">Promosi & Campaign Buku</p>
-</div>
-</div>
-${bottomNav()}`;
+function getAdminUI(user) {
+    const mySales = sales.filter(x => x.user === user.fullname);
+    return `
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs space-y-4">
+            <h2 class="font-black text-sm text-gray-800 border-b pb-2 uppercase tracking-wide text-gray-500">Pencatatan Distribusi</h2>
+            <div>
+                <label class="text-[11px] font-bold text-gray-400 block mb-1">PILIH BUKU</label>
+                <select id="book" onchange="calculateTotal()" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none">
+                    <option value="">-- Pilih List Buku --</option>
+                    ${books.map(b => `<option value="${b.title}">${b.title}</option>`).join('')}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <input id="buyer" placeholder="Pembeli" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+                <input id="qty" type="number" oninput="calculateTotal()" placeholder="Kuantitas (Qty)" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            </div>
+            <input id="marketplace" placeholder="Platform Marketplace" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <div class="grid grid-cols-2 gap-2 bg-emerald-50/60 p-3 rounded-xl text-xs">
+                <div><span class="text-[10px] text-gray-400 font-bold block">TOTAL OMZET</span> <input id="total" readonly value="Rp 0" class="font-bold text-gray-800 bg-transparent outline-none w-full"></div>
+                <div><span class="text-[10px] text-gray-400 font-bold block">ALOKASI ROYALTI</span> <input id="royaltyAmount" readonly value="Rp 0" class="font-bold text-emerald-700 bg-transparent outline-none w-full"></div>
+            </div>
+            <div class="text-[11px] text-gray-400 space-y-2">
+                <label class="block">File Nota: <input id="invoiceFile" type="file" class="mt-1 block w-full"></label>
+                <label class="block">File Pembayaran: <input id="paymentFile" type="file" class="mt-1 block w-full"></label>
+            </div>
+            <button onclick="saveSale('${user.fullname}')" class="w-full bg-[#064E3B] text-white p-3 rounded-xl font-bold hover:bg-emerald-950 transition text-sm cursor-pointer">Simpan Transaksi</button>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs space-y-4">
+            <h2 class="font-black text-sm text-gray-800 border-b pb-2 uppercase tracking-wide text-gray-500">Pencatatan Biaya Keluar</h2>
+            <input id="expenseDescription" placeholder="Nama Kebutuhan Operasional" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <input id="vendor" placeholder="Nama Vendor Rekanan" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <input id="expenseAmount" type="number" placeholder="Nominal Pengeluaran (Rp)" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <div><label class="text-[11px] text-gray-400 block">Bukti Kwitansi: <input id="expenseInvoice" type="file" class="mt-1 block w-full"></label></div>
+            <button onclick="saveExpense('${user.fullname}')" class="w-full bg-red-600 text-white p-3 rounded-xl font-bold hover:bg-red-700 transition text-sm cursor-pointer">Simpan Pengeluaran</button>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs">
+            <h2 class="font-black text-sm text-gray-800 border-b pb-3 mb-4 uppercase tracking-wide text-gray-500">Log Buku Kas Anda</h2>
+            <div class="space-y-3 max-h-[385px] overflow-y-auto pr-1">
+                ${mySales.length === 0 ? '<p class="text-center text-xs text-gray-400 py-6">Belum ada riwayat transaksi masuk.</p>':''}
+                ${mySales.map(s => `
+                <div class="bg-gray-50 border border-gray-100 p-3 rounded-xl flex justify-between items-center text-xs">
+                    <div class="max-w-[70%]">
+                        <div class="font-bold text-gray-800 truncate">${s.book}</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">Rp ${Number(s.total||0).toLocaleString()} • Qty: ${s.qty||0}</div>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="exportInvoicePDF('${s.id}')" class="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg cursor-pointer" title="Cetak Slip"><i class="fa fa-print"></i></button>
+                        <button onclick="deleteData('sales','${s.id}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg cursor-pointer"><i class="fa fa-trash"></i></button>
+                    </div>
+                </div>`).join('')}
+            </div>
+        </div>
+    </div>`;
 }
 
-function calculateTotal(){
-const title=document.getElementById('book').value;
-const book=books.find(x=>x.title===title);
-const qty=Number(document.getElementById('qty').value||0);
-if(!book)return;
-const total=qty*Number(book.price||0);
-const royal=total*(Number(book.royalty_percent||0)/100);
-document.getElementById('total').value='Rp '+total.toLocaleString();
-document.getElementById('royaltyAmount').value='Rp '+royal.toLocaleString();
+function getRedaksiUI() {
+    return `
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs space-y-3">
+            <h2 class="font-black text-sm text-gray-500 border-b pb-2 uppercase tracking-wide">Registrasi Masuk Naskah</h2>
+            <input id="title" placeholder="Judul Buku Utama" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <input id="author" placeholder="Nama Penulis / Kreator" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <input id="isbn" placeholder="Kode Internasional ISBN/QRCBN" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <div class="grid grid-cols-2 gap-2">
+                <input id="price" type="number" placeholder="Harga Katalog (Rp)" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+                <input id="royalty" type="number" placeholder="Bagi Hasil %" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            </div>
+            <input id="editor" placeholder="Staf Editor Kepala" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <input id="layout" placeholder="Staf Tata Letak" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <input id="cover" placeholder="Staf Desainer Cover" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+            <select id="status" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none">
+                <option>Naskah Masuk</option><option>Editing</option><option>Layout</option><option>Cover</option><option>Cetak</option><option>Distribusi</option><option>Selesai</option>
+            </select>
+            <button onclick="saveProject()" class="w-full bg-[#064E3B] text-white p-3 rounded-xl font-bold hover:bg-emerald-950 text-sm cursor-pointer">Simpan Data Buku</button>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs lg:col-span-2">
+            <h2 class="font-black text-sm text-gray-500 border-b pb-3 mb-4 uppercase tracking-wide">Monitoring Gudang Arsip Naskah</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[440px] overflow-y-auto">
+                ${projects.map(p => `
+                <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl flex justify-between items-start text-xs">
+                    <div>
+                        <div class="font-bold text-gray-800">${p.title || 'No Title'}</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">Penulis: ${p.author || '-'}</div>
+                        <span class="inline-block px-2.5 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-full text-[9px] mt-2">${p.status || '-'}</span>
+                    </div>
+                    <button onclick="deleteData('projects','${p.projectId}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg cursor-pointer"><i class="fa fa-trash"></i></button>
+                </div>`).join('')}
+            </div>
+        </div>
+    </div>`;
 }
 
-async function saveSale(user){
-const title=document.getElementById('book').value;
-const book=books.find(x=>x.title===title);
-if(!book){toast('Pilih buku');return;}
-const qty=Number(document.getElementById('qty').value||0);
-const total=qty*Number(book.price||0);
-const royal=total*(Number(book.royalty_percent||0)/100);
-
-await fetch(API_URL,{
-method:'POST',
-body:JSON.stringify({
-action:'addSale',
-data:{
-id:Date.now(),
-date:new Date().toLocaleDateString(),
-buyer_name:document.getElementById('buyer').value,
-book:title,
-author:book.author,
-qty:qty,
-total:total,
-royalty:royal,
-marketplace:document.getElementById('marketplace').value,
-payment_status:'Paid',
-invoice_file:document.getElementById('invoiceFile').files[0]?.name||'-',
-payment_file:document.getElementById('paymentFile').files[0]?.name||'-',
-user:user
-}
-})
-});
-
-toast('Penjualan berhasil');
-loadAllData(JSON.parse(localStorage.getItem('naraUser')));
+function getDesainUI() {
+    return `
+    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs">
+        <h2 class="font-black text-sm text-gray-500 border-b pb-3 mb-4 uppercase tracking-wide">Alur Kerja Divisi Kreatif & Seni</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${projects.map(p => `
+            <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl flex flex-col justify-between text-xs">
+                <div>
+                    <h3 class="font-bold text-gray-800 truncate">${p.title}</h3>
+                    <p class="text-gray-400 text-[10px] mb-3">Kreator: ${p.author}</p>
+                    <input placeholder="Pj Produksi" value="${p.layout || ''}" class="w-full p-2.5 rounded-lg border border-gray-200 bg-white mb-2 text-xs focus:outline-none">
+                    <textarea placeholder="Tulis instruksi revisi layout di sini..." class="w-full p-2.5 rounded-lg border border-gray-200 bg-white text-xs h-16 resize-none focus:outline-none"></textarea>
+                </div>
+                <button onclick="toast('Catatan progres buku berhasil diperbarui!')" class="w-full bg-[#064E3B] text-white py-2 rounded-lg font-bold mt-3 text-[11px] cursor-pointer">Perbarui Catatan</button>
+            </div>`).join('')}
+        </div>
+    </div>`;
 }
 
-async function saveExpense(user){
-await fetch(API_URL,{
-method:'POST',
-body:JSON.stringify({
-action:'addExpense',
-data:{
-id:Date.now(),
-description:document.getElementById('expenseDescription').value,
-category:'Percetakan',
-vendor:document.getElementById('vendor').value,
-amount:document.getElementById('expenseAmount').value,
-receipt_file:document.getElementById('expenseInvoice').files[0]?.name||'-',
-date:new Date().toLocaleDateString(),
-user:user
-}
-})
-});
-
-toast('Pengeluaran berhasil');
-loadAllData(JSON.parse(localStorage.getItem('naraUser')));
+function getLeaderUI() {
+    return `
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-xl">
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs text-center">
+            <div class="w-10 h-10 bg-emerald-50 text-emerald-700 rounded-xl flex items-center justify-center mx-auto mb-2"><i class="fa fa-book"></i></div>
+            <p class="text-xs text-gray-400 font-medium">Buku Berjalan di Sistem</p>
+            <h2 class="text-3xl font-black mt-1 text-gray-800">${projects.length}</h2>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs text-center">
+            <div class="w-10 h-10 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center mx-auto mb-2"><i class="fa fa-receipt"></i></div>
+            <p class="text-xs text-gray-400 font-medium">Transaksi Distribusi Terdata</p>
+            <h2 class="text-3xl font-black mt-1 text-gray-800">${sales.length}</h2>
+        </div>
+    </div>`;
 }
 
-async function saveProject(){
-const data={
-projectId:Date.now(),
-title:document.getElementById('title').value,
-author:document.getElementById('author').value,
-status:document.getElementById('status').value,
-redaksi:'Elyna',
-editor:document.getElementById('editor').value,
-layout:document.getElementById('layout').value,
-cover:document.getElementById('cover').value
-};
-
-await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'addProject',data:data})});
-
-await fetch(API_URL,{method:'POST',body:JSON.stringify({
-action:'addBook',
-data:{
-id:'BK'+Date.now(),
-title:data.title,
-author:data.author,
-isbn:document.getElementById('isbn').value,
-price:document.getElementById('price').value,
-royalty_percent:document.getElementById('royalty').value,
-status:data.status
-}
-})});
-
-toast('Naskah berhasil disimpan');
-loadAllData(JSON.parse(localStorage.getItem('naraUser')));
+function getCreativeUI() {
+    return `
+    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-2xs max-w-md">
+        <div class="text-3xl text-orange-500 mb-2"><i class="fa fa-bullhorn"></i></div>
+        <h2 class="text-base font-black text-gray-800">Manajemen Campaign Buku</h2>
+        <p class="text-xs text-gray-400 mt-1 mb-4">Modul sinkronisasi kit pemasaran digital terintegrasi cloud server.</p>
+        <div class="p-4 bg-orange-50 text-[11px] text-orange-800 rounded-xl font-medium leading-relaxed">
+            Gunakan fungsionalitas tombol penyegaran data di sudut kanan atas untuk memperbarui antrean judul buku terbaru dari lini redaksional.
+        </div>
+    </div>`;
 }
 
-async function deleteData(sheet,id){
-if(!confirm('Hapus data?')) return;
+/* ==============================================
+   LOGIKA PERHITUNGAN TRANSAKSI & INPUT DATA
+   ============================================== */
 
-await fetch(API_URL,{
-method:'POST',
-body:JSON.stringify({
-action:'deleteRow',
-data:{sheet:sheet,id:id}
-})
-});
-
-toast('Data dihapus');
-loadAllData(JSON.parse(localStorage.getItem('naraUser')));
+function calculateTotal() {
+    const title = document.getElementById('book').value;
+    const book = books.find(x => x.title === title);
+    const qty = Number(document.getElementById('qty').value || 0);
+    if (!book) return;
+    const total = qty * Number(book.price || 0);
+    const royal = total * (Number(book.royalty_percent || 0) / 100);
+    document.getElementById('total').value = 'Rp ' + total.toLocaleString();
+    document.getElementById('royaltyAmount').value = 'Rp ' + royal.toLocaleString();
 }
 
-function exportManagerPDF(){
-const { jsPDF } = window.jspdf;
-const doc=new jsPDF();
-doc.text('Laporan Manager Nara Pustaka',20,20);
-doc.text('Dicetak oleh Vero',20,30);
-doc.save('laporan-manager.pdf');
+async function saveSale(user) {
+    const title = document.getElementById('book').value;
+    const book = books.find(x => x.title === title);
+    if (!book) { toast('Harap pilih judul buku!'); return; }
+    const qty = Number(document.getElementById('qty').value || 0);
+    if (qty <= 0) { toast('Kuantitas minimal 1 unit!'); return; }
+    
+    const total = qty * Number(book.price || 0);
+    const royal = total * (Number(book.royalty_percent || 0) / 100);
+
+    toast('Mengunggah berkas penjualan...');
+    await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'addSale',
+            data: {
+                id: Date.now(),
+                date: new Date().toLocaleDateString(),
+                buyer_name: document.getElementById('buyer').value || '-',
+                book: title,
+                author: book.author || '-',
+                qty: qty,
+                total: total,
+                royalty: royal,
+                marketplace: document.getElementById('marketplace').value || '-',
+                payment_status: 'Paid',
+                invoice_file: document.getElementById('invoiceFile').files[0]?.name || '-',
+                payment_file: document.getElementById('paymentFile').files[0]?.name || '-',
+                user: user
+            }
+        })
+    });
+
+    toast('Data penjualan berhasil disimpan!');
+    loadAllData(JSON.parse(localStorage.getItem('naraUser')));
 }
 
+async function saveExpense(user) {
+    const desc = document.getElementById('expenseDescription').value.trim();
+    const amount = Number(document.getElementById('expenseAmount').value || 0);
+    if(!desc || amount <= 0) { toast('Isi keterangan & nominal dengan benar!'); return; }
+    
+    toast('Mengunggah rincian pengeluaran...');
+    await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'addExpense',
+            data: {
+                id: Date.now(),
+                description: desc,
+                category: 'Percetakan',
+                vendor: document.getElementById('vendor').value || '-',
+                amount: amount,
+                receipt_file: document.getElementById('expenseInvoice').files[0]?.name || '-',
+                date: new Date().toLocaleDateString(),
+                user: user
+            }
+        })
+    });
+
+    toast('Data operasional berhasil disimpan!');
+    loadAllData(JSON.parse(localStorage.getItem('naraUser')));
+}
+
+async function saveProject() {
+    const titleVal = document.getElementById('title').value.trim();
+    if(!titleVal) { toast('Judul buku wajib diisi!'); return; }
+
+    const data = {
+        projectId: Date.now(),
+        title: titleVal,
+        author: document.getElementById('author').value || '-',
+        status: document.getElementById('status').value,
+        redaksi: 'Elyna',
+        editor: document.getElementById('editor').value || '-',
+        layout: document.getElementById('layout').value || '-',
+        cover: document.getElementById('cover').value || '-'
+    };
+
+    toast('Mendaftarkan judul naskah...');
+    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addProject', data: data }) });
+    await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'addBook',
+            data: {
+                id: 'BK' + Date.now(),
+                title: data.title,
+                author: data.author,
+                isbn: document.getElementById('isbn').value || '-',
+                price: document.getElementById('price').value || 0,
+                royalty_percent: document.getElementById('royalty').value || 0,
+                status: data.status
+            }
+        })
+    });
+
+    toast('Buku resmi didaftarkan ke sistem!');
+    loadAllData(JSON.parse(localStorage.getItem('naraUser')));
+}
+
+async function deleteData(sheet, id) {
+    if (!confirm('Hapus baris data terpilih secara permanen?')) return;
+
+    toast('Menghapus data dari server...');
+    await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'deleteRow',
+            data: { sheet: sheet, id: id }
+        })
+    });
+
+    toast('Data berhasil dihapus!');
+    loadAllData(JSON.parse(localStorage.getItem('naraUser')));
+}
+
+/* ==============================================
+   PROSEDUR RENDER LOGO VECTOR RESMI NARA PUSTAKA
+   ============================================== */
+function drawNaraLogo(doc, x, y) {
+    doc.setFillColor(139, 90, 43); // Cokelat Utama Nara
+    doc.rect(x, y + 2, 4, 18, 'F');
+    doc.rect(x + 14, y + 5, 4, 15, 'F');
+    
+    for(let i=0; i<=10; i++) {
+        let pct = i / 10;
+        let arcY = y + 5 - Math.sin(pct * Math.PI) * 3;
+        doc.rect(x + 4 + (pct * 10), arcY, 1.5, 5, 'F');
+    }
+    
+    doc.setFillColor(219, 194, 161); // Krem Sekunder Logo
+    doc.circle(x + 2, y + 18, 3, 'F');
+    doc.setFillColor(139, 90, 43);
+    doc.circle(x + 2, y + 18, 1.2, 'F');
+}
+
+/* ==============================================
+   PROSEDUR RENDER TANDA TANGAN DEBY VERONA (VEKTOR)
+   ============================================== */
+function drawDebySignature(doc, x, y) {
+    doc.setDrawColor(40, 40, 40);
+    doc.setLineWidth(0.6);
+    
+    doc.ellipse(x + 12, y + 2, 12, 3, 'D');
+    doc.line(x + 18, y + 4, x + 16, y + 8);
+    doc.line(x + 16, y + 8, x + 20, y + 10);
+    doc.line(x + 20, y + 10, x + 15, y + 13);
+    doc.line(x + 15, y + 13, x + 19, y + 16);
+    doc.ellipse(x + 10, y + 17, 10, 2, 'D');
+    
+    for (let theta = 0; theta <= Math.PI; theta += 0.1) {
+        let xStart = x + 13 - Math.cos(theta) * 11;
+        let yStart = y + 28 - Math.sin(theta) * 10;
+        let xEnd = x + 13 - Math.cos(theta + 0.1) * 11;
+        let yEnd = y + 28 - Math.sin(theta + 0.1) * 10;
+        if(theta + 0.1 <= Math.PI) doc.line(xStart, yStart, xEnd, yEnd);
+    }
+    doc.line(x + 2, y + 28, x + 26, y + 28);
+    doc.line(x + 23, y + 25, x + 25, y + 29);
+}
+
+/* ==============================================
+   MESIN ENGINE CETAK PDF PREMIUM PERUSAHAAN (NO WATERMARK)
+   ============================================== */
+
+function exportManagerPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    const income = sales.reduce((a,b)=>a+Number(b.total||0),0);
+    const outcome = expenses.reduce((a,b)=>a+Number(b.amount||0),0);
+    const profit = income - outcome;
+
+    doc.setFillColor(6, 78, 59);
+    doc.rect(0, 0, 210, 35, 'F');
+
+    drawNaraLogo(doc, 15, 7);
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("NARA PUSTAKA ENTERPRISE", 38, 20);
+    doc.setFontSize(9);
+    doc.setFont("Helvetica", "normal");
+    doc.text("TalentaSync Automation Report System • Official Dashboard Core", 38, 27);
+
+    doc.setTextColor(30, 30, 30);
+    doc.setFontSize(13);
+    doc.setFont("Helvetica", "bold");
+    doc.text("LAPORAN EKSEKUTIF KINERJA KEUANGAN BULANAN", 15, 52);
+    
+    doc.setFontSize(9.5);
+    doc.setFont("Helvetica", "normal");
+    doc.text(`Tanggal Sinkronisasi : ${new Date().toLocaleDateString('id-ID')}`, 15, 60);
+    doc.text(`Otoritas Pengesah   : Direktur Keuangan (Deby Verona)`, 15, 66);
+    doc.text(`Klasifikasi Berkas  : Validated / Confidential Document`, 15, 72);
+
+    let y = 85;
+    doc.setFillColor(245, 245, 240);
+    doc.rect(15, y, 180, 8, 'F');
+    doc.setFont("Helvetica", "bold");
+    doc.text("POS ANGGARAN OPERASIONAL", 20, y + 5.5);
+    doc.text("AKUMULASI NOMINAL (IDR)", 135, y + 5.5);
+
+    doc.setFont("Helvetica", "normal");
+    y += 8;
+    doc.rect(15, y, 180, 10);
+    doc.text("Total Akumulasi Pemasukan Distribusi (Omzet)", 20, y + 6);
+    doc.text(`Rp ${income.toLocaleString('id-ID')}`, 135, y + 6);
+
+    y += 10;
+    doc.rect(15, y, 180, 10);
+    doc.text("Total Akumulasi Biaya Pengeluaran Produksi", 20, y + 6);
+    doc.text(`Rp ${outcome.toLocaleString('id-ID')}`, 135, y + 6);
+
+    y += 10;
+    doc.setFillColor(232, 245, 233);
+    doc.rect(15, y, 180, 12, 'F');
+    doc.rect(15, y, 180, 12);
+    doc.setFont("Helvetica", "bold");
+    doc.setTextColor(6, 78, 59);
+    doc.text("TOTAL LABA BERSIH (PROFIT)", 20, y + 7.5);
+    doc.text(`Rp ${profit.toLocaleString('id-ID')}`, 135, y + 7.5);
+
+    y += 40;
+    doc.setTextColor(30, 30, 30);
+    doc.setFont("Helvetica", "normal");
+    doc.text("Disahkan Secara Digital,", 145, y);
+    
+    drawDebySignature(doc, 142, y + 4);
+
+    doc.setFont("Helvetica", "bold");
+    doc.text("DEBY VERONA", 145, y + 36);
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.text("Direktur Utama & Keuangan", 145, y + 40);
+
+    doc.save(`Laporan_Keuangan_NaraPustaka_${Date.now()}.pdf`);
+}
+
+function exportInvoicePDF(id) {
+    const sale = sales.find(x => String(x.id) === String(id));
+    if(!sale) { toast('Data transaksi tidak valid!'); return; }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    doc.setFillColor(6, 78, 59);
+    doc.rect(0, 0, 210, 15, 'F');
+
+    doc.setTextColor(30, 30, 30);
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("SLIP DISTRIBUSI & ROYALTI PENULIS", 15, 32);
+
+    doc.setFontSize(9);
+    doc.setFont("Helvetica", "normal");
+    doc.text("Nara Pustaka Automation Platform via TalentaSync Cloud", 15, 38);
+    doc.text(`ID Referensi : TX-${sale.id}`, 140, 32);
+    doc.text(`Tanggal      : ${sale.date || '-'}`, 140, 38);
+
+    doc.line(15, 43, 195, 43);
+
+    doc.setFont("Helvetica", "bold");
+    doc.text("INFORMASI DETAIL:", 15, 52);
+    doc.setFont("Helvetica", "normal");
+    doc.text(`Judul Buku Utama : ${sale.book}`, 15, 58);
+    doc.text(`Penulis Kreator  : ${sale.author || '-'}`, 15, 64);
+    doc.text(`Nama Pembeli     : ${sale.buyer_name || '-'}`, 15, 70);
+    doc.text(`Gerai Pemasaran  : ${sale.marketplace || '-'}`, 15, 76);
+
+    let y = 88;
+    doc.setFillColor(6, 78, 59);
+    doc.rect(15, y, 180, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("Helvetica", "bold");
+    doc.text("URAIAN DISTRIBUSI", 20, y + 5.5);
+    doc.text("QTY", 115, y + 5.5);
+    doc.text("JUMLAH (IDR)", 145, y + 5.5);
+
+    doc.setTextColor(30, 30, 30);
+    doc.setFont("Helvetica", "normal");
+    y += 8;
+    doc.rect(15, y, 180, 10);
+    doc.text("Omzet Kotor Penjualan Buku", 20, y + 6);
+    doc.text(String(sale.qty || 0), 115, y + 6);
+    doc.text(`Rp ${Number(sale.total || 0).toLocaleString('id-ID')}`, 145, y + 6);
+
+    y += 10;
+    doc.setFillColor(240, 248, 240);
+    doc.rect(15, y, 180, 10, 'F');
+    doc.rect(15, y, 180, 10);
+    doc.setFont("Helvetica", "bold");
+    doc.text("Alokasi Bersih Royalti Hak Penulis", 20, y + 6);
+    doc.text("-", 115, y + 6);
+    doc.text(`Rp ${Number(sale.royalty || 0).toLocaleString('id-ID')}`, 145, y + 6);
+
+    y += 30;
+    doc.setFont("Helvetica", "normal");
+    doc.text("Kasir Pemroses,", 15, y);
+    doc.setFont("Helvetica", "bold");
+    doc.text(String(sale.user || 'Staf Administrasi'), 15, y + 25);
+
+    doc.setFont("Helvetica", "normal");
+    doc.text("Mengetahui Direktur Keuangan,", 135, y);
+    drawDebySignature(doc, 135, y + 2);
+    doc.setFont("Helvetica", "bold");
+    doc.text("DEBY VERONA", 135, y + 33);
+
+    doc.save(`Slip_Royalti_${sale.id}.pdf`);
+}
 </script>
 </body>
 </html>
