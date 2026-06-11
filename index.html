@@ -1,623 +1,1195 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nara Pustaka - TalentaSync Dashboard</title>
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  Users, 
+  BookOpen, 
+  TrendingUp, 
+  Coins, 
+  CheckCircle, 
+  Database, 
+  Plus, 
+  Trash2, 
+  Printer, 
+  Award, 
+  ChevronRight, 
+  Lock, 
+  LogOut, 
+  Eye, 
+  FileText, 
+  Menu, 
+  X,
+  CreditCard,
+  Grid
+} from 'lucide-react';
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;900&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { nara: { botol: '#064E3B', cokelat: '#8B5A2B', krem: '#DBC2A1', bg: '#FDFBF7' } }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { background-color: #FDFBF7; }
-        .fade { animation: fade 0.2s ease-out; }
-        @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-    </style>
-</head>
-<body class="text-[#1E1E1E] antialiased min-h-screen">
-
-<div id="app"></div>
-
-<script>
-// Masukkan URL Web App Google Apps Script Anda yang aktif di bawah ini
-const API_URL = 'https://script.google.com/macros/s/AKfycbyBbOFVU5xwqZr0q5zhb4Q76x0f8x8u44SbT-tVdj6GtVTbwqGekiEigCYils9WUUJs/exec';
-
-// Konfigurasi Hak Akses & Kredensial Pengguna Resmi Nara Pustaka
+// --- DATA REFERENSI KARYAWAN & TARIF ---
 const USERS = [
-    {username:'vero',password:'vero123',role:'Manager',fullname:'Deby Verona'},
-    {username:'jeyraa',password:'jey123',role:'Team Leader',fullname:'Jeyraa'},
-    {username:'thami',password:'thami123',role:'Administrasi',fullname:'Thami'},
-    {username:'elyna',password:'ely123',role:'Redaksi',fullname:'Elyna'},
-    {username:'nala',password:'nala123',role:'Desain',fullname:'Nala'},
-    {username:'calista',password:'calista123',role:'Kreatif',fullname:'Calista'},
-    {username:'zahra',password:'zahra123',role:'Kreatif',fullname:'Zahra'}
+  { name: 'Deby Verona', password: 'deby verona', role: 'Dual', description: 'Manager & Layout' },
+  { name: 'Jeyraa', password: 'jeyraa', role: 'Leader', description: 'Team Leader' },
+  { name: 'Elyna', password: 'elyna', role: 'Editor', description: 'Editor Akuisisi 1' },
+  { name: 'Mesiya', password: 'mesiya', role: 'Editor', description: 'Editor Akuisisi 2' },
+  { name: 'Calista', password: 'calista', role: 'Cover', description: 'Desain Cover 1' },
+  { name: 'Zahra', password: 'zahra', role: 'Cover', description: 'Desain Cover 2' },
+  { name: 'Nala', password: 'nala', role: 'Grafis', description: 'Desain Grafis' },
+  { name: 'Thami', password: 'thami', role: 'Admin', description: 'Admin Operasional' }
 ];
 
-let books = [], sales = [], projects = [], expenses = [], attendanceLog = [];
-let isSidebarOpen = false;
+const PAYROLL_RATES = {
+  editor: 50000,
+  layout: 50000,
+  cover: 50000,
+  grafis_biasa: 2000,
+  grafis_po: 25000,
+  admin_sales: 6000,
+  leader_sales: 6000
+};
 
-init();
+// --- DATA AWAL (SEED DATA BERDASARKAN BERKAS LAPORAN REAL) ---
+const INITIAL_TASKS = [
+  { id: 'T001', title: 'Taruhan si Elang', author: 'Miss Ivy', status: 'READY_PRINT', editor: 'Elyna', cover_artist: 'Zahra', layouter: 'Deby Verona' },
+  { id: 'T002', title: 'Bintang Jatuh', author: 'Lala', status: 'POOL_EDITOR', editor: null, cover_artist: null, layouter: null },
+  { id: 'T003', title: 'Kala Senja', author: 'Kurniawan', status: 'POOL_COVER', editor: 'Mesiya', cover_artist: null, layouter: null }
+];
 
-function init() {
-    const user = JSON.parse(localStorage.getItem('naraUser'));
-    if (user) { loadAllData(user); } else { loginPage(); }
-}
+const INITIAL_SALES = [
+  { id: 'S001', date: '2026-06-03', buyer: 'Syafa Kurniawan', title: 'Taruhan si Elang', qty: 1, price: 158000, total: 158000 },
+  { id: 'S002', date: '2026-06-11', buyer: 'Aulia', title: 'Taruhan si Elang', qty: 2, price: 55500, total: 111000 }
+];
 
-function toast(msg) {
-    const div = document.createElement('div');
-    div.className = 'fixed top-5 left-1/2 -translate-x-1/2 bg-nara-botol text-white px-5 py-3 rounded-xl shadow-2xl z-50 font-medium text-xs border border-emerald-500 fade';
-    div.innerText = msg;
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 2200);
-}
+const INITIAL_FINANCES = [
+  { id: 'F001', date: '2026-06-05', category: 'Cetak', description: 'Cetak Taruhan si Elang - Paket Lengkap', amount: 74960, type: 'Keluar' },
+  { id: 'F002', date: '2026-06-11', category: 'Cetak', description: 'Cetak Taruhan si Elang - Paket B', amount: 91920, type: 'Keluar' }
+];
 
-function toggleSidebar() {
-    isSidebarOpen = !isSidebarOpen;
-    const sidebar = document.getElementById('sidebarMenu');
-    if (sidebar) {
-        if (isSidebarOpen) { sidebar.classList.remove('-translate-x-full'); } 
-        else { sidebar.classList.add('-translate-x-full'); }
+const INITIAL_GRAFIS_LOG = [
+  { id: 'G001', date: '2026-06-10', type: 'PO', description: 'Poster Promo Pre-Order Taruhan si Elang' },
+  { id: 'G002', date: '2026-06-11', type: 'Biasa', description: 'Feed IG Quotes Miss Ivy' }
+];
+
+const INITIAL_KPI_LOG = [
+  { id: 'K001', targetName: 'Elyna', score: 92, note: 'Sangat cepat dalam akuisisi naskah Elang', date: '2026-06-11' },
+  { id: 'K002', targetName: 'Zahra', score: 88, note: 'Desain cover kreatif dan sesuai arahan', date: '2026-06-11' }
+];
+
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [dualRoleModal, setDualRoleModal] = useState(false);
+  const [activeMobileTab, setActiveMobileTab] = useState('dashboard');
+  const [showSheetsSim, setShowSheetsSim] = useState(false);
+  const [sheetTab, setSheetTab] = useState('tasks');
+  const [alertMsg, setAlertMsg] = useState(null);
+  const [selectedPayee, setSelectedPayee] = useState(null); // Gaji Detail Modal
+
+  // --- DATABASE STATES (IN-MEMORY SIMULATOR) ---
+  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [sales, setSales] = useState(INITIAL_SALES);
+  const [finances, setFinances] = useState(INITIAL_FINANCES);
+  const [grafisLog, setGrafisLog] = useState(INITIAL_GRAFIS_LOG);
+  const [kpiLog, setKpiLog] = useState(INITIAL_KPI_LOG);
+
+  // Custom Toast helper
+  const triggerToast = (msg, type = 'success') => {
+    setAlertMsg({ text: msg, type });
+    setTimeout(() => setAlertMsg(null), 3000);
+  };
+
+  // --- LOGIKA LOGIN ---
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const password = e.target.password.value;
+    const user = USERS.find(u => u.password === password.toLowerCase());
+    
+    if (user) {
+      if (user.role === 'Dual') {
+        setDualRoleModal(user);
+      } else {
+        setCurrentUser(user);
+        triggerToast(`Selamat datang kembali, ${user.name}!`);
+      }
+    } else {
+      triggerToast('Sandi akses salah atau tidak terdaftar!', 'error');
     }
-}
+  };
 
-function loginPage() {
-    document.getElementById('app').innerHTML = `
-    <div class="min-h-screen flex items-center justify-center p-4 fade">
-        <div class="bg-white rounded-3xl w-full max-w-sm shadow-xl border border-gray-100 p-6 space-y-6">
-            <div class="text-center">
-                <div class="flex justify-center mb-3">
-                    <div class="w-11 h-11 bg-nara-botol transform -skew-x-12 rounded-xl flex items-center justify-center shadow">
-                        <span class="text-white font-black text-xl transform skew-x-12">N</span>
-                    </div>
-                </div>
-                <h1 class="text-xl font-black text-gray-900 tracking-tight">Nara Pustaka</h1>
-                <p class="text-xs font-semibold text-gray-400 mt-0.5">TalentaSync Client-Engine v3.5</p>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Username</label>
-                    <div class="relative flex items-center">
-                        <i class="fa fa-user absolute left-4 text-gray-300 text-xs"></i>
-                        <input id="username" type="text" placeholder="Masukkan username" class="w-full pl-10 pr-4 py-3 text-xs rounded-xl border border-gray-200 bg-gray-50/50 font-medium focus:outline-none focus:border-nara-botol">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Password</label>
-                    <div class="relative flex items-center">
-                        <i class="fa fa-lock absolute left-4 text-gray-300 text-xs"></i>
-                        <input id="password" type="password" placeholder="••••••••" class="w-full pl-10 pr-4 py-3 text-xs rounded-xl border border-gray-200 bg-gray-50/50 font-medium focus:outline-none focus:border-nara-botol">
-                    </div>
-                </div>
-            </div>
-            <button onclick="login()" class="w-full bg-nara-botol hover:bg-emerald-900 text-white py-3 rounded-xl font-bold text-xs tracking-wide transition shadow-md flex items-center justify-center space-x-2">
-                <span>Masuk Sistem</span>
-                <i class="fa fa-arrow-right text-[10px] opacity-80"></i>
-            </button>
-        </div>
-    </div>`;
-}
+  const selectRole = (roleChoice) => {
+    setCurrentUser({ ...dualRoleModal, role: roleChoice });
+    setDualRoleModal(false);
+    triggerToast(`Masuk sebagai ${roleChoice}`);
+  };
 
-async function login() {
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value.trim();
-    const found = USERS.find(x => x.username === u && x.password === p);
-    if (!found) { toast('Akses ditolak! Kredensial salah.'); return; }
-    localStorage.setItem('naraUser', JSON.stringify(found));
-    await loadAllData(found);
-}
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setSelectedPayee(null);
+    triggerToast('Anda telah keluar dari sistem.');
+  };
 
-function logout() {
-    localStorage.removeItem('naraUser');
-    loginPage();
-}
+  // --- PAYROLL ENGINE (Sesuai Blueprint Performa Nyata) ---
+  const payrollCalc = useMemo(() => {
+    let payroll = {};
+    USERS.forEach(u => payroll[u.name] = { total: 0, details: [] });
 
-async function loadAllData(user) {
-    document.getElementById('app').innerHTML = `
-    <div class="min-h-screen flex items-center justify-center bg-nara-bg">
-        <div class="text-center space-y-2">
-            <div class="w-10 h-10 border-4 border-nara-botol border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <div class="text-xs font-bold text-nara-botol">Sinkronisasi Basis Data Awan...</div>
-        </div>
-    </div>`;
-
-    try {
-        const [b, s, p, e, a] = await Promise.all([
-            fetch(API_URL + '?action=getBooks').then(r => r.json().catch(()=>[])),
-            fetch(API_URL + '?action=getSales').then(r => r.json().catch(()=>[])),
-            fetch(API_URL + '?action=getProjects').then(r => r.json().catch(()=>[])),
-            fetch(API_URL + '?action=getExpenses').then(r => r.json().catch(()=>[])),
-            fetch(API_URL + '?action=getAttendance').then(r => r.json().catch(()=>[]))
-        ]);
-
-        books = b; sales = s; projects = p; expenses = e; attendanceLog = a;
-        isSidebarOpen = false;
-        renderResponsiveDashboard(user);
-    } catch (err) {
-        console.error(err);
-        toast('Gagal memuat basis data awan!');
-    }
-}
-
-function renderResponsiveDashboard(user) {
-    let contentUI = '';
-    if(user.role === 'Manager') contentUI = getManagerUI();
-    else if(user.role === 'Administrasi') contentUI = getAdminUI(user);
-    else if(user.role === 'Redaksi') contentUI = getRedaksiUI();
-    else if(user.role === 'Desain') contentUI = getDesainUI();
-    else if(user.role === 'Team Leader') contentUI = getLeaderUI();
-    else if(user.role === 'Kreatif') contentUI = getCreativeUI();
-
-    document.getElementById('app').innerHTML = `
-    <div class="flex min-h-screen bg-nara-bg relative overflow-x-hidden">
-        
-        <aside id="sidebarMenu" class="fixed lg:sticky top-0 left-0 z-50 flex flex-col w-64 bg-nara-botol text-white p-5 justify-between h-screen shrink-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out shadow-xl lg:shadow-none">
-            <div class="space-y-6">
-                <div class="flex items-center justify-between font-black text-lg tracking-tight">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-5 h-5 bg-emerald-400 transform -skew-x-12 rounded-sm"></div>
-                        <span>TalentaSync</span>
-                    </div>
-                    <button onclick="toggleSidebar()" class="lg:hidden text-white text-sm"><i class="fa fa-times"></i></button>
-                </div>
-                <nav class="space-y-1">
-                    <a href="#" class="flex items-center space-x-3 bg-emerald-900/50 px-4 py-2.5 rounded-xl font-medium text-xs text-white">
-                        <i class="fa fa-layer-group w-4 text-emerald-400"></i>
-                        <span>${user.role} Workspace</span>
-                    </a>
-                </nav>
-            </div>
-            
-            <div class="border-t border-emerald-800 pt-4 flex items-center justify-between">
-                <div class="flex items-center space-x-2.5 min-w-0">
-                    <div class="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-[11px] border border-emerald-400 shrink-0">
-                        ${user.fullname.substring(0,2)}
-                    </div>
-                    <div class="truncate text-left">
-                        <p class="font-bold text-xs truncate max-w-[120px]">${user.fullname}</p>
-                        <p class="text-[10px] text-emerald-300 mt-0.5 truncate">${user.role}</p>
-                    </div>
-                </div>
-                <button onclick="logout()" class="text-red-300 hover:text-red-400 p-1.5 text-xs"><i class="fa fa-power-off"></i></button>
-            </div>
-        </aside>
-
-        <div class="flex-1 min-w-0 flex flex-col min-h-screen">
-            <header class="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
-                <div class="flex items-center space-x-3">
-                    <button onclick="toggleSidebar()" class="lg:hidden text-nara-botol text-base p-1"><i class="fa fa-bars"></i></button>
-                    <div class="hidden sm:block text-left">
-                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Lini Operasional</p>
-                        <p class="text-xs font-bold text-gray-700">Nara Pustaka Core Network</p>
-                    </div>
-                </div>
-                <div class="flex space-x-2">
-                    <button onclick="init()" class="bg-nara-bg border border-gray-200 px-3 py-1.5 rounded-xl text-xs font-bold text-nara-botol hover:bg-gray-100 transition"><i class="fa fa-sync-alt mr-1"></i> Refresh</button>
-                </div>
-            </header>
-
-            <main class="flex-1 p-4 md:p-8 max-w-6xl w-full mx-auto fade">
-                <div class="mb-6">
-                    <h1 class="text-2xl font-black text-gray-800 tracking-tight">Halo, ${user.fullname}</h1>
-                    <p class="text-xs text-gray-400 mt-0.5">Sistem kendali data terpusat berbasis Client-Side Processing.</p>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center space-x-3 w-full md:w-auto">
-                        <div class="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-nara-botol shrink-0"><i class="fa fa-fingerprint text-base"></i></div>
-                        <div>
-                            <h4 class="font-bold text-xs text-gray-800">Presensi Karyawan Terintegrasi</h4>
-                            <p class="text-[10px] text-gray-400">Pencatatan langsung terhubung ke database awan korporat.</p>
-                        </div>
-                    </div>
-                    <div class="flex space-x-2 w-full md:w-auto justify-end">
-                        <button onclick="handleAttendance('Masuk')" class="flex-1 md:flex-none bg-nara-botol text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-950 transition"><i class="fa fa-sign-in-alt mr-1"></i> Clock In</button>
-                        <button onclick="handleAttendance('Pulang')" class="flex-1 md:flex-none bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-orange-700 transition"><i class="fa fa-sign-out-alt mr-1"></i> Clock Out</button>
-                    </div>
-                </div>
-
-                ${contentUI}
-            </main>
-        </div>
-    </div>`;
-
-    if(user.role === 'Manager') renderManagerChart();
-}
-
-async function handleAttendance(type) {
-    const user = JSON.parse(localStorage.getItem('naraUser'));
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('id-ID');
-    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-    toast(`Mencatatkan absensi ${type}...`);
-    try {
-        await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'addRow',
-                data: {
-                    sheet: 'Attendance',
-                    rowData: { id: String(Date.now()), name: user.fullname, role: user.role, date: dateStr, time: timeStr, type: type }
-                }
-            })
-        });
-        toast(`Absen ${type} sukses pada pukul ${timeStr}!`);
-        loadAllData(user);
-    } catch(err) {
-        toast('Koneksi sibuk! Gagal mengirim absensi.');
-    }
-}
-
-function getManagerUI() {
-    const income = sales.reduce((a,b)=>a+Number(b.total||0),0);
-    const outcome = expenses.reduce((a,b)=>a+Number(b.amount||0),0);
-    const profit = income - outcome;
-
-    return `
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs">
-            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">Total Omzet</span>
-            <h3 class="text-xl font-black mt-3">Rp ${income.toLocaleString()}</h3>
-        </div>
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs">
-            <span class="text-[10px] font-bold text-red-600 bg-red-50 px-2.5 py-0.5 rounded-full">Biaya Operasional</span>
-            <h3 class="text-xl font-black mt-3">Rp ${outcome.toLocaleString()}</h3>
-        </div>
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs flex flex-col justify-between">
-            <div class="flex justify-between items-center w-full">
-                <span class="text-[10px] font-bold text-nara-botol bg-emerald-100 px-2.5 py-0.5 rounded-full">Net Profit</span>
-                <button onclick="exportManagerPDF()" class="text-[10px] font-bold bg-nara-botol text-white px-2.5 py-1 rounded-lg"><i class="fa fa-print mr-1"></i> Cetak</button>
-            </div>
-            <h3 class="text-xl font-black text-emerald-600 mt-3">Rp ${profit.toLocaleString()}</h3>
-        </div>
-    </div>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs lg:col-span-2">
-            <h2 class="font-bold text-gray-500 mb-4 text-[10px] uppercase tracking-wider">Performa Distribusi Lini Buku</h2>
-            <div class="h-64 w-full relative"><canvas id="salesChart"></canvas></div>
-        </div>
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs flex flex-col justify-between">
-            <div>
-                <div class="flex justify-between items-center border-b pb-2 mb-3">
-                    <h2 class="font-bold text-gray-500 text-[10px] uppercase tracking-wider">Log Kehadiran Tim</h2>
-                    <button onclick="clearAllData('Attendance')" class="text-[9px] text-red-500 hover:underline font-bold"><i class="fa fa-trash-alt mr-1"></i> Bersihkan Log</button>
-                </div>
-                <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
-                    ${attendanceLog.length === 0 ? '<p class="text-center text-xs text-gray-400 py-10">Belum ada absen masuk.</p>':''}
-                    ${attendanceLog.slice().reverse().map(log => `
-                    <div class="bg-gray-50 p-2.5 rounded-xl flex justify-between items-center text-[11px] border border-gray-100">
-                        <div>
-                            <div class="font-bold text-gray-800">${log.name || '-'}</div>
-                            <div class="text-[9px] text-gray-400 mt-0.5">${log.role || '-'}</div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="px-2 py-0.5 rounded-full font-bold text-[9px] ${log.type === 'Masuk' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}">${log.type || '-'}</span>
-                            <button onclick="deleteData('Attendance', '${log.id}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa fa-trash text-[10px]"></i></button>
-                        </div>
-                    </div>`).join('')}
-                </div>
-            </div>
-        </div>
-    </div>`;
-}
-
-function getAdminUI(user) {
-    const mySales = sales.filter(x => x.user === user.fullname);
-    return `
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-3">
-            <h2 class="font-bold text-xs text-gray-400 border-b pb-1.5 uppercase tracking-wide">Pencatatan Distribusi</h2>
-            <div>
-                <select id="book" onchange="calculateTotal()" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs focus:outline-none">
-                    <option value="">-- Pilih Buku --</option>
-                    ${books.map(b => `<option value="${b.title}">${b.title}</option>`).join('')}
-                </select>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <input id="buyer" placeholder="Nama Pembeli" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-                <input id="qty" type="number" oninput="calculateTotal()" placeholder="Qty" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            </div>
-            <input id="marketplace" placeholder="Marketplace Platform" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <div class="bg-emerald-50/50 p-2.5 rounded-xl text-[11px] space-y-1">
-                <div class="flex justify-between"><span>Omzet:</span><input id="total" readonly value="Rp 0" class="font-bold bg-transparent text-right outline-none w-28"></div>
-                <div class="flex justify-between text-emerald-800"><span>Royalti:</span><input id="royaltyAmount" readonly value="Rp 0" class="font-bold bg-transparent text-right outline-none w-28"></div>
-            </div>
-            <button onclick="saveSale('${user.fullname}')" class="w-full bg-nara-botol text-white p-2.5 rounded-xl font-bold text-xs">Simpan Transaksi</button>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-3">
-            <h2 class="font-bold text-xs text-gray-400 border-b pb-1.5 uppercase tracking-wide">Pencatatan Biaya Keluar</h2>
-            <input id="expenseDescription" placeholder="Kebutuhan Operasional" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <input id="vendor" placeholder="Vendor Rekanan" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <input id="expenseAmount" type="number" placeholder="Nominal Pengeluaran (Rp)" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <button onclick="saveExpense('${user.fullname}')" class="w-full bg-red-600 text-white p-2.5 rounded-xl font-bold text-xs">Simpan Pengeluaran</button>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm md:col-span-2 lg:col-span-1">
-            <div class="flex justify-between items-center border-b pb-2 mb-3">
-                <h2 class="font-bold text-xs text-gray-400 uppercase tracking-wide">Buku Kas Anda</h2>
-                <button onclick="clearAllData('Sales')" class="text-[9px] text-red-500 hover:underline font-bold"><i class="fa fa-dumpster mr-1"></i> Hapus Semua</button>
-            </div>
-            <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
-                ${mySales.length === 0 ? '<p class="text-center text-xs text-gray-400 py-6">Belum ada transaksi masuk.</p>':''}
-                ${mySales.map(s => `
-                <div class="bg-gray-50 p-2.5 rounded-xl flex justify-between items-center text-[11px] border border-gray-100">
-                    <div class="truncate max-w-[65%]">
-                        <div class="font-bold text-gray-800 truncate">${s.book}</div>
-                        <div class="text-[9px] text-gray-400 mt-0.5">Rp ${Number(s.total||0).toLocaleString()}</div>
-                    </div>
-                    <div class="flex space-x-1 shrink-0">
-                        <button onclick="exportInvoicePDF('${s.id}')" class="text-emerald-700 bg-emerald-50 p-1.5 rounded-lg"><i class="fa fa-print"></i></button>
-                        <button onclick="deleteData('Sales', '${s.id}')" class="text-red-500 p-1.5 rounded-lg hover:bg-red-50"><i class="fa fa-trash"></i></button>
-                    </div>
-                </div>`).join('')}
-            </div>
-        </div>
-    </div>`;
-}
-
-function getRedaksiUI() {
-    return `
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-2.5">
-            <h2 class="font-bold text-xs text-gray-400 border-b pb-1.5 uppercase tracking-wide">Registrasi Masuk Naskah</h2>
-            <input id="title" placeholder="Judul Buku Utama" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <input id="author" placeholder="Nama Penulis" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <input id="isbn" placeholder="Kode ISBN/QRCBN" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <div class="grid grid-cols-2 gap-2">
-                <input id="price" type="number" placeholder="Harga" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-                <input id="royalty" type="number" placeholder="Bagi Hasil %" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            </div>
-            <input id="editor" placeholder="Staf Editor" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <input id="layout" placeholder="Staf Layout" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <input id="cover" placeholder="Staf Desainer" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <select id="status" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-                <option>Naskah Masuk</option><option>Editing</option><option>Layout</option><option>Cover</option><option>Cetak</option><option>Distribusi</option><option>Selesai</option>
-            </select>
-            <button onclick="saveProject()" class="w-full bg-nara-botol text-white p-2.5 rounded-xl font-bold text-xs">Simpan Data Buku</button>
-        </div>
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm lg:col-span-2">
-            <div class="flex justify-between items-center border-b pb-2 mb-3">
-                <h2 class="font-bold text-xs text-gray-400 uppercase tracking-wide">Arsip Naskah Berjalan</h2>
-                <button onclick="clearAllData('Projects')" class="text-[9px] text-red-500 hover:underline font-bold"><i class="fa fa-folder-minus mr-1"></i> Kosongkan Proyek</button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                ${projects.map(p => `
-                <div class="bg-gray-50 border border-gray-100 p-3 rounded-xl flex justify-between items-start text-[11px]">
-                    <div class="truncate max-w-[80%]">
-                        <div class="font-bold text-gray-800 truncate">${p.title || 'No Title'}</div>
-                        <div class="text-[9px] text-gray-400 mt-0.5">Penulis: ${p.author || '-'}</div>
-                        <span class="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-full text-[8px] mt-1.5">${p.status || '-'}</span>
-                    </div>
-                    <button onclick="deleteData('Projects', '${p.id}')" class="text-red-500 p-1.5 rounded-lg hover:bg-red-50"><i class="fa fa-trash"></i></button>
-                </div>`).join('')}
-            </div>
-        </div>
-    </div>`;
-}
-
-function getDesainUI() {
-    return `
-    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-        <h2 class="font-bold text-xs text-gray-400 border-b pb-2 mb-3 uppercase tracking-wide">Alur Antrean Divisi Kreatif</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            ${projects.map(p => `
-            <div class="bg-gray-50 border border-gray-100 p-3 rounded-xl flex flex-col justify-between text-[11px]">
-                <div>
-                    <h3 class="font-bold text-gray-800 truncate">${p.title}</h3>
-                    <p class="text-gray-400 text-[9px] mb-2">Penulis: ${p.author}</p>
-                    <input placeholder="Pj" value="${p.layout || ''}" class="w-full p-2 rounded-lg border border-gray-200 bg-white mb-1.5 text-xs focus:outline-none">
-                </div>
-                <button onclick="toast('Catatan progres buku berhasil diperbarui!')" class="w-full bg-nara-botol text-white py-1.5 rounded-lg font-bold mt-2 text-[10px]">Update</button>
-            </div>`).join('')}
-        </div>
-    </div>`;
-}
-
-function getLeaderUI() { return `<div class="bg-white p-5 rounded-2xl max-w-sm border border-gray-100 shadow-sm"><p class="text-xs text-gray-400 font-bold">Proyek Aktif: ${projects.length} Buku</p></div>`; }
-function getCreativeUI() { return `<div class="bg-white p-5 rounded-2xl max-w-sm border border-gray-100 shadow-sm"><p class="text-xs text-gray-400 font-bold">Modul Campaign Aktif</p></div>`; }
-
-function calculateTotal() {
-    const title = document.getElementById('book').value;
-    const book = books.find(x => x.title === title);
-    const qty = Number(document.getElementById('qty').value || 0);
-    if (!book) return;
-    const total = qty * Number(book.price || 0);
-    const royal = total * (Number(book.royalty_percent || 0) / 100);
-    document.getElementById('total').value = 'Rp ' + total.toLocaleString();
-    document.getElementById('royaltyAmount').value = 'Rp ' + royal.toLocaleString();
-}
-
-async function saveSale(user) {
-    const title = document.getElementById('book').value;
-    const book = books.find(x => x.title === title);
-    if (!book) { toast('Pilih judul buku!'); return; }
-    const qty = Number(document.getElementById('qty').value || 0);
-    if (qty <= 0) { toast('Kuantitas minimal 1 unit!'); return; }
-    
-    const total = qty * Number(book.price || 0);
-    const royal = total * (Number(book.royalty_percent || 0) / 100);
-    const generatedId = String(Date.now());
-
-    toast('Menyimpan transaksi...');
-    await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'addRow',
-            data: {
-                sheet: 'Sales',
-                rowData: { id: generatedId, date: new Date().toLocaleDateString('id-ID'), buyer_name: document.getElementById('buyer').value || '-', book: title, author: book.author || '-', qty: qty, total: total, royalty: royal, marketplace: document.getElementById('marketplace').value || '-', payment_status: 'Paid', invoice_file: '-', payment_file: '-', user: user }
-            }
-        })
-    });
-    toast('Data penjualan sukses disimpan!');
-    loadAllData(JSON.parse(localStorage.getItem('naraUser')));
-}
-
-async function saveExpense(user) {
-    const desc = document.getElementById('expenseDescription').value.trim();
-    const amount = Number(document.getElementById('expenseAmount').value || 0);
-    if(!desc || amount <= 0) { toast('Data pengeluaran tidak valid!'); return; }
-    
-    toast('Menyimpan pengeluaran...');
-    await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'addRow',
-            data: {
-                sheet: 'Expenses',
-                rowData: { id: String(Date.now()), description: desc, category: 'Percetakan', vendor: document.getElementById('vendor').value || '-', amount: amount, receipt_file: '-', date: new Date().toLocaleDateString('id-ID'), user: user }
-            }
-        })
-    });
-    toast('Data biaya operasional tersimpan!');
-    loadAllData(JSON.parse(localStorage.getItem('naraUser')));
-}
-
-async function saveProject() {
-    const titleVal = document.getElementById('title').value.trim();
-    if(!titleVal) { toast('Judul wajib diisi!'); return; }
-    const generatedId = String(Date.now());
-
-    toast('Mendaftarkan judul naskah...');
-    await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'addRow',
-            data: {
-                sheet: 'Projects',
-                rowData: { id: generatedId, projectId: generatedId, title: titleVal, author: document.getElementById('author').value || '-', status: document.getElementById('status').value, redaksi: 'Elyna', editor: document.getElementById('editor').value || '-', layout: document.getElementById('layout').value || '-', cover: document.getElementById('cover').value || '-' }
-            }
-        })
-    });
-    
-    await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'addRow',
-            data: {
-                sheet: 'Books',
-                rowData: { id: 'BK' + generatedId, title: titleVal, author: document.getElementById('author').value || '-', isbn: document.getElementById('isbn').value || '-', price: document.getElementById('price').value || 0, royalty_percent: document.getElementById('royalty').value || 0, status: document.getElementById('status').value }
-            }
-        })
-    });
-    
-    toast('Buku resmi terdaftar di sistem!');
-    loadAllData(JSON.parse(localStorage.getItem('naraUser')));
-}
-
-async function deleteData(sheetName, id) {
-    if (!id || id === 'undefined') {
-        toast('ID tidak valid. Gagal memproses data.');
-        return;
-    }
-    if (!confirm(`Hapus item ini secara permanen dari tabel '${sheetName}'?`)) return;
-    
-    toast('Menghapus data...');
-    try {
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'deleteRow',
-                data: { sheet: sheetName, id: String(id) }
-            })
-        }).then(r => r.json());
-        
-        if(res.status === 'Success') {
-            toast('Item berhasil dihapus!');
-        } else {
-            toast('Item tidak ditemukan di server spreadsheet.');
+    // 1. Editor Gaji (50k per naskah selesai status >= POOL_COVER)
+    tasks.forEach(task => {
+      if (task.editor) {
+        const isFinished = ['POOL_COVER', 'WIP_COVER', 'POOL_LAYOUT', 'WIP_LAYOUT', 'READY_PRINT'].includes(task.status);
+        if (isFinished) {
+          payroll[task.editor].total += PAYROLL_RATES.editor;
+          payroll[task.editor].details.push({ desc: `Editing Naskah: ${task.title}`, pay: PAYROLL_RATES.editor });
         }
-        loadAllData(JSON.parse(localStorage.getItem('naraUser')));
-    } catch(err) {
-        toast('Gagal terhubung dengan server.');
+      }
+    });
+
+    // 2. Cover Gaji (50k per naskah selesai status >= POOL_LAYOUT)
+    tasks.forEach(task => {
+      if (task.cover_artist) {
+        const isFinished = ['POOL_LAYOUT', 'WIP_LAYOUT', 'READY_PRINT'].includes(task.status);
+        if (isFinished) {
+          payroll[task.cover_artist].total += PAYROLL_RATES.cover;
+          payroll[task.cover_artist].details.push({ desc: `Desain Cover: ${task.title}`, pay: PAYROLL_RATES.cover });
+        }
+      }
+    });
+
+    // 3. Layout Gaji (50k per naskah selesai status === READY_PRINT)
+    tasks.forEach(task => {
+      if (task.layouter && task.status === 'READY_PRINT') {
+        payroll[task.layouter].total += PAYROLL_RATES.layout;
+        payroll[task.layouter].details.push({ desc: `Layout Buku: ${task.title}`, pay: PAYROLL_RATES.layout });
+      }
+    });
+
+    // 4. Admin Gaji (6k per buku terjual)
+    const totalBooksSold = sales.reduce((sum, sale) => sum + parseInt(sale.qty || 0), 0);
+    if (totalBooksSold > 0) {
+      payroll['Thami'].total += totalBooksSold * PAYROLL_RATES.admin_sales;
+      payroll['Thami'].details.push({ desc: `Komisi Admin: Penjualan ${totalBooksSold} Eks Buku`, pay: totalBooksSold * PAYROLL_RATES.admin_sales });
     }
-}
 
-async function clearAllData(sheetName) {
-    if (!confirm(`PERINGATAN OPERASIONAL:\nAnda akan mengosongkan seluruh data pada tabel "${sheetName}".`)) return;
-    if (!confirm('Apakah Anda benar-benar yakin? Tindakan ini bersifat permanen.')) return;
-
-    toast(`Mengosongkan tabel ${sheetName}...`);
-    try {
-        await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'deleteAllRows',
-                data: { sheet: sheetName }
-            })
-        });
-        toast(`Tabel ${sheetName} kini kosong.`);
-        loadAllData(JSON.parse(localStorage.getItem('naraUser')));
-    } catch(err) {
-        toast('Gagal membersihkan database.');
+    // 5. Leader Gaji (6k per buku terjual)
+    if (totalBooksSold > 0) {
+      payroll['Jeyraa'].total += totalBooksSold * PAYROLL_RATES.leader_sales;
+      payroll['Jeyraa'].details.push({ desc: `Insentif Supervisi: Penjualan ${totalBooksSold} Eks Buku`, pay: totalBooksSold * PAYROLL_RATES.leader_sales });
     }
-}
 
-function drawNaraLogo(doc, x, y) {
-    doc.setFillColor(139, 90, 43); doc.rect(x, y + 2, 4, 18, 'F'); doc.rect(x + 14, y + 5, 4, 15, 'F');
-    for(let i=0; i<=10; i++) {
-        let pct = i / 10; let arcY = y + 5 - Math.sin(pct * Math.PI) * 3; doc.rect(x + 4 + (pct * 10), arcY, 1.5, 5, 'F');
-    }
-    doc.setFillColor(219, 194, 161); doc.circle(x + 2, y + 18, 3, 'F'); doc.setFillColor(139, 90, 43); doc.circle(x + 2, y + 18, 1.2, 'F');
-}
+    // 6. Desain Grafis Gaji (2k feed biasa, 25k feed PO)
+    grafisLog.forEach(log => {
+      const rate = log.type === 'PO' ? PAYROLL_RATES.grafis_po : PAYROLL_RATES.grafis_biasa;
+      payroll['Nala'].total += rate;
+      payroll['Nala'].details.push({ desc: `Feed ${log.type === 'PO' ? 'Pre-Order' : 'Biasa'}: ${log.description}`, pay: rate });
+    });
 
-function drawDebySignature(doc, x, y) {
-    doc.setDrawColor(40, 40, 40); doc.setLineWidth(0.6); doc.ellipse(x + 12, y + 2, 12, 3, 'D');
-    doc.line(x + 18, y + 4, x + 16, y + 8); doc.line(x + 16, y + 8, x + 20, y + 10); doc.line(x + 20, y + 10, x + 15, y + 13); doc.line(x + 15, y + 13, x + 19, y + 16); doc.ellipse(x + 10, y + 17, 10, 2, 'D');
-    for (let theta = 0; theta <= Math.PI; theta += 0.1) {
-        let xStart = x + 13 - Math.cos(theta) * 11; let yStart = y + 28 - Math.sin(theta) * 10;
-        let xEnd = x + 13 - Math.cos(theta + 0.1) * 11; let yEnd = y + 28 - Math.sin(theta + 0.1) * 10;
-        if(theta + 0.1 <= Math.PI) doc.line(xStart, yStart, xEnd, yEnd);
-    }
-    doc.line(x + 2, y + 28, x + 26, y + 28); doc.line(x + 23, y + 25, x + 25, y + 29);
-}
+    return payroll;
+  }, [tasks, sales, grafisLog]);
 
-function exportManagerPDF() {
-    const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
-    const income = sales.reduce((a,b)=>a+Number(b.total||0),0); const outcome = expenses.reduce((a,b)=>a+Number(b.amount||0),0); const profit = income - outcome;
-    doc.setFillColor(6, 78, 59); doc.rect(0, 0, 210, 35, 'F'); drawNaraLogo(doc, 15, 7);
-    doc.setTextColor(255, 255, 255); doc.setFont("Helvetica", "bold"); doc.setFontSize(22); doc.text("NARA PUSTAKA ENTERPRISE", 38, 20);
-    doc.setFontSize(9); doc.setFont("Helvetica", "normal"); doc.text("TalentaSync Automation Report System • Official Dashboard Core", 38, 27);
-    doc.setTextColor(30, 30, 30); doc.setFontSize(13); doc.setFont("Helvetica", "bold"); doc.text("LAPORAN EKSEKUTIF KINERJA KEUANGAN BULANAN", 15, 52);
-    doc.setFontSize(9.5); doc.setFont("Helvetica", "normal"); doc.text(`Tanggal Sinkronisasi : ${new Date().toLocaleDateString('id-ID')}`, 15, 60); doc.text(`Otoritas Pengesah   : Direktur Keuangan (Deby Verona)`, 15, 66); doc.text(`Klasifikasi Berkas  : Validated / Confidential Document`, 15, 72);
-    let y = 85; doc.setFillColor(245, 245, 240); doc.rect(15, y, 180, 8, 'F'); doc.setFont("Helvetica", "bold"); doc.text("POS ANGGARAN OPERASIONAL", 20, y + 5.5); doc.text("AKUMULASI NOMINAL (IDR)", 135, y + 5.5);
-    doc.setFont("Helvetica", "normal"); y += 8; doc.rect(15, y, 180, 10); doc.text("Total Akumulasi Pemasukan Distribusi (Omzet)", 20, y + 6); doc.text(`Rp ${income.toLocaleString('id-ID')}`, 135, y + 6);
-    y += 10; doc.rect(15, y, 180, 10); doc.text("Total Akumulasi Biaya Pengeluaran Produksi", 20, y + 6); doc.text(`Rp ${outcome.toLocaleString('id-ID')}`, 135, y + 6);
-    y += 10; doc.setFillColor(232, 245, 233); doc.rect(15, y, 180, 12, 'F'); doc.rect(15, y, 180, 12); doc.setFont("Helvetica", "bold"); doc.setTextColor(6, 78, 59); doc.text("TOTAL LABA BERSIH (PROFIT)", 20, y + 7.5); doc.text(`Rp ${profit.toLocaleString('id-ID')}`, 135, y + 7.5);
-    y += 40; doc.setTextColor(30, 30, 30); doc.setFont("Helvetica", "normal"); doc.text("Disahkan Secara Digital,", 145, y); drawDebySignature(doc, 142, y + 4);
-    doc.setFont("Helvetica", "bold"); doc.text("DEBY VERONA", 145, y + 36); doc.setFont("Helvetica", "normal"); doc.setFontSize(8.5); doc.text("Direktur Utama & Keuangan", 145, y + 40);
-    doc.save(`Laporan_Keuangan_NaraPustaka_${Date.now()}.pdf`);
-}
+  // --- KEUANGAN EKSEKUTIF REAL-TIME ---
+  const financialSummary = useMemo(() => {
+    const totalPemasukan = sales.reduce((sum, s) => sum + parseInt(s.total || 0), 0);
+    const totalPengeluaranCetakDanManual = finances.reduce((sum, f) => sum + parseInt(f.amount || 0), 0);
+    
+    // Total Gaji Terhitung Otomatis
+    const totalPayroll = Object.values(payrollCalc).reduce((sum, item) => sum + item.total, 0);
 
-function exportInvoicePDF(id) {
-    const sale = sales.find(x => String(x.id) === String(id)); if(!sale) { toast('Data transaksi tidak valid!'); return; }
-    const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
-    doc.setFillColor(6, 78, 59); doc.rect(0, 0, 210, 15, 'F'); doc.setTextColor(30, 30, 30); doc.setFont("Helvetica", "bold"); doc.setFontSize(16); doc.text("SLIP DISTRIBUSI & ROYALTI PENULIS", 15, 32);
-    doc.setFontSize(9); doc.setFont("Helvetica", "normal"); doc.text("Nara Pustaka Automation Platform via TalentaSync Cloud", 15, 38); doc.text(`ID Referensi : TX-${sale.id}`, 140, 32); doc.text(`Tanggal      : ${sale.date || '-'}`, 140, 38);
-    doc.line(15, 43, 195, 43); doc.setFont("Helvetica", "bold"); doc.text("INFORMASI DETAIL:", 15, 52); doc.setFont("Helvetica", "normal");
-    doc.text(`Judul Buku Utama : ${sale.book}`, 15, 58); doc.text(`Penulis Kreator  : ${sale.author || '-'}`, 15, 64);
-    doc.text(`Nama Pembeli     : ${sale.buyer_name || '-'}`, 15, 70); doc.text(`Gerai Pemasaran  : ${sale.marketplace || '-'}`, 15, 76);
-    let y = 88; doc.setFillColor(6, 78, 59); doc.rect(15, y, 180, 8, 'F'); doc.setTextColor(255, 255, 255); doc.setFont("Helvetica", "bold"); doc.text("URAIAN DISTRIBUSI", 20, y + 5.5); doc.text("QTY", 115, y + 5.5); doc.text("JUMLAH (IDR)", 145, y + 5.5);
-    doc.setTextColor(30, 30, 30); doc.setFont("Helvetica", "normal"); y += 8; doc.rect(15, y, 180, 10); doc.text("Omzet Kotor Penjualan Buku", 20, y + 6); doc.text(String(sale.qty || 0), 115, y + 6); doc.text(`Rp ${Number(sale.total || 0).toLocaleString('id-ID')}`, 145, y + 6);
-    y += 10; doc.setFillColor(240, 248, 240); doc.rect(15, y, 180, 10, 'F'); doc.rect(15, y, 180, 10); doc.setFont("Helvetica", "bold"); doc.text("Alokasi Bersih Royalti Hak Penulis", 20, y + 6); doc.text("-", 115, y + 6); doc.text(`Rp ${Number(sale.royalty || 0).toLocaleString('id-ID')}`, 145, y + 6);
-    y += 30; doc.setFont("Helvetica", "normal"); doc.text("Kasir Pemroses,", 15, y); doc.setFont("Helvetica", "bold"); doc.text(String(sale.user || 'Staf Administrasi'), 15, y + 25);
-    doc.setFont("Helvetica", "normal"); doc.text("Mengetahui Direktur Keuangan,", 135, y); drawDebySignature(doc, 135, y + 2); doc.setFont("Helvetica", "bold"); doc.text("DEBY VERONA", 135, y + 33);
-    doc.save(`Slip_Royalti_${sale.id}.pdf`);
+    // Laba Bersih = Pendapatan - (Pengeluaran Cetak + Payroll Karyawan + Pengeluaran Lainnya)
+    const labaBersih = totalPemasukan - totalPengeluaranCetakDanManual - totalPayroll;
+
+    return {
+      totalPemasukan,
+      totalPengeluaranCetakDanManual,
+      totalPayroll,
+      labaBersih
+    };
+  }, [sales, finances, payrollCalc]);
+
+  // Helper Formatter Rupiah
+  const formatRupiah = (val) => {
+    return 'Rp' + new Intl.NumberFormat('id-ID').format(val || 0);
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4">
+        <div className="w-full max-w-md bg-slate-800/80 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-slate-700">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/20">
+              <span className="text-2xl font-black text-white font-serif">NP</span>
+            </div>
+            <h1 className="text-2xl font-black text-white tracking-wider">NARA PUSTAKA</h1>
+            <p className="text-slate-400 text-sm mt-1">Portal Manajemen Terpadu & Real-Time</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Kata Sandi Akses</label>
+              <div className="relative">
+                <input 
+                  type="password" 
+                  name="password" 
+                  placeholder="Masukkan sandi unik divisi..." 
+                  className="w-full px-4 py-3.5 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-white placeholder-slate-500 text-center text-lg tracking-widest focus:outline-none"
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold transition duration-200 transform active:scale-95 shadow-lg shadow-blue-500/10">
+              Verifikasi & Masuk
+            </button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t border-slate-700/50 text-center">
+            <p className="text-xs text-slate-400">Copyright &copy; 2026 Nara Pustaka Indonesia</p>
+          </div>
+        </div>
+
+        {/* Modal Dual Peran untuk Deby Verona */}
+        {dualRoleModal && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-slate-800 border border-slate-700 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl">
+              <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-400">
+                <Grid className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Pilih Ruang Kerja</h3>
+              <p className="text-sm text-slate-400 mb-6">Kata sandi terdeteksi sebagai akses ganda. Pilih peran Anda untuk memulai:</p>
+              <div className="space-y-3">
+                <button onClick={() => selectRole('Manager')} className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition duration-150 transform active:scale-95">
+                  Masuk Sebagai Manager
+                </button>
+                <button onClick={() => selectRole('Layout')} className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition duration-150 transform active:scale-95">
+                  Masuk Sebagai Layout Editor
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col relative pb-20 sm:pb-0">
+      
+      {/* Toast Alert */}
+      {alertMsg && (
+        <div className="fixed top-4 right-4 left-4 sm:left-auto z-50 p-4 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-2 animate-bounce bg-slate-800 text-slate-100 border-slate-700">
+          <div className={`w-2 h-2 rounded-full ${alertMsg.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`} />
+          {alertMsg.text}
+        </div>
+      )}
+
+      {/* --- DESKTOP SIDEBAR + MOBILE HEADER --- */}
+      <header className="bg-slate-800/80 border-b border-slate-700/80 sticky top-0 z-30 backdrop-blur-md px-4 py-3 sm:px-8 sm:py-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-bold text-white shadow-md">
+            NP
+          </div>
+          <div>
+            <h1 className="text-base font-black tracking-wider text-white hidden sm:block">NARA PUSTAKA</h1>
+            <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">{currentUser.role} Panel</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="text-right hidden sm:block">
+            <p className="text-sm font-bold text-slate-200">{currentUser.name}</p>
+            <p className="text-xs text-slate-500">{currentUser.description || 'Karyawan Nara Pustaka'}</p>
+          </div>
+          
+          <button 
+            onClick={() => setShowSheetsSim(!showSheetsSim)} 
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition duration-150 ${showSheetsSim ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+          >
+            <Database className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Database Live</span>
+          </button>
+
+          <button 
+            onClick={handleLogout}
+            className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition duration-150 flex items-center gap-2 text-xs font-bold"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Log Keluar</span>
+          </button>
+        </div>
+      </header>
+
+      {/* --- MAIN FLEX CONTAINER --- */}
+      <div className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 gap-6">
+        
+        {/* VIEW UTAMA SESUAI PERAN */}
+        <div className="flex-1 min-w-0 space-y-6">
+          
+          {/* A. WORKSPACE UNTUK MANAGER */}
+          {currentUser.role === 'Manager' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-black text-white">Dashboard Keuangan Eksekutif</h2>
+                <div className="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 font-bold">Akses Manager Terverifikasi</div>
+              </div>
+
+              {/* Grid Ringkasan Keuangan */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between">
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Total Pendapatan</span>
+                  <span className="text-2xl font-black text-blue-400 mt-2">{formatRupiah(financialSummary.totalPemasukan)}</span>
+                  <p className="text-[10px] text-slate-500 mt-1">Total Penjualan Buku Admin</p>
+                </div>
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between">
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Biaya Percetakan</span>
+                  <span className="text-2xl font-black text-orange-400 mt-2">
+                    {formatRupiah(finances.filter(f => f.category === 'Cetak').reduce((sum, f) => sum + f.amount, 0))}
+                  </span>
+                  <p className="text-[10px] text-slate-500 mt-1">Data input percetakan admin</p>
+                </div>
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between">
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Beban Payroll</span>
+                  <span className="text-2xl font-black text-rose-400 mt-2">{formatRupiah(financialSummary.totalPayroll)}</span>
+                  <p className="text-[10px] text-slate-500 mt-1">Gaji terhitung otomatis</p>
+                </div>
+                <div className={`border rounded-2xl p-5 flex flex-col justify-between ${financialSummary.labaBersih >= 0 ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400' : 'bg-red-500/5 border-red-500/30 text-red-400'}`}>
+                  <span className="text-xs font-bold uppercase tracking-wider">Estimasi Laba Bersih</span>
+                  <span className="text-2xl font-black mt-2">{formatRupiah(financialSummary.labaBersih)}</span>
+                  <p className="text-[10px] mt-1 opacity-80">Terpotong semua pengeluaran & upah</p>
+                </div>
+              </div>
+
+              {/* Laporan Gaji Tim */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Users className="w-4 h-4 text-indigo-400" />
+                    Daftar Penggajian Karyawan
+                  </h3>
+                  <span className="text-[10px] text-slate-400">Total 7 Staff Aktif</span>
+                </div>
+                
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-700 text-slate-400 uppercase font-mono tracking-wider">
+                        <th className="py-3 px-2">Nama Karyawan</th>
+                        <th className="py-3 px-2">Peran Utama</th>
+                        <th className="py-3 px-2">Gaji Berjalan</th>
+                        <th className="py-3 px-2 text-right">Rincian Slip</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/50">
+                      {USERS.filter(u => u.name !== 'Deby Verona').map((employee) => (
+                        <tr key={employee.name} className="hover:bg-slate-750">
+                          <td className="py-3 px-2 font-bold text-slate-200">{employee.name}</td>
+                          <td className="py-3 px-2"><span className="bg-slate-700 text-slate-300 px-2.5 py-1 rounded text-[10px] font-semibold">{employee.role}</span></td>
+                          <td className="py-3 px-2 font-black text-emerald-400">{formatRupiah(payrollCalc[employee.name]?.total)}</td>
+                          <td className="py-3 px-2 text-right">
+                            <button 
+                              onClick={() => setSelectedPayee({ name: employee.name, role: employee.role })}
+                              className="px-3 py-1.5 bg-blue-600/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600 hover:text-white rounded-lg transition duration-150 text-[10px] font-bold"
+                            >
+                              Lihat Laporan
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {/* Tampilkan Deby sebagai Layout Editor */}
+                      <tr className="hover:bg-slate-750 bg-slate-750/30">
+                        <td className="py-3 px-2 font-bold text-slate-200">Deby Verona (Saya)</td>
+                        <td className="py-3 px-2"><span className="bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded text-[10px] font-semibold">Layout Editor</span></td>
+                        <td className="py-3 px-2 font-black text-emerald-400">{formatRupiah(payrollCalc['Deby Verona']?.total)}</td>
+                        <td className="py-3 px-2 text-right">
+                          <button 
+                            onClick={() => setSelectedPayee({ name: 'Deby Verona', role: 'Layout' })}
+                            className="px-3 py-1.5 bg-blue-600/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600 hover:text-white rounded-lg transition duration-150 text-[10px] font-bold"
+                          >
+                            Lihat Laporan
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Modul Arus Kas Pengeluaran Khusus Manager */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Form Pengeluaran Manual */}
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 lg:col-span-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white mb-3">Catat Arus Kas Keluar</h3>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const category = e.target.category.value;
+                      const description = e.target.description.value;
+                      const amount = parseInt(e.target.amount.value || 0);
+                      
+                      setFinances([...finances, {
+                        id: 'F' + Date.now(),
+                        date: new Date().toISOString().split('T')[0],
+                        category,
+                        description,
+                        amount,
+                        type: 'Keluar'
+                      }]);
+                      
+                      e.target.reset();
+                      triggerToast('Arus kas keluar berhasil dicatat!');
+                    }} className="space-y-3 text-xs">
+                      <div>
+                        <label className="text-slate-400 font-semibold mb-1 block">Kategori</label>
+                        <select name="category" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                          <option value="Iklan">Meta Ads & Tiktok Ads</option>
+                          <option value="Royalti">Pembayaran Royalti Penulis</option>
+                          <option value="Sewa Server">Sewa Server & Canva Pro</option>
+                          <option value="Operasional">Kebutuhan Kantor Operasional</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-semibold mb-1 block">Keterangan Pengeluaran</label>
+                        <input required type="text" name="description" placeholder="Deskripsi transaksi..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-semibold mb-1 block">Jumlah (Rp)</label>
+                        <input required type="number" name="amount" placeholder="Nominal Rp..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                      </div>
+                      <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-white mt-4">
+                        Tambahkan Transaksi
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                {/* Mutasi Log Finansial Terbuka (Disertai Tombol Hapus Universal) */}
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 lg:col-span-2">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-sm font-bold text-white">Buku Mutasi Kas & Operasional</h3>
+                    <span className="text-[10px] text-slate-400">Total: {finances.length} Mutasi</span>
+                  </div>
+                  
+                  <div className="overflow-x-auto w-full max-h-[300px] overflow-y-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-700 text-slate-400 uppercase font-mono tracking-wider">
+                          <th className="py-2 px-1">Kategori</th>
+                          <th className="py-2 px-1">Keterangan</th>
+                          <th className="py-2 px-1">Jumlah</th>
+                          <th className="py-2 px-1 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-700/50">
+                        {finances.map(f => (
+                          <tr key={f.id} className="hover:bg-slate-750">
+                            <td className="py-2.5 px-1">
+                              <span className="bg-slate-900 border border-slate-700 text-slate-300 px-2 py-0.5 rounded text-[10px]">
+                                {f.category}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-1 font-medium">{f.description}</td>
+                            <td className="py-2.5 px-1 text-red-400 font-bold">-{formatRupiah(f.amount)}</td>
+                            <td className="py-2.5 px-1 text-right">
+                              <button 
+                                onClick={() => {
+                                  setFinances(finances.filter(item => item.id !== f.id));
+                                  triggerToast('Transaksi berhasil dihapus dari sistem!');
+                                }}
+                                className="p-1.5 text-red-500 hover:text-red-400 hover:bg-slate-700 rounded-lg"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* B. WORKSPACE UNTUK ADMIN */}
+          {currentUser.role === 'Admin' && (
+            <div className="space-y-6 animate-fade-in">
+              <h2 className="text-xl font-black text-white">Panel Admin Operasional (Thami)</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Form Input Penjualan */}
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 border-b border-slate-700 pb-3 mb-4">
+                    <TrendingUp className="w-5 h-5 text-blue-400" />
+                    <h3 className="font-bold text-white text-sm">Input Penjualan Buku (Pendapatan)</h3>
+                  </div>
+
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const buyer = e.target.buyer.value;
+                    const title = e.target.title.value;
+                    const qty = parseInt(e.target.qty.value || 0);
+                    const price = parseInt(e.target.price.value || 0);
+                    const total = qty * price;
+
+                    setSales([...sales, {
+                      id: 'S' + Date.now(),
+                      date: new Date().toISOString().split('T')[0],
+                      buyer,
+                      title,
+                      qty,
+                      price,
+                      total
+                    }]);
+
+                    e.target.reset();
+                    triggerToast('Penjualan buku berhasil disimpan!');
+                  }} className="space-y-3 text-xs">
+                    <div>
+                      <label className="text-slate-400 font-semibold mb-1 block">Nama Pembeli</label>
+                      <input required type="text" name="buyer" placeholder="Syafa Kurniawan, Aulia, dll..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 font-semibold mb-1 block">Judul Buku</label>
+                      <input required type="text" name="title" placeholder="Taruhan si Elang..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-slate-400 font-semibold mb-1 block">Kuantitas (Qty)</label>
+                        <input required type="number" name="qty" placeholder="1" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-semibold mb-1 block">Harga Jual Satuan (Rp)</label>
+                        <input required type="number" name="price" placeholder="55500" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                      </div>
+                    </div>
+                    <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-white mt-4">
+                      Simpan Penjualan
+                    </button>
+                  </form>
+                </div>
+
+                {/* Form Input Cetak (Pengeluaran Produksi) */}
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 border-b border-slate-700 pb-3 mb-4">
+                    <BookOpen className="w-5 h-5 text-orange-400" />
+                    <h3 className="font-bold text-white text-sm">Input Laporan Percetakan (Pengeluaran)</h3>
+                  </div>
+
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const title = e.target.title.value;
+                    const amount = parseInt(e.target.amount.value || 0);
+
+                    // Secara otomatis masuk sebagai pengeluaran dengan kategori 'Cetak'
+                    setFinances([...finances, {
+                      id: 'F' + Date.now(),
+                      date: new Date().toISOString().split('T')[0],
+                      category: 'Cetak',
+                      description: `Cetak Buku: ${title}`,
+                      amount,
+                      type: 'Keluar'
+                    }]);
+
+                    e.target.reset();
+                    triggerToast('Laporan cetak baru berhasil diinput!');
+                  }} className="space-y-3 text-xs">
+                    <div>
+                      <label className="text-slate-400 font-semibold mb-1 block">Judul / Paket Buku Cetak</label>
+                      <input required type="text" name="title" placeholder="Taruhan si Elang - Paket B" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 font-semibold mb-1 block">Biaya Percetakan Total (Rp)</label>
+                      <input required type="number" name="amount" placeholder="Total biaya..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                    </div>
+                    <button type="submit" className="w-full py-2.5 bg-orange-600 hover:bg-orange-500 rounded-lg font-bold text-white mt-4">
+                      Simpan Pengeluaran Cetak
+                    </button>
+                  </form>
+                </div>
+
+              </div>
+
+              {/* Form Input Naskah Baru */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                <h3 className="font-bold text-white text-sm mb-3">Registrasi Naskah Baru (Antrean Editor)</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const title = e.target.title.value;
+                  const author = e.target.author.value;
+
+                  setTasks([...tasks, {
+                    id: 'T' + Date.now(),
+                    title,
+                    author,
+                    status: 'POOL_EDITOR',
+                    editor: null,
+                    cover_artist: null,
+                    layouter: null
+                  }]);
+
+                  e.target.reset();
+                  triggerToast('Naskah baru masuk ke Antrean Rebutan Editor!');
+                }} className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs items-end">
+                  <div>
+                    <label className="text-slate-400 font-semibold mb-1 block">Judul Buku</label>
+                    <input required type="text" name="title" placeholder="Masukkan judul..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 font-semibold mb-1 block">Penulis</label>
+                    <input required type="text" name="author" placeholder="Nama penulis..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                  </div>
+                  <button type="submit" className="py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-bold text-white">
+                    Simpan Ke Antrean
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* C. WORKSPACE UNTUK LEADER */}
+          {currentUser.role === 'Leader' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-black text-white">Dashboard Monitoring & KPI Leader (Jeyraa)</h2>
+                <div className="text-xs text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20 font-bold">Data Keuangan & Gaji Terkunci</div>
+              </div>
+
+              {/* Statistik Penjualan Global Tim */}
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-xl">
+                <h3 className="text-xs font-bold uppercase tracking-wider opacity-80">Performa Tim Penjualan</h3>
+                <div className="text-4xl font-black mt-2">{sales.reduce((sum, s) => sum + parseInt(s.qty || 0), 0)} Eks</div>
+                <p className="text-xs mt-2 opacity-90">Total buku terjual tim sejauh ini. Performa tim berkolerasi dengan insentif bulanan.</p>
+              </div>
+
+              {/* Form Pemberian KPI Rating Karyawan */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-yellow-400" />
+                  Berikan Evaluasi Performa (KPI) Tim
+                </h3>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const targetName = e.target.targetName.value;
+                  const score = parseInt(e.target.score.value || 0);
+                  const note = e.target.note.value;
+
+                  setKpiLog([...kpiLog, {
+                    id: 'K' + Date.now(),
+                    targetName,
+                    score,
+                    note,
+                    date: new Date().toISOString().split('T')[0]
+                  }]);
+
+                  e.target.reset();
+                  triggerToast('Evaluasi KPI berhasil diterbitkan!');
+                }} className="space-y-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-slate-400 font-semibold mb-1 block">Pilih Karyawan</label>
+                      <select name="targetName" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                        {USERS.filter(u => u.role !== 'Dual' && u.role !== 'Leader').map(u => (
+                          <option key={u.name} value={u.name}>{u.name} ({u.role})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-slate-400 font-semibold mb-1 block">Skor KPI (1 - 100)</label>
+                      <input required type="number" name="score" min="1" max="100" placeholder="Contoh: 90" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 font-semibold mb-1 block">Keterangan / Catatan Evaluasi</label>
+                      <input required type="text" name="note" placeholder="Tugas sangat cepat, dsb..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                    </div>
+                  </div>
+                  <button type="submit" className="w-full sm:w-auto px-6 py-2.5 bg-yellow-600 hover:bg-yellow-500 rounded-lg font-bold text-white">
+                    Simpan KPI Performa
+                  </button>
+                </form>
+              </div>
+
+              {/* Log Monitoring Seluruh Alur Naskah */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                <h3 className="text-sm font-bold text-white mb-3">Monitoring Status Produksi Terkini</h3>
+                <div className="space-y-3">
+                  {tasks.map(t => (
+                    <div key={t.id} className="bg-slate-900 border border-slate-700 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div>
+                        <h4 className="font-bold text-slate-200 text-sm">{t.title}</h4>
+                        <p className="text-slate-400">Penulis: {t.author}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <span className="bg-slate-800 text-slate-300 border border-slate-700 px-2.5 py-1 rounded text-[10px] font-bold">
+                          {t.status.replace('_', ' ')}
+                        </span>
+                        {t.editor && <span className="bg-blue-900/40 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">Ed: {t.editor}</span>}
+                        {t.cover_artist && <span className="bg-purple-900/40 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded text-[10px]">Cov: {t.cover_artist}</span>}
+                        {t.layouter && <span className="bg-emerald-900/40 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">Lay: {t.layouter}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* D. WORKSPACE REBUTAN UNTUK EDITOR, COVER & LAYOUT */}
+          {['Editor', 'Cover', 'Layout'].includes(currentUser.role) && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex justify-between items-center bg-slate-800 border border-slate-700 rounded-2xl p-4">
+                <div>
+                  <h2 className="text-lg font-black text-white">Workspace Tim Produksi: {currentUser.role}</h2>
+                  <p className="text-xs text-slate-400">Klik klaim paling cepat untuk mengunci pekerjaan!</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">Estimasi Upah Saya</p>
+                  <p className="text-lg font-black text-emerald-400">{formatRupiah(payrollCalc[currentUser.name]?.total)}</p>
+                </div>
+              </div>
+
+              {/* SISTEM REBUTAN TUGAS */}
+              {(() => {
+                let poolStatus = '';
+                let wipStatus = '';
+                let nextStatus = '';
+                let roleField = '';
+
+                if (currentUser.role === 'Editor') {
+                  poolStatus = 'POOL_EDITOR'; wipStatus = 'WIP_EDITOR'; nextStatus = 'POOL_COVER'; roleField = 'editor';
+                } else if (currentUser.role === 'Cover') {
+                  poolStatus = 'POOL_COVER'; wipStatus = 'WIP_COVER'; nextStatus = 'POOL_LAYOUT'; roleField = 'cover_artist';
+                } else if (currentUser.role === 'Layout') {
+                  poolStatus = 'POOL_LAYOUT'; wipStatus = 'WIP_LAYOUT'; nextStatus = 'READY_PRINT'; roleField = 'layouter';
+                }
+
+                const availableTasks = tasks.filter(t => t.status === poolStatus);
+                const myActiveTasks = tasks.filter(t => t.status === wipStatus && t[roleField] === currentUser.name);
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                    {/* Kolom Rebutan */}
+                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                      <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                        <h3 className="font-bold text-white text-sm">Pool Antrean Terbuka</h3>
+                        <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">First Come, First Served</span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {availableTasks.length === 0 ? (
+                          <div className="text-center py-10 text-slate-500 italic">Belum ada naskah yang siap didelegasikan ke antrean ini.</div>
+                        ) : (
+                          availableTasks.map(t => (
+                            <div key={t.id} className="bg-slate-900 border border-slate-750 p-4 rounded-xl flex items-center justify-between gap-4">
+                              <div>
+                                <h4 className="font-bold text-slate-200 text-sm">{t.title}</h4>
+                                <p className="text-slate-400 mt-0.5">Penulis: {t.author}</p>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  // Concurrency lock simulation
+                                  setTasks(tasks.map(item => {
+                                    if (item.id === t.id) {
+                                      return { ...item, status: wipStatus, [roleField]: currentUser.name };
+                                    }
+                                    return item;
+                                  }));
+                                  triggerToast(`Naskah "${t.title}" berhasil diklaim!`);
+                                }}
+                                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition duration-150"
+                              >
+                                Klaim Tugas
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Kolom Dikerjakan */}
+                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                      <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                        <h3 className="font-bold text-white text-sm">Sedang Saya Kerjakan</h3>
+                        <span className="bg-amber-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">Klaim Terkunci</span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {myActiveTasks.length === 0 ? (
+                          <div className="text-center py-10 text-slate-500 italic">Anda belum mengklaim naskah apapun. Ambil tugas di sisi kiri!</div>
+                        ) : (
+                          myActiveTasks.map(t => (
+                            <div key={t.id} className="bg-slate-900 border border-slate-750 p-4 rounded-xl flex items-center justify-between gap-4">
+                              <div>
+                                <h4 className="font-bold text-slate-200 text-sm">{t.title}</h4>
+                                <p className="text-slate-400 mt-0.5">Penulis: {t.author}</p>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setTasks(tasks.map(item => {
+                                    if (item.id === t.id) {
+                                      return { ...item, status: nextStatus };
+                                    }
+                                    return item;
+                                  }));
+                                  triggerToast(`Naskah "${t.title}" selesai & diteruskan!`);
+                                }}
+                                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition duration-150"
+                              >
+                                Tandai Selesai
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* E. WORKSPACE UNTUK DESAIN GRAFIS */}
+          {currentUser.role === 'Grafis' && (
+            <div className="space-y-6 animate-fade-in">
+              <h2 className="text-xl font-black text-white">Workspace Desain Grafis (Nala)</h2>
+
+              {/* Form Input Sederhana Sesuai Request */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                <div className="mb-4 bg-emerald-600/10 border border-emerald-500/20 p-4 rounded-xl text-emerald-400 flex justify-between items-center">
+                  <div>
+                    <p className="text-xs font-bold uppercase">Estimasi Gaji Feed Saya</p>
+                    <p className="text-xs opacity-75">Tiap input menambah log upah Anda otomatis</p>
+                  </div>
+                  <span className="text-2xl font-black">{formatRupiah(payrollCalc['Nala']?.total)}</span>
+                </div>
+
+                <h3 className="font-bold text-white text-sm mb-3">Input Log Jumlah Editing Poster / Feed IG</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const type = e.target.type.value;
+                  const description = e.target.description.value;
+
+                  setGrafisLog([...grafisLog, {
+                    id: 'G' + Date.now(),
+                    date: new Date().toISOString().split('T')[0],
+                    type,
+                    description
+                  }]);
+
+                  e.target.reset();
+                  triggerToast('Log feed berhasil tersimpan!');
+                }} className="space-y-3 text-xs">
+                  <div>
+                    <label className="text-slate-400 font-semibold mb-1 block">Jenis Feed Konten</label>
+                    <select name="type" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                      <option value="Biasa">Feed Instagram Biasa (Rp2.000)</option>
+                      <option value="PO">Feed Instagram Pre-Order PO (Rp25.000)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-slate-400 font-semibold mb-1 block">Nama File / Deskripsi Konten Poster</label>
+                    <input required type="text" name="description" placeholder="Poster Pre-order Taruhan si Elang, dsb..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+                  </div>
+                  <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-white">
+                    Simpan Log Konten
+                  </button>
+                </form>
+              </div>
+
+              {/* Log Pekerjaan Nala */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                <h3 className="text-sm font-bold text-white mb-3">Riwayat Log Poster IG Anda</h3>
+                <div className="overflow-x-auto w-full max-h-[250px] overflow-y-auto text-xs">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-slate-700 text-slate-400 font-mono">
+                        <th className="py-2">Tanggal</th>
+                        <th className="py-2">Tipe</th>
+                        <th className="py-2">Keterangan</th>
+                        <th className="py-2 text-right">Upah</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/50">
+                      {grafisLog.map(log => (
+                        <tr key={log.id}>
+                          <td className="py-2">{log.date}</td>
+                          <td className="py-2">
+                            <span className="bg-slate-900 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
+                              {log.type}
+                            </span>
+                          </td>
+                          <td className="py-2">{log.description}</td>
+                          <td className="py-2 text-right font-bold text-emerald-400">
+                            +{formatRupiah(log.type === 'PO' ? PAYROLL_RATES.grafis_po : PAYROLL_RATES.grafis_biasa)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* --- SIMULATOR GOOGLE SHEETS LIVE (BLUEPRINT #7) --- */}
+        {showSheetsSim && (
+          <div className="w-full lg:w-[400px] bg-slate-800 border-t lg:border-t-0 lg:border-l border-slate-700 p-5 shrink-0 flex flex-col justify-between rounded-2xl lg:rounded-none animate-fade-in">
+            <div>
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-700">
+                <div className="flex items-center gap-2">
+                  <Database className="w-5 h-5 text-emerald-400" />
+                  <span className="font-bold text-white text-sm">Sheets DB Simulator</span>
+                </div>
+                <button onClick={() => setShowSheetsSim(false)} className="text-slate-400 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Tab Navigation Simulator */}
+              <div className="flex flex-wrap gap-1 mb-4 text-[10px]">
+                <button onClick={() => setSheetTab('tasks')} className={`px-2.5 py-1 rounded font-bold ${sheetTab === 'tasks' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                  DB_Tasks
+                </button>
+                <button onClick={() => setSheetTab('sales')} className={`px-2.5 py-1 rounded font-bold ${sheetTab === 'sales' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                  DB_Sales
+                </button>
+                <button onClick={() => setSheetTab('finances')} className={`px-2.5 py-1 rounded font-bold ${sheetTab === 'finances' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                  DB_Finances
+                </button>
+                <button onClick={() => setSheetTab('kpi')} className={`px-2.5 py-1 rounded font-bold ${sheetTab === 'kpi' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                  DB_KPI
+                </button>
+              </div>
+
+              {/* Data Grid Simulator */}
+              <div className="overflow-x-auto overflow-y-auto max-h-[380px] bg-slate-950 p-2 rounded-lg border border-slate-750 text-[10px] font-mono">
+                {sheetTab === 'tasks' && (
+                  <table className="w-full text-left whitespace-nowrap">
+                    <thead>
+                      <tr className="border-b border-slate-700 text-slate-500">
+                        <th className="p-1">ID</th>
+                        <th className="p-1">Judul</th>
+                        <th className="p-1">Status</th>
+                        <th className="p-1">Editor</th>
+                        <th className="p-1">Cover</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tasks.map(t => (
+                        <tr key={t.id} className="border-b border-slate-800/50 text-slate-300 hover:bg-slate-900">
+                          <td className="p-1 text-blue-400">{t.id}</td>
+                          <td className="p-1 font-bold">{t.title}</td>
+                          <td className="p-1 text-yellow-400">{t.status}</td>
+                          <td className="p-1 text-slate-400">{t.editor || '-'}</td>
+                          <td className="p-1 text-slate-400">{t.cover_artist || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                {sheetTab === 'sales' && (
+                  <table className="w-full text-left whitespace-nowrap">
+                    <thead>
+                      <tr className="border-b border-slate-700 text-slate-500">
+                        <th className="p-1">ID</th>
+                        <th className="p-1">Tanggal</th>
+                        <th className="p-1">Buku</th>
+                        <th className="p-1">Qty</th>
+                        <th className="p-1">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sales.map(s => (
+                        <tr key={s.id} className="border-b border-slate-800/50 text-slate-300 hover:bg-slate-900">
+                          <td className="p-1 text-blue-400">{s.id}</td>
+                          <td className="p-1">{s.date}</td>
+                          <td className="p-1 font-bold">{s.title}</td>
+                          <td className="p-1">{s.qty}</td>
+                          <td className="p-1 text-emerald-400">{s.total}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                {sheetTab === 'finances' && (
+                  <table className="w-full text-left whitespace-nowrap">
+                    <thead>
+                      <tr className="border-b border-slate-700 text-slate-500">
+                        <th className="p-1">ID</th>
+                        <th className="p-1">Kategori</th>
+                        <th className="p-1">Keterangan</th>
+                        <th className="p-1">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {finances.map(f => (
+                        <tr key={f.id} className="border-b border-slate-800/50 text-slate-300 hover:bg-slate-900">
+                          <td className="p-1 text-blue-400">{f.id}</td>
+                          <td className="p-1 text-slate-400">{f.category}</td>
+                          <td className="p-1 font-bold">{f.description}</td>
+                          <td className="p-1 text-red-400">{f.amount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                {sheetTab === 'kpi' && (
+                  <table className="w-full text-left whitespace-nowrap">
+                    <thead>
+                      <tr className="border-b border-slate-700 text-slate-500">
+                        <th className="p-1">ID</th>
+                        <th className="p-1">Nama</th>
+                        <th className="p-1">Skor</th>
+                        <th className="p-1">Evaluasi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {kpiLog.map(k => (
+                        <tr key={k.id} className="border-b border-slate-800/50 text-slate-300 hover:bg-slate-900">
+                          <td className="p-1 text-blue-400">{k.id}</td>
+                          <td className="p-1 font-bold">{k.targetName}</td>
+                          <td className="p-1 text-yellow-400 font-bold">{k.score}/100</td>
+                          <td className="p-1 text-slate-400">{k.note}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-emerald-950/40 border border-emerald-900 text-emerald-300 text-[10px] rounded-lg">
+              <span className="font-bold uppercase tracking-wider block mb-1">ℹ️ Google Sheets Link Sim</span>
+              Sistem mensimulasikan penyimpanan online. Setiap kali transaksi/klaim dilakukan, data sel spreadsheet di atas diperbarui seketika.
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* --- MODAL DETIL GAJI & PRINT SLIP GAJI (BLUEPRINT #6) --- */}
+      {selectedPayee && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-slate-800 border border-slate-700 rounded-3xl p-6 w-full max-w-lg text-slate-100 shadow-2xl relative">
+            <button onClick={() => setSelectedPayee(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Container Print Area */}
+            <div id="salary-slip-print" className="p-4 bg-white text-slate-900 rounded-xl space-y-4 font-sans text-xs">
+              <div className="text-center border-b-2 border-dashed border-slate-300 pb-3">
+                <h3 className="text-sm font-black tracking-wider uppercase">NARA PUSTAKA INDONESIA</h3>
+                <p className="text-[9px] text-slate-500">Slip Pembayaran Resmi Kinerja Karyawan</p>
+                <p className="text-[8px] text-slate-400">Tanggal Cetak: {new Date().toLocaleDateString('id-ID')}</p>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span>Nama Karyawan:</span>
+                  <span className="font-bold uppercase">{selectedPayee.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Posisi / Peran:</span>
+                  <span className="font-bold">{selectedPayee.role}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Skor Evaluasi KPI:</span>
+                  <span className="font-bold text-indigo-600">
+                    {kpiLog.filter(k => k.targetName === selectedPayee.name).pop()?.score || 'Belum Dinilai'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="border-t border-b border-slate-200 py-3 space-y-2">
+                <span className="font-bold block text-[10px] uppercase text-slate-500 tracking-wider">Rincian Hasil Kinerja:</span>
+                
+                {payrollCalc[selectedPayee.name]?.details.length === 0 ? (
+                  <p className="text-slate-400 italic text-center">Belum ada penyelesaian kinerja yang tercatat periode ini.</p>
+                ) : (
+                  payrollCalc[selectedPayee.name]?.details.map((item, index) => (
+                    <div key={index} className="flex justify-between">
+                      <span className="max-w-[70%]">{item.desc}</span>
+                      <span className="font-mono">{formatRupiah(item.pay)}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="flex justify-between items-center text-sm font-bold pt-2">
+                <span>TOTAL GAJI DITERIMA:</span>
+                <span className="text-emerald-600 text-lg font-black">{formatRupiah(payrollCalc[selectedPayee.name]?.total)}</span>
+              </div>
+
+              <div className="text-center text-[8px] text-slate-400 pt-4 border-t border-slate-100">
+                Dokumen ini sah dikeluarkan secara otomatis oleh Sistem Portal Nara Pustaka.
+              </div>
+            </div>
+
+            {/* Aksi Modal */}
+            <div className="flex gap-3 mt-6 text-xs font-bold">
+              <button 
+                onClick={() => {
+                  window.print();
+                }} 
+                className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl flex items-center justify-center gap-2"
+              >
+                <Printer className="w-4 h-4" />
+                Cetak Slip PDF
+              </button>
+              
+              {/* Hanya Manager yang bisa bayar gaji */}
+              {currentUser.role === 'Manager' && (
+                <button 
+                  onClick={() => {
+                    const amt = payrollCalc[selectedPayee.name]?.total;
+                    if (amt <= 0) {
+                      triggerToast('Tidak ada gaji berjalan untuk dibayarkan!', 'error');
+                      return;
+                    }
+
+                    // Tambahkan mutasi kas keluar pembayaran gaji
+                    setFinances([...finances, {
+                      id: 'F' + Date.now(),
+                      date: new Date().toISOString().split('T')[0],
+                      category: 'Gaji',
+                      description: `Bayar Gaji: ${selectedPayee.name} (Sistem Otomatis)`,
+                      amount: amt,
+                      type: 'Keluar'
+                    }]);
+
+                    triggerToast(`Pembayaran Gaji ${selectedPayee.name} sukses dicatat ke kas!`);
+                    setSelectedPayee(null);
+                  }} 
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center gap-2"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  Bayar & Catat Kas
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSS Cetak Khusus agar Invoice Slip Gaji Pas di Kertas */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #salary-slip-print, #salary-slip-print * {
+            visibility: visible;
+          }
+          #salary-slip-print {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none;
+            padding: 20px;
+          }
+        }
+      `}</style>
+
+    </div>
+  );
 }
-</script>
-</body>
-</html>
